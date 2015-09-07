@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -11,7 +11,7 @@ class BoostingTest extends BaseTest
     /**
      * @var array
      */
-    protected $sampleData = array(
+    protected array<int, array<string, mixed>> $sampleData = array(
         array('name' => 'Vital Lama', 'price' => 5.2),
         array('name' => 'Vital Match', 'price' => 2.1),
         array('name' => 'Mercury Vital', 'price' => 7.5),
@@ -19,21 +19,21 @@ class BoostingTest extends BaseTest
         array('name' => 'Lama Vital 2nd', 'price' => 3.2),
     );
 
-    protected function _getTestIndex()
+    protected function _getTestIndex() : \Elastica\Index
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
         $type->setMapping(array(
             'name' => array('type' => 'string', 'index' => 'analyzed'),
             'price' => array('type' => 'float'),
-        ));
+        ))->getWaitHandle()->join();
         $docs = array();
         foreach ($this->sampleData as $key => $value) {
-            $docs[] = new Document($key, $value);
+            $docs[] = new Document((string) $key, $value);
         }
-        $type->addDocuments($docs);
+        $type->addDocuments($docs)->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -41,24 +41,24 @@ class BoostingTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $keyword = 'vital';
         $negativeKeyword = 'Mercury';
 
         $query = new Boosting();
-        $positiveQuery = new Term(array('name' => $keyword));
-        $negativeQuery = new Term(array('name' => $negativeKeyword));
+        $positiveQuery = new Term(Map {'name' => $keyword});
+        $negativeQuery = new Term(Map {'name' => $negativeKeyword});
         $query->setPositiveQuery($positiveQuery);
         $query->setNegativeQuery($negativeQuery);
         $query->setNegativeBoost(0.3);
 
         $expected = array(
-            'boosting' => array(
+            'boosting' => Map {
                 'positive' => $positiveQuery->toArray(),
                 'negative' => $negativeQuery->toArray(),
                 'negative_boost' => 0.3,
-            ),
+            },
         );
         $this->assertEquals($expected, $query->toArray());
     }
@@ -66,19 +66,19 @@ class BoostingTest extends BaseTest
     /**
      * @group functional
      */
-    public function testNegativeBoost()
+    public function testNegativeBoost() : void
     {
         $keyword = 'vital';
         $negativeKeyword = 'mercury';
 
         $query = new Boosting();
-        $positiveQuery = new Term(array('name' => $keyword));
-        $negativeQuery = new Term(array('name' => $negativeKeyword));
+        $positiveQuery = new Term(Map {'name' => $keyword});
+        $negativeQuery = new Term(Map {'name' => $negativeKeyword});
         $query->setPositiveQuery($positiveQuery);
         $query->setNegativeQuery($negativeQuery);
         $query->setNegativeBoost(0.2);
 
-        $response = $this->_getTestIndex()->search($query);
+        $response = $this->_getTestIndex()->search($query)->getWaitHandle()->join();
         $results = $response->getResults();
 
         $this->assertEquals($response->getTotalHits(), 4);

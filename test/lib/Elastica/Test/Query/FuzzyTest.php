@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -10,39 +10,39 @@ class FuzzyTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $fuzzy = new Fuzzy();
         $fuzzy->addField('user', array('value' => 'Nicolas', 'boost' => 1.0));
         $expectedArray = array(
-            'fuzzy' => array(
+            'fuzzy' => Map {
                 'user' => array(
                     'value' => 'Nicolas',
                     'boost' => 1.0,
                 ),
-            ),
+            },
         );
         $this->assertEquals($expectedArray, $fuzzy->toArray(), 'Deprecated method failed');
 
         $fuzzy = new Fuzzy('user', 'Nicolas');
         $expectedArray = array(
-            'fuzzy' => array(
+            'fuzzy' => Map {
                 'user' => array(
                     'value' => 'Nicolas',
                 ),
-            ),
+            },
         );
         $this->assertEquals($expectedArray, $fuzzy->toArray());
 
         $fuzzy = new Fuzzy();
         $fuzzy->setField('user', 'Nicolas')->setFieldOption('boost', 1.0);
         $expectedArray = array(
-            'fuzzy' => array(
+            'fuzzy' => Map {
                 'user' => array(
                     'value' => 'Nicolas',
                     'boost' => 1.0,
                 ),
-            ),
+            },
         );
         $this->assertEquals($expectedArray, $fuzzy->toArray());
     }
@@ -50,28 +50,28 @@ class FuzzyTest extends BaseTest
     /**
      * @group functional
      */
-    public function testQuery()
+    public function testQuery() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('test');
 
         $type->addDocuments(array(
-            new Document(1, array('name' => 'Basel-Stadt')),
-            new Document(2, array('name' => 'New York')),
-            new Document(3, array('name' => 'Baden')),
-            new Document(4, array('name' => 'Baden Baden')),
-        ));
+            new Document('1', array('name' => 'Basel-Stadt')),
+            new Document('2', array('name' => 'New York')),
+            new Document('3', array('name' => 'Baden')),
+            new Document('4', array('name' => 'Baden Baden')),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $field = 'name';
 
         $query = new Fuzzy();
         $query->setField($field, 'Baden');
 
-        $resultSet = $index->search($query);
+        $resultSet = $index->search($query)->getWaitHandle()->join();
 
         $this->assertEquals(2, $resultSet->count());
     }
@@ -79,15 +79,11 @@ class FuzzyTest extends BaseTest
     /**
      * @group unit
      */
-    public function testBadArguments()
+    public function testBadArguments() : void
     {
         $this->setExpectedException('Elastica\Exception\InvalidException');
         $query = new Fuzzy();
         $query->addField('name', array(array('value' => 'Baden')));
-
-        $this->setExpectedException('Elastica\Exception\InvalidException');
-        $query = new Fuzzy();
-        $query->setField('name', array());
 
         $this->setExpectedException('Elastica\Exception\InvalidException');
         $query = new Fuzzy();
@@ -98,19 +94,19 @@ class FuzzyTest extends BaseTest
     /**
      * @group functional
      */
-    public function testFuzzyWithFacets()
+    public function testFuzzyWithFacets() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
 
         $type->addDocuments(array(
-            new Document(1, array('name' => 'Basel-Stadt')),
-            new Document(2, array('name' => 'New York')),
-            new Document(3, array('name' => 'Baden')),
-            new Document(4, array('name' => 'Baden Baden')),
-        ));
+            new Document('1', array('name' => 'Basel-Stadt')),
+            new Document('2', array('name' => 'New York')),
+            new Document('3', array('name' => 'Baden')),
+            new Document('4', array('name' => 'Baden Baden')),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $field = 'name';
 
@@ -123,7 +119,7 @@ class FuzzyTest extends BaseTest
         $query = new \Elastica\Query($fuzzyQuery);
         $query->addFacet($facet);
 
-        $resultSet = $index->search($query);
+        $resultSet = $index->search($query)->getWaitHandle()->join();
 
         // Assert query worked ok
         $this->assertEquals(2, $resultSet->count());

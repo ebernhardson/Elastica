@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Aggregation;
 
 /**
@@ -11,9 +11,9 @@ class Histogram extends AbstractSimpleAggregation
     /**
      * @param string $name     the name of this aggregation
      * @param string $field    the name of the field on which to perform the aggregation
-     * @param int    $interval the interval by which documents will be bucketed
+     * @param string $interval the interval by which documents will be bucketed
      */
-    public function __construct($name, $field, $interval)
+    public function __construct(string $name, string $field, string $interval)
     {
         parent::__construct($name);
         $this->setField($field);
@@ -21,13 +21,14 @@ class Histogram extends AbstractSimpleAggregation
     }
 
     /**
-     * Set the interval by which documents will be bucketed.
+     * Set the interval by which documents will be bucketed. In elasticsearch
+     * interval format.
      *
-     * @param int $interval
+     * @param string $interval
      *
      * @return $this
      */
-    public function setInterval($interval)
+    public function setInterval(string $interval) : this
     {
         return $this->setParam('interval', $interval);
     }
@@ -40,7 +41,7 @@ class Histogram extends AbstractSimpleAggregation
      *
      * @return $this
      */
-    public function setOrder($order, $direction)
+    public function setOrder(string $order, string $direction) : this
     {
         return $this->setParam('order', array($order => $direction));
     }
@@ -52,7 +53,7 @@ class Histogram extends AbstractSimpleAggregation
      *
      * @return $this
      */
-    public function setMinimumDocumentCount($count)
+    public function setMinimumDocumentCount(int $count) : this
     {
         return $this->setParam('min_doc_count', $count);
     }

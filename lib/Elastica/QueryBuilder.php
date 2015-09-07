@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Exception\QueryBuilderException;
@@ -16,19 +16,19 @@ class QueryBuilder
     /**
      * @var Version
      */
-    private $_version;
+    private Version $_version;
 
     /**
      * @var Facade[]
      */
-    private $_facades = array();
+    private array<string, Facade> $_facades = array();
 
     /**
      * Constructor.
      *
      * @param Version $version
      */
-    public function __construct(Version $version = null)
+    public function __construct(?Version $version = null)
     {
         $this->_version = $version ?: new Version\Latest();
 
@@ -48,7 +48,7 @@ class QueryBuilder
      *
      * @return Facade
      */
-    public function __call($dsl, array $arguments)
+    public function __call($dsl, array $arguments) : Facade
     {
         if (false === isset($this->_facades[$dsl])) {
             throw new QueryBuilderException('DSL "'.$dsl.'" not supported');
@@ -62,7 +62,7 @@ class QueryBuilder
      *
      * @param DSL $dsl
      */
-    public function addDSL(DSL $dsl)
+    public function addDSL(DSL $dsl) : void
     {
         $this->_facades[$dsl->getType()] = new Facade($dsl, $this->_version);
     }

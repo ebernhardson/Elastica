@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica;
 
 /**
@@ -29,7 +29,7 @@ interface SearchableInterface
      *
      * @return \Elastica\ResultSet ResultSet with all results inside
      */
-    public function search($query = '', $options = null);
+    public function search(mixed $query = '', mixed $options = null) : Awaitable<ResultSet>;
 
     /**
      * Counts results for a query.
@@ -40,13 +40,13 @@ interface SearchableInterface
      *
      * @return int number of documents matching the query
      */
-    public function count($query = '');
+    public function count(mixed $query = '') : Awaitable<int>;
 
     /**
-     * @param \Elastica\Query $query
-     * @param array           $options
+     * @param string|array|\Elastica\Query $query
+     * @param array|int                    $options
      *
      * @return \Elastica\Search
      */
-    public function createSearch($query = '', $options = null);
+    public function createSearch(mixed $query = '', mixed $options = null) : Search;
 }

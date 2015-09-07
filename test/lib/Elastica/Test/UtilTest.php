@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Connection;
@@ -12,12 +12,12 @@ class UtilTest extends BaseTest
      * @group unit
      * @dataProvider getEscapeTermPairs
      */
-    public function testEscapeTerm($unescaped, $escaped)
+    public function testEscapeTerm($unescaped, $escaped) : void
     {
         $this->assertEquals($escaped, Util::escapeTerm($unescaped));
     }
 
-    public function getEscapeTermPairs()
+    public function getEscapeTermPairs() : array<array<string>>
     {
         return array(
             array('', ''),
@@ -33,12 +33,12 @@ class UtilTest extends BaseTest
      * @group unit
      * @dataProvider getReplaceBooleanWordsPairs
      */
-    public function testReplaceBooleanWords($before, $after)
+    public function testReplaceBooleanWords($before, $after) : void
     {
         $this->assertEquals($after, Util::replaceBooleanWords($before));
     }
 
-    public function getReplaceBooleanWordsPairs()
+    public function getReplaceBooleanWordsPairs() : array<array<string>>
     {
         return array(
             array('to be OR not to be', 'to be || not to be'),
@@ -53,7 +53,7 @@ class UtilTest extends BaseTest
     /**
      * @group unit
      */
-    public function testEscapeTermSpecialCharacters()
+    public function testEscapeTermSpecialCharacters() : void
     {
         $before = '\\+-&&||!(){}[]^"~*?:/<>';
         $after = '\\\\\\+\\-\\&&\\||\\!\\(\\)\\{\\}\\[\\]\\^\\"\\~\\*\\?\\:\\/\<\>';
@@ -64,7 +64,7 @@ class UtilTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToCamelCase()
+    public function testToCamelCase() : void
     {
         $string = 'hello_world';
         $this->assertEquals('HelloWorld', Util::toCamelCase($string));
@@ -76,7 +76,7 @@ class UtilTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToSnakeCase()
+    public function testToSnakeCase() : void
     {
         $string = 'HelloWorld';
         $this->assertEquals('hello_world', Util::toSnakeCase($string));
@@ -88,7 +88,7 @@ class UtilTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConvertRequestToCurlCommand()
+    public function testConvertRequestToCurlCommand() : void
     {
         $path = 'test';
         $method = Request::POST;
@@ -97,7 +97,7 @@ class UtilTest extends BaseTest
 
         $connection = new Connection();
         $connection->setHost($this->_getHost());
-        $connection->setPort('9200');
+        $connection->setPort(9200);
 
         $request = new Request($path, $method, $data, $query, $connection);
 
@@ -110,8 +110,9 @@ class UtilTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConvertDateTimeObjectWithTimezone()
+    public function testConvertDateTimeObjectWithTimezone() : void
     {
+        ini_set( 'date.timezone', 'UTC' );
         $dateTimeObject = new \DateTime();
         $timestamp = $dateTimeObject->getTimestamp();
 
@@ -125,8 +126,9 @@ class UtilTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConvertDateTimeObjectWithoutTimezone()
+    public function testConvertDateTimeObjectWithoutTimezone() : void
     {
+        ini_set( 'date.timezone', 'UTC' );
         $dateTimeObject = new \DateTime();
         $timestamp = $dateTimeObject->getTimestamp();
 

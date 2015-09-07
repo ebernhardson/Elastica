@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Aggregation;
 
 use Elastica\Aggregation\Avg;
@@ -7,18 +7,18 @@ use Elastica\Query;
 
 class AvgTest extends BaseAggregationTest
 {
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : \Elastica\Index
     {
         $index = $this->_createIndex();
 
         $index->getType('test')->addDocuments(array(
-            new Document(1, array('price' => 5)),
-            new Document(2, array('price' => 8)),
-            new Document(3, array('price' => 1)),
-            new Document(4, array('price' => 3)),
-        ));
+            new Document('1', array('price' => 5)),
+            new Document('2', array('price' => 8)),
+            new Document('3', array('price' => 1)),
+            new Document('4', array('price' => 3)),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -26,14 +26,15 @@ class AvgTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testAvgAggregation()
+    public function testAvgAggregation() : void
     {
         $agg = new Avg('avg');
         $agg->setField('price');
 
         $query = new Query();
         $query->addAggregation($agg);
-        $results = $this->_getIndexForTest()->search($query)->getAggregations();
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
+        $results = $response->getAggregations();
         $this->assertEquals((5 + 8 + 1 + 3) / 4.0, $results['avg']['value']);
     }
 }

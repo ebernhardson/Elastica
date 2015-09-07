@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Aggregation;
 
 use Elastica\Aggregation\Terms;
@@ -7,18 +7,18 @@ use Elastica\Query;
 
 class TermsTest extends BaseAggregationTest
 {
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : \Elastica\Index
     {
         $index = $this->_createIndex();
 
         $index->getType('test')->addDocuments(array(
-            new Document(1, array('color' => 'blue')),
-            new Document(2, array('color' => 'blue')),
-            new Document(3, array('color' => 'red')),
-            new Document(4, array('color' => 'green')),
-        ));
+            new Document('1', array('color' => 'blue')),
+            new Document('2', array('color' => 'blue')),
+            new Document('3', array('color' => 'red')),
+            new Document('4', array('color' => 'green')),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -26,14 +26,15 @@ class TermsTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testTermsAggregation()
+    public function testTermsAggregation() : void
     {
         $agg = new Terms('terms');
         $agg->setField('color');
 
         $query = new Query();
         $query->addAggregation($agg);
-        $results = $this->_getIndexForTest()->search($query)->getAggregation('terms');
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
+        $results = $response->getAggregation('terms');
 
         $this->assertEquals(2, $results['buckets'][0]['doc_count']);
         $this->assertEquals('blue', $results['buckets'][0]['key']);
@@ -42,7 +43,7 @@ class TermsTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testTermsSetOrder()
+    public function testTermsSetOrder() : void
     {
         $agg = new Terms('terms');
         $agg->setField('color');
@@ -50,7 +51,8 @@ class TermsTest extends BaseAggregationTest
 
         $query = new Query();
         $query->addAggregation($agg);
-        $results = $this->_getIndexForTest()->search($query)->getAggregation('terms');
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
+        $results = $response->getAggregation('terms');
 
         $this->assertEquals('blue', $results['buckets'][2]['key']);
     }

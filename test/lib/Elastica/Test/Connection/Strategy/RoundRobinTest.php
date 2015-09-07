@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Connection\Strategy;
 
 use Elastica\Connection;
@@ -17,12 +17,12 @@ class RoundRobinTest extends Base
     /**
      * @var int Number of seconds to wait before timeout is called. Is set low for tests to have fast tests.
      */
-    protected $_timeout = 1;
+    protected int $_timeout = 1;
 
     /**
      * @group functional
      */
-    public function testConnection()
+    public function testConnection() : void
     {
         $config = array('connectionStrategy' => 'RoundRobin');
         $client = $this->_getClient($config);
@@ -37,7 +37,7 @@ class RoundRobinTest extends Base
     /**
      * @group unit
      */
-    public function testOldStrategySetted()
+    public function testOldStrategySetted() : void
     {
         $config = array('roundRobin' => true);
         $client = $this->_getClient($config);
@@ -49,24 +49,24 @@ class RoundRobinTest extends Base
      * @group functional
      * @expectedException \Elastica\Exception\ConnectionException
      */
-    public function testFailConnection()
+    public function testFailConnection() : void
     {
         $config = array('connectionStrategy' => 'RoundRobin', 'host' => '255.255.255.0', 'timeout' => $this->_timeout);
         $client = $this->_getClient($config);
 
         $this->_checkStrategy($client);
 
-        $client->request('/_aliases');
+        $client->request('/_aliases')->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testWithOneFailConnection()
+    public function testWithOneFailConnection() : void
     {
         $connections = array(
-            new Connection(array('host' => '255.255.255.0', 'timeout' => $this->_timeout)),
-            new Connection(array('host' => $this->_getHost(), 'timeout' => $this->_timeout)),
+            new Connection(Map {'host' => '255.255.255.0', 'timeout' => $this->_timeout}),
+            new Connection(Map {'host' => $this->_getHost(), 'timeout' => $this->_timeout}),
         );
 
         $count = 0;
@@ -90,12 +90,12 @@ class RoundRobinTest extends Base
     /**
      * @group functional
      */
-    public function testWithNoValidConnection()
+    public function testWithNoValidConnection() : void
     {
         $connections = array(
-            new Connection(array('host' => '255.255.255.0', 'timeout' => $this->_timeout)),
-            new Connection(array('host' => '45.45.45.45', 'port' => '80', 'timeout' => $this->_timeout)),
-            new Connection(array('host' => '10.123.213.123', 'timeout' => $this->_timeout)),
+            new Connection(Map {'host' => '255.255.255.0', 'timeout' => $this->_timeout}),
+            new Connection(Map {'host' => '45.45.45.45', 'port' => '80', 'timeout' => $this->_timeout}),
+            new Connection(Map {'host' => '10.123.213.123', 'timeout' => $this->_timeout}),
         );
 
         $count = 0;
@@ -106,7 +106,7 @@ class RoundRobinTest extends Base
         $client->setConnections($connections);
 
         try {
-            $client->request('/_aliases');
+            $client->request('/_aliases')->getWaitHandle()->join();
             $this->fail('Should throw exception as no connection valid');
         } catch (ConnectionException $e) {
             $this->assertEquals(count($connections), $count);
@@ -114,15 +114,18 @@ class RoundRobinTest extends Base
         }
     }
 
-    protected function _checkStrategy($client)
+    protected function _checkStrategy(@\Elastica\Client $client) : void
     {
         $strategy = $client->getConnectionStrategy();
 
         $this->assertInstanceOf('Elastica\Connection\Strategy\RoundRobin', $strategy);
     }
 
-    protected function _checkResponse($response)
+    protected function _checkResponse($response) : void
     {
+        if ($response instanceof Awaitable) {
+            $response = $response->getWaitHandle()->join();
+        }
         $this->assertTrue($response->isOk());
     }
 }

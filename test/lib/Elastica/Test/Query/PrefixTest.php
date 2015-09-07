@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Query\Prefix;
@@ -9,19 +9,19 @@ class PrefixTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $query = new Prefix();
         $key = 'name';
         $value = 'ni';
-        $boost = 2;
+        $boost = 2.0;
         $query->setPrefix($key, $value, $boost);
 
         $data = $query->toArray();
 
-        $this->assertInternalType('array', $data['prefix']);
-        $this->assertInternalType('array', $data['prefix'][$key]);
-        $this->assertEquals($data['prefix'][$key]['value'], $value);
-        $this->assertEquals($data['prefix'][$key]['boost'], $boost);
+        $this->assertInstanceOf('HH\Map', $data['prefix']);
+        $this->assertInstanceOf('HH\Map', /* UNSAFE_EXPR */ $data['prefix'][$key]);
+        $this->assertEquals(/* UNSAFE_EXPR */ $data['prefix'][$key]['value'], $value);
+        $this->assertEquals(/* UNSAFE_EXPR */ $data['prefix'][$key]['boost'], $boost);
     }
 }

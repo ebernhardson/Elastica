@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Suggest;
 
 use Elastica\Document;
@@ -12,19 +12,19 @@ class TermTest extends BaseTest
     /**
      * @return Index
      */
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : Index
     {
         $index = $this->_createIndex();
         $type = $index->getType('testSuggestType');
         $type->addDocuments(array(
-            new Document(1, array('id' => 1, 'text' => 'GitHub')),
-            new Document(2, array('id' => 1, 'text' => 'Elastic')),
-            new Document(3, array('id' => 1, 'text' => 'Search')),
-            new Document(4, array('id' => 1, 'text' => 'Food')),
-            new Document(5, array('id' => 1, 'text' => 'Flood')),
-            new Document(6, array('id' => 1, 'text' => 'Folks')),
-        ));
-        $index->refresh();
+            new Document('1', array('id' => 1, 'text' => 'GitHub')),
+            new Document('2', array('id' => 1, 'text' => 'Elastic')),
+            new Document('3', array('id' => 1, 'text' => 'Search')),
+            new Document('4', array('id' => 1, 'text' => 'Food')),
+            new Document('5', array('id' => 1, 'text' => 'Flood')),
+            new Document('6', array('id' => 1, 'text' => 'Folks')),
+        ))->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -32,7 +32,7 @@ class TermTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $suggest = new Suggest();
 
@@ -46,22 +46,22 @@ class TermTest extends BaseTest
         $suggest->addSuggestion($suggest2->setText('Girhub'));
 
         $expected = array(
-            'suggest' => array(
+            'suggest' => Map {
                 'suggest1' => array(
-                    'term' => array(
+                    'term' => Map {
                         'field' => '_all',
                         'sort' => 'frequency',
-                    ),
+                    },
                     'text' => 'Foor',
                 ),
                 'suggest2' => array(
-                    'term' => array(
+                    'term' => Map {
                         'field' => '_all',
                         'suggest_mode' => 'popular',
-                    ),
+                    },
                     'text' => 'Girhub',
                 ),
-            ),
+            },
         );
 
         $this->assertEquals($expected, $suggest->toArray());
@@ -70,7 +70,7 @@ class TermTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSuggestResults()
+    public function testSuggestResults() : void
     {
         $suggest = new Suggest();
         $suggest1 = new Term('suggest1', '_all');
@@ -79,14 +79,14 @@ class TermTest extends BaseTest
         $suggest->addSuggestion($suggest2->setText('Girhub'));
 
         $index = $this->_getIndexForTest();
-        $result = $index->search($suggest);
+        $result = $index->search($suggest)->getWaitHandle()->join();
 
         $this->assertEquals(2, $result->countSuggests());
 
         $suggests = $result->getSuggests();
 
         // Ensure that two suggestion results are returned for suggest1
-        $this->assertEquals(2, sizeof($suggests['suggest1']));
+        $this->assertEquals(2, count($suggests['suggest1']));
 
         $this->assertEquals('github', $suggests['suggest2'][0]['options'][0]['text']);
         $this->assertEquals('food', $suggests['suggest1'][0]['options'][0]['text']);
@@ -95,18 +95,18 @@ class TermTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSuggestNoResults()
+    public function testSuggestNoResults() : void
     {
         $termSuggest = new Term('suggest1', '_all');
         $termSuggest->setText('Foobar')->setSize(4);
 
         $index = $this->_getIndexForTest();
-        $result = $index->search($termSuggest);
+        $result = $index->search($termSuggest)->getWaitHandle()->join();
 
         $this->assertEquals(1, $result->countSuggests());
 
         // Assert that no suggestions were returned
         $suggests = $result->getSuggests();
-        $this->assertEquals(0, sizeof($suggests['suggest1'][0]['options']));
+        $this->assertEquals(0, count($suggests['suggest1'][0]['options']));
     }
 }

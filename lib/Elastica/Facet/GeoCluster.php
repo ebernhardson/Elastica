@@ -1,5 +1,7 @@
-<?php
+<?hh // strict
 namespace Elastica\Facet;
+
+use Indexish;
 
 /**
  * Implements the Geo Cluster facet.
@@ -16,7 +18,7 @@ class GeoCluster extends AbstractFacet
      *
      * @return $this
      */
-    public function setField($fieldName)
+    public function setField(string $fieldName) : this
     {
         $this->setParam('field', $fieldName);
 
@@ -28,7 +30,7 @@ class GeoCluster extends AbstractFacet
      *
      * @return $this
      */
-    public function setFactor($factor)
+    public function setFactor(float $factor) : this
     {
         $this->setParam('factor', $factor);
 
@@ -40,7 +42,7 @@ class GeoCluster extends AbstractFacet
      *
      * @return $this
      */
-    public function setShowIds($showIds)
+    public function setShowIds(bool $showIds) : this
     {
         $this->setParam('showIds', $showIds);
 
@@ -57,7 +59,7 @@ class GeoCluster extends AbstractFacet
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $this->_setFacetParam('geo_cluster', $this->_params);
 

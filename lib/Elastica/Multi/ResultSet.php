@@ -1,10 +1,11 @@
-<?php
+<?hh
 namespace Elastica\Multi;
 
 use Elastica\Exception\InvalidException;
 use Elastica\Response;
 use Elastica\ResultSet as BaseResultSet;
 use Elastica\Search as BaseSearch;
+use Indexish;
 
 /**
  * Elastica multi search result set
@@ -12,28 +13,28 @@ use Elastica\Search as BaseSearch;
  *
  * @author munkie
  */
-class ResultSet implements \Iterator, \ArrayAccess, \Countable
+class ResultSet implements \Iterator<BaseResultSet>, \ArrayAccess<mixed, BaseResultSet>, \Countable
 {
     /**
      * Result Sets.
      *
      * @var array|\Elastica\ResultSet[] Result Sets
      */
-    protected $_resultSets = array();
+    protected array $_resultSets = array();
 
     /**
      * Current position.
      *
      * @var int Current position
      */
-    protected $_position = 0;
+    protected int $_position = 0;
 
     /**
      * Response.
      *
      * @var \Elastica\Response Response object
      */
-    protected $_response;
+    protected Response $_response;
 
     /**
      * Constructs ResultSet object.
@@ -43,6 +44,7 @@ class ResultSet implements \Iterator, \ArrayAccess, \Countable
      */
     public function __construct(Response $response, array $searches)
     {
+        $this->_response = $response;
         $this->rewind();
         $this->_init($response, $searches);
     }
@@ -53,14 +55,14 @@ class ResultSet implements \Iterator, \ArrayAccess, \Countable
      *
      * @throws \Elastica\Exception\InvalidException
      */
-    protected function _init(Response $response, array $searches)
+    protected function _init(Response $response, array $searches) : void
     {
         $this->_response = $response;
         $responseData = $response->getData();
 
-        if (isset($responseData['responses']) && is_array($responseData['responses'])) {
+        if (isset(/* UNSAFE_EXPR */ $responseData['responses']) && /* UNSAFE_EXPR */ $responseData['responses'] instanceof Indexish) {
             reset($searches);
-            foreach ($responseData['responses'] as $key => $responseData) {
+            foreach (/* UNSAFE_EXPR */ $responseData['responses'] as $key => $responseData) {
                 $currentSearch = each($searches);
 
                 if ($currentSearch === false) {
@@ -81,7 +83,7 @@ class ResultSet implements \Iterator, \ArrayAccess, \Countable
     /**
      * @return array|\Elastica\ResultSet[]
      */
-    public function getResultSets()
+    public function getResultSets() : array
     {
         return $this->_resultSets;
     }
@@ -91,7 +93,7 @@ class ResultSet implements \Iterator, \ArrayAccess, \Countable
      *
      * @return \Elastica\Response Response object
      */
-    public function getResponse()
+    public function getResponse() : Response
     {
         return $this->_response;
     }
@@ -101,7 +103,7 @@ class ResultSet implements \Iterator, \ArrayAccess, \Countable
      *
      * @return bool
      */
-    public function hasError()
+    public function hasError() : bool
     {
         foreach ($this->getResultSets() as $resultSet) {
             if ($resultSet->getResponse()->hasError()) {
@@ -115,18 +117,17 @@ class ResultSet implements \Iterator, \ArrayAccess, \Countable
     /**
      * @return bool|\Elastica\ResultSet
      */
-    public function current()
+    public function current() : BaseResultSet
     {
-        if ($this->valid()) {
-            return $this->_resultSets[$this->key()];
-        } else {
-            return false;
+        if (!$this->valid()) {
+            throw new OutOfBoundsException();
         }
+        return $this->_resultSets[$this->key()];
     }
 
     /**
      */
-    public function next()
+    public function next() : void
     {
         ++$this->_position;
     }
@@ -134,7 +135,7 @@ class ResultSet implements \Iterator, \ArrayAccess, \Countable
     /**
      * @return int
      */
-    public function key()
+    public function key() : int
     {
         return $this->_position;
     }
@@ -142,14 +143,14 @@ class ResultSet implements \Iterator, \ArrayAccess, \Countable
     /**
      * @return bool
      */
-    public function valid()
+    public function valid() : bool
     {
         return isset($this->_resultSets[$this->key()]);
     }
 
     /**
      */
-    public function rewind()
+    public function rewind() : void
     {
         $this->_position = 0;
     }
@@ -157,7 +158,7 @@ class ResultSet implements \Iterator, \ArrayAccess, \Countable
     /**
      * @return int
      */
-    public function count()
+    public function count() : int
     {
         return count($this->_resultSets);
     }
@@ -175,11 +176,14 @@ class ResultSet implements \Iterator, \ArrayAccess, \Countable
     /**
      * @param mixed $offset
      *
-     * @return mixed Can return all value types.
+     * @return ResultSet Can return all value types.
      */
     public function offsetGet($offset)
     {
-        return isset($this->_resultSets[$offset]) ? $this->_resultSets[$offset] : null;
+        if (!isset($this->_resultSets[$offset])) {
+            throw new \OutOfBoundsException();
+        }
+        return $this->_resultSets[$offset];
     }
 
     /**

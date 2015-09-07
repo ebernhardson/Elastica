@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Filter;
 
 /**
@@ -15,7 +15,7 @@ class Limit extends AbstractFilter
      *
      * @param int $limit Limit
      */
-    public function __construct($limit)
+    public function __construct(int $limit)
     {
         $this->setLimit($limit);
     }
@@ -27,7 +27,7 @@ class Limit extends AbstractFilter
      *
      * @return $this
      */
-    public function setLimit($limit)
+    public function setLimit(int $limit) : this
     {
         return $this->setParam('value', (int) $limit);
     }

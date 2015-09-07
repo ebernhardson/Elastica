@@ -1,7 +1,7 @@
 {
-    "name": "ruflin/elastica",
-    "description": "Elasticsearch Client",
-    "keywords": ["search","client"],
+    "name": "ebernhardson/elastica-async",
+    "description": "Async Elasticsearch Client",
+    "keywords": ["search","client","async","hacklang"],
     "homepage": "http://elastica.io/",
     "type": "library",
     "license": "MIT",
@@ -9,10 +9,13 @@
         {
             "name": "Nicolas Ruflin",
             "homepage": "http://ruflin.com/"
-        }
+        },
+		{
+			"name": "Erik Bernhardson"
+		}
     ],
     "require": {
-        "php": ">=5.3.3",
+        "hhvm": ">=3.6",
         "psr/log": "~1.0"
     },
     "require-dev": {

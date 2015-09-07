@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Facet;
 
 use Elastica\Document;
@@ -12,20 +12,20 @@ class QueryTest extends BaseTest
     /**
      * @group functional
      */
-    public function testFilter()
+    public function testFilter() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('helloworld');
 
-        $type->addDocument(new Document(1, array('color' => 'red')));
-        $type->addDocument(new Document(2, array('color' => 'green')));
-        $type->addDocument(new Document(3, array('color' => 'blue')));
+        $type->addDocument(new Document('1', array('color' => 'red')))->getWaitHandle()->join();
+        $type->addDocument(new Document('2', array('color' => 'green')))->getWaitHandle()->join();
+        $type->addDocument(new Document('3', array('color' => 'blue')))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $termQuery = new Term(array('color' => 'red'));
+        $termQuery = new Term(Map {'color' => 'red'});
 
         $facet = new FacetQuery('test');
         $facet->setQuery($termQuery);
@@ -33,7 +33,7 @@ class QueryTest extends BaseTest
         $query = new Query();
         $query->addFacet($facet);
 
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
 
         $facets = $resultSet->getFacets();
 

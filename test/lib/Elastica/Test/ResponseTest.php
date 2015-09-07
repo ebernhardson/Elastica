@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Document;
@@ -9,13 +9,14 @@ use Elastica\Request;
 use Elastica\Response;
 use Elastica\Test\Base as BaseTest;
 use Elastica\Type\Mapping;
+use Indexish;
 
 class ResponseTest extends BaseTest
 {
     /**
      * @group unit
      */
-    public function testClassHierarchy()
+    public function testClassHierarchy() : void
     {
         $facet = new DateHistogram('dateHist1');
         $this->assertInstanceOf('Elastica\Facet\Histogram', $facet);
@@ -26,7 +27,7 @@ class ResponseTest extends BaseTest
     /**
      * @group functional
      */
-    public function testResponse()
+    public function testResponse() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('helloworld');
@@ -35,26 +36,26 @@ class ResponseTest extends BaseTest
             'name' => array('type' => 'string', 'store' => 'no'),
             'dtmPosted' => array('type' => 'date', 'store' => 'no', 'format' => 'yyyy-MM-dd HH:mm:ss'),
         ));
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
         $type->addDocuments(array(
-            new Document(1, array('name' => 'nicolas ruflin', 'dtmPosted' => '2011-06-23 21:53:00')),
-            new Document(2, array('name' => 'raul martinez jr', 'dtmPosted' => '2011-06-23 09:53:00')),
-            new Document(3, array('name' => 'rachelle clemente', 'dtmPosted' => '2011-07-08 08:53:00')),
-            new Document(4, array('name' => 'elastica search', 'dtmPosted' => '2011-07-08 01:53:00')),
-        ));
+            new Document('1', array('name' => 'nicolas ruflin', 'dtmPosted' => '2011-06-23 21:53:00')),
+            new Document('2', array('name' => 'raul martinez jr', 'dtmPosted' => '2011-06-23 09:53:00')),
+            new Document('3', array('name' => 'rachelle clemente', 'dtmPosted' => '2011-07-08 08:53:00')),
+            new Document('4', array('name' => 'elastica search', 'dtmPosted' => '2011-07-08 01:53:00')),
+        ))->getWaitHandle()->join();
 
         $query = new Query();
         $query->setQuery(new MatchAll());
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
 
         $engineTime = $resultSet->getResponse()->getEngineTime();
         $shardsStats = $resultSet->getResponse()->getShardsStatistics();
 
         $this->assertInternalType('int', $engineTime);
-        $this->assertTrue(is_array($shardsStats));
+        $this->assertTrue($shardsStats instanceof Indexish);
         $this->assertArrayHasKey('total', $shardsStats);
         $this->assertArrayHasKey('successful', $shardsStats);
     }
@@ -62,13 +63,13 @@ class ResponseTest extends BaseTest
     /**
      * @group functional
      */
-    public function testIsOk()
+    public function testIsOk() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
 
-        $doc = new Document(1, array('name' => 'ruflin'));
-        $response = $type->addDocument($doc);
+        $doc = new Document('1', array('name' => 'ruflin'));
+        $response = $type->addDocument($doc)->getWaitHandle()->join();
 
         $this->assertTrue($response->isOk());
     }
@@ -76,16 +77,16 @@ class ResponseTest extends BaseTest
     /**
      * @group functional
      */
-    public function testIsOkMultiple()
+    public function testIsOkMultiple() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
 
         $docs = array(
-            new Document(1, array('name' => 'ruflin')),
-            new Document(2, array('name' => 'ruflin')),
+            new Document('1', array('name' => 'ruflin')),
+            new Document('2', array('name' => 'ruflin')),
         );
-        $response = $type->addDocuments($docs);
+        $response = $type->addDocuments($docs)->getWaitHandle()->join();
 
         $this->assertTrue($response->isOk());
     }
@@ -93,7 +94,7 @@ class ResponseTest extends BaseTest
     /**
      * @group unit
      */
-    public function testIsOkBulkWithErrorsField()
+    public function testIsOkBulkWithErrorsField() : void
     {
         $response = new Response(json_encode(array(
             'took' => 213,
@@ -110,7 +111,7 @@ class ResponseTest extends BaseTest
     /**
      * @group unit
      */
-    public function testIsNotOkBulkWithErrorsField()
+    public function testIsNotOkBulkWithErrorsField() : void
     {
         $response = new Response(json_encode(array(
             'took' => 213,
@@ -127,7 +128,7 @@ class ResponseTest extends BaseTest
     /**
      * @group unit
      */
-    public function testIsOkBulkItemsWithOkField()
+    public function testIsOkBulkItemsWithOkField() : void
     {
         $response = new Response(json_encode(array(
             'took' => 213,
@@ -143,7 +144,7 @@ class ResponseTest extends BaseTest
     /**
      * @group unit
      */
-    public function testIsNotOkBulkItemsWithOkField()
+    public function testIsNotOkBulkItemsWithOkField() : void
     {
         $response = new Response(json_encode(array(
             'took' => 213,
@@ -159,7 +160,7 @@ class ResponseTest extends BaseTest
     /**
      * @group unit
      */
-    public function testIsOkBulkItemsWithStatusField()
+    public function testIsOkBulkItemsWithStatusField() : void
     {
         $response = new Response(json_encode(array(
             'took' => 213,
@@ -175,7 +176,7 @@ class ResponseTest extends BaseTest
     /**
      * @group unit
      */
-    public function testIsNotOkBulkItemsWithStatusField()
+    public function testIsNotOkBulkItemsWithStatusField() : void
     {
         $response = new Response(json_encode(array(
             'took' => 213,
@@ -191,14 +192,14 @@ class ResponseTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGetDataEmpty()
+    public function testGetDataEmpty() : void
     {
         $index = $this->_createIndex();
 
         $response = $index->request(
             'non-existent-type/_mapping',
             Request::GET
-        )->getData();
+        )->getWaitHandle()->join()->getData();
 
         $this->assertEquals(0, count($response));
     }

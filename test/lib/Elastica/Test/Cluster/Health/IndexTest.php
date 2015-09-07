@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Cluster\Health;
 
 use Elastica\Cluster\Health\Index as HealthIndex;
@@ -11,7 +11,7 @@ class IndexTest extends BaseTest
      */
     protected $_index;
 
-    public function setUp()
+    public function setUp() : void
     {
         parent::setUp();
 
@@ -58,7 +58,7 @@ class IndexTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetName()
+    public function testGetName() : void
     {
         $this->assertEquals('test', $this->_index->getName());
     }
@@ -66,7 +66,7 @@ class IndexTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetStatus()
+    public function testGetStatus() : void
     {
         $this->assertEquals('yellow', $this->_index->getStatus());
     }
@@ -74,7 +74,7 @@ class IndexTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetNumberOfShards()
+    public function testGetNumberOfShards() : void
     {
         $this->assertEquals(1, $this->_index->getNumberOfShards());
     }
@@ -82,7 +82,7 @@ class IndexTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetNumberOfReplicas()
+    public function testGetNumberOfReplicas() : void
     {
         $this->assertEquals(2, $this->_index->getNumberOfReplicas());
     }
@@ -90,7 +90,7 @@ class IndexTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetActivePrimaryShards()
+    public function testGetActivePrimaryShards() : void
     {
         $this->assertEquals(3, $this->_index->getActivePrimaryShards());
     }
@@ -98,7 +98,7 @@ class IndexTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetActiveShards()
+    public function testGetActiveShards() : void
     {
         $this->assertEquals(4, $this->_index->getActiveShards());
     }
@@ -106,7 +106,7 @@ class IndexTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetRelocatingShards()
+    public function testGetRelocatingShards() : void
     {
         $this->assertEquals(5, $this->_index->getRelocatingShards());
     }
@@ -114,7 +114,7 @@ class IndexTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetInitializingShards()
+    public function testGetInitializingShards() : void
     {
         $this->assertEquals(6, $this->_index->getInitializingShards());
     }
@@ -122,7 +122,7 @@ class IndexTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetUnassignedShards()
+    public function testGetUnassignedShards() : void
     {
         $this->assertEquals(7, $this->_index->getUnassignedShards());
     }
@@ -130,7 +130,7 @@ class IndexTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetShards()
+    public function testGetShards() : void
     {
         $shards = $this->_index->getShards();
 

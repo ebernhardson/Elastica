@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Tool;
 
 use Elastica\Document;
@@ -13,7 +13,7 @@ class CrossIndexTest extends Base
      *
      * @group functional
      */
-    public function testReindex()
+    public function testReindex() : void
     {
         $oldIndex = $this->_createIndex(null, true, 2);
         $this->_addDocs($oldIndex->getType('crossIndexTest'), 10);
@@ -22,10 +22,10 @@ class CrossIndexTest extends Base
 
         $this->assertInstanceOf(
             'Elastica\Index',
-            CrossIndex::reindex($oldIndex, $newIndex)
+            CrossIndex::reindex($oldIndex, $newIndex)->getWaitHandle()->join()
         );
 
-        $this->assertEquals(10, $newIndex->count());
+        $this->assertEquals(10, $newIndex->count()->getWaitHandle()->join());
     }
 
     /**
@@ -33,7 +33,7 @@ class CrossIndexTest extends Base
      *
      * @group functional
      */
-    public function testReindexTypeOption()
+    public function testReindexTypeOption() : void
     {
         $oldIndex = $this->_createIndex('', true, 2);
         $type1 = $oldIndex->getType('crossIndexTest_1');
@@ -47,16 +47,16 @@ class CrossIndexTest extends Base
         // \Elastica\Type
         CrossIndex::reindex($oldIndex, $newIndex, array(
             CrossIndex::OPTION_TYPE => $type1,
-        ));
-        $this->assertEquals(10, $newIndex->count());
-        $newIndex->deleteDocuments($docs1);
+        ))->getWaitHandle()->join();
+        $this->assertEquals(10, $newIndex->count()->getWaitHandle()->join());
+        $newIndex->deleteDocuments($docs1)->getWaitHandle()->join();
 
         // string
         CrossIndex::reindex($oldIndex, $newIndex, array(
             CrossIndex::OPTION_TYPE => 'crossIndexTest_2',
-        ));
-        $this->assertEquals(10, $newIndex->count());
-        $newIndex->deleteDocuments($docs2);
+        ))->getWaitHandle()->join();
+        $this->assertEquals(10, $newIndex->count()->getWaitHandle()->join());
+        $newIndex->deleteDocuments($docs2)->getWaitHandle()->join();
 
         // array
         CrossIndex::reindex($oldIndex, $newIndex, array(
@@ -64,8 +64,8 @@ class CrossIndexTest extends Base
                 'crossIndexTest_1',
                 $type2,
             ),
-        ));
-        $this->assertEquals(20, $newIndex->count());
+        ))->getWaitHandle()->join();
+        $this->assertEquals(20, $newIndex->count()->getWaitHandle()->join());
     }
 
     /**
@@ -73,7 +73,7 @@ class CrossIndexTest extends Base
      *
      * @group functional
      */
-    public function testCopy()
+    public function testCopy() : void
     {
         $oldIndex = $this->_createIndex(null, true, 2);
         $newIndex = $this->_createIndex(null, true, 2);
@@ -85,16 +85,16 @@ class CrossIndexTest extends Base
                 'store' => true,
             ),
         );
-        $oldType->setMapping($oldMapping);
+        $oldType->setMapping($oldMapping)->getWaitHandle()->join();
         $docs = $this->_addDocs($oldType, 10);
 
         // mapping
         $this->assertInstanceOf(
             'Elastica\Index',
-            CrossIndex::copy($oldIndex, $newIndex)
+            CrossIndex::copy($oldIndex, $newIndex)->getWaitHandle()->join()
         );
 
-        $newMapping = $newIndex->getType('copy_test')->getMapping();
+        $newMapping = $newIndex->getType('copy_test')->getMapping()->getWaitHandle()->join();
         if (!isset($newMapping['copy_test']['properties']['name'])) {
             $this->fail('could not request new mapping');
         }
@@ -105,8 +105,8 @@ class CrossIndexTest extends Base
         );
 
         // document copy
-        $this->assertEquals(10, $newIndex->count());
-        $newIndex->deleteDocuments($docs);
+        $this->assertEquals(10, $newIndex->count()->getWaitHandle()->join());
+        $newIndex->deleteDocuments($docs)->getWaitHandle()->join();
 
         // ignore mapping
         $ignoredType = $oldIndex->getType('copy_test_1');
@@ -114,10 +114,10 @@ class CrossIndexTest extends Base
 
         CrossIndex::copy($oldIndex, $newIndex, array(
             CrossIndex::OPTION_TYPE => $oldType,
-        ));
+        ))->getWaitHandle()->join();
 
-        $this->assertFalse($newIndex->getType($ignoredType->getName())->exists());
-        $this->assertEquals(10, $newIndex->count());
+        $this->assertFalse($newIndex->getType($ignoredType->getName())->exists()->getWaitHandle()->join());
+        $this->assertEquals(10, $newIndex->count()->getWaitHandle()->join());
     }
 
     /**
@@ -126,15 +126,15 @@ class CrossIndexTest extends Base
      *
      * @return array
      */
-    private function _addDocs(Type $type, $docs)
+    private function _addDocs(Type $type, @int $docs) : array
     {
         $insert = array();
         for ($i = 1; $i <= $docs; ++$i) {
-            $insert[] = new Document($i, array('_id' => $i, 'key' => 'value'));
+            $insert[] = new Document((string) $i, array('_id' => $i, 'key' => 'value'));
         }
 
-        $type->addDocuments($insert);
-        $type->getIndex()->refresh();
+        $type->addDocuments($insert)->getWaitHandle()->join();
+        $type->getIndex()->refresh()->getWaitHandle()->join();
 
         return $insert;
     }

@@ -1,8 +1,9 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Exception\NotFoundException;
 use Elastica\Exception\ResponseException;
+use Indexish;
 
 /**
  * Class Snapshot.
@@ -14,7 +15,7 @@ class Snapshot
     /**
      * @var Client
      */
-    protected $_client;
+    protected Client $_client;
 
     /**
      * @param Client $client
@@ -31,9 +32,9 @@ class Snapshot
      * @param string $type     the repository type ("fs" for file system)
      * @param array  $settings Additional repository settings. If type "fs" is used, the "location" setting must be provided.
      *
-     * @return Response
+     * @return Awaitable<Response>
      */
-    public function registerRepository($name, $type, $settings = array())
+    public function registerRepository(string $name, string $type, array $settings = array()) : Awaitable<Response>
     {
         $data = array(
             'type' => $type,
@@ -51,12 +52,12 @@ class Snapshot
      * @throws Exception\ResponseException
      * @throws Exception\NotFoundException
      *
-     * @return array
+     * @return Awaitable<array>
      */
-    public function getRepository($name)
+    public async function getRepository(string $name) : Awaitable<array>
     {
         try {
-            $response = $this->request($name);
+            $response = await $this->request($name);
         } catch (ResponseException $e) {
             if ($e->getResponse()->getStatus() == 404) {
                 throw new NotFoundException("Repository '".$name."' does not exist.");
@@ -64,18 +65,25 @@ class Snapshot
             throw $e;
         }
         $data = $response->getData();
-
+        if (!$data instanceof Indexish) {
+            throw new \RuntimeException('expected array');
+        }
         return $data[$name];
     }
 
     /**
      * Retrieve all repository records.
      *
-     * @return array
+     * @return Awaitable<array>
      */
-    public function getAllRepositories()
+    public async function getAllRepositories() : Awaitable<Indexish<string, mixed>>
     {
-        return $this->request('_all')->getData();
+        $response = await $this->request('_all');
+        $data = $response->getData();
+        if (!$data instanceof Indexish) {
+            throw new \RuntimeException('expected array');
+        }
+        return $data;
     }
 
     /**
@@ -86,9 +94,9 @@ class Snapshot
      * @param array  $options           optional settings for this snapshot
      * @param bool   $waitForCompletion if true, the request will not return until the snapshot operation is complete
      *
-     * @return Response
+     * @return Awaitable<Response>
      */
-    public function createSnapshot($repository, $name, $options = array(), $waitForCompletion = false)
+    public function createSnapshot(string $repository, string $name, array $options = array(), bool $waitForCompletion = false) : Awaitable<Response>
     {
         return $this->request($repository.'/'.$name, Request::PUT, $options, array('wait_for_completion' => $waitForCompletion));
     }
@@ -102,12 +110,12 @@ class Snapshot
      * @throws Exception\ResponseException
      * @throws Exception\NotFoundException
      *
-     * @return array
+     * @return Awaitable<array>
      */
-    public function getSnapshot($repository, $name)
+    public async function getSnapshot(string $repository, string $name) : Awaitable<array>
     {
         try {
-            $response = $this->request($repository.'/'.$name);
+            $response = await $this->request($repository.'/'.$name);
         } catch (ResponseException $e) {
             if ($e->getResponse()->getStatus() == 404) {
                 throw new NotFoundException("Snapshot '".$name."' does not exist in repository '".$repository."'.");
@@ -115,8 +123,13 @@ class Snapshot
             throw $e;
         }
         $data = $response->getData();
-
-        return $data['snapshots'][0];
+        if (isset(/* UNSAFE_EXPR */ $data['snapshots'][0])) {
+            $snapshot = /* UNSAFE_EXPR */ $data['snapshots'][0];
+            if ($snapshot instanceof Indexish) {
+                return $snapshot;
+            }
+        }
+        throw new \RuntimeException('expected array');
     }
 
     /**
@@ -124,11 +137,16 @@ class Snapshot
      *
      * @param string $repository the repository name
      *
-     * @return array
+     * @return Awaitable<array>
      */
-    public function getAllSnapshots($repository)
+    public async function getAllSnapshots(string $repository) : Awaitable<Indexish<string, mixed>>
     {
-        return $this->request($repository.'/_all')->getData();
+        $response = await $this->request($repository.'/_all');
+        $data = $response->getData();
+        if (!$data instanceof Indexish) {
+            throw new \RuntimeException('expected array');
+        }
+        return $data;
     }
 
     /**
@@ -137,9 +155,9 @@ class Snapshot
      * @param string $repository the repository in which the snapshot resides
      * @param string $name       the name of the snapshot to be deleted
      *
-     * @return Response
+     * @return Awaitable<Response>
      */
-    public function deleteSnapshot($repository, $name)
+    public function deleteSnapshot(string $repository, string $name) : Awaitable<Response>
     {
         return $this->request($repository.'/'.$name, Request::DELETE);
     }
@@ -152,9 +170,9 @@ class Snapshot
      * @param array  $options           options for the restore operation
      * @param bool   $waitForCompletion if true, the request will not return until the restore operation is complete
      *
-     * @return Response
+     * @return Awaitable<Response>
      */
-    public function restoreSnapshot($repository, $name, $options = array(), $waitForCompletion = false)
+    public function restoreSnapshot(string $repository, string $name, array $options = array(), bool $waitForCompletion = false) : Awaitable<Response>
     {
         return $this->request($repository.'/'.$name.'/_restore', Request::POST, $options, array('wait_for_completion' => $waitForCompletion));
     }
@@ -167,9 +185,9 @@ class Snapshot
      * @param array  $data   request body data
      * @param array  $query  query string parameters
      *
-     * @return Response
+     * @return Awaitable<Response>
      */
-    public function request($path, $method = Request::GET, $data = array(), array $query = array())
+    public function request(string $path, string $method = Request::GET, array $data = array(), array $query = array()) : Awaitable<Response>
     {
         return $this->_client->request('/_snapshot/'.$path, $method, $data, $query);
     }

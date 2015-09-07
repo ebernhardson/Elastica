@@ -1,5 +1,7 @@
-<?php
+<?hh // strict
 namespace Elastica\Filter;
+
+use Indexish;
 
 /**
  * Prefix filter.
@@ -15,14 +17,14 @@ class Prefix extends AbstractFilter
      *
      * @var string
      */
-    protected $_field = '';
+    protected string $_field = '';
 
     /**
      * Holds the prefix string.
      *
      * @var string
      */
-    protected $_prefix = '';
+    protected string $_prefix = '';
 
     /**
      * Creates prefix filter.
@@ -30,7 +32,7 @@ class Prefix extends AbstractFilter
      * @param string $field  Field name
      * @param string $prefix Prefix string
      */
-    public function __construct($field = '', $prefix = '')
+    public function __construct(string $field = '', string $prefix = '')
     {
         $this->setField($field);
         $this->setPrefix($prefix);
@@ -43,7 +45,7 @@ class Prefix extends AbstractFilter
      *
      * @return $this
      */
-    public function setField($field)
+    public function setField(string $field) : this
     {
         $this->_field = $field;
 
@@ -57,7 +59,7 @@ class Prefix extends AbstractFilter
      *
      * @return $this
      */
-    public function setPrefix($prefix)
+    public function setPrefix(string $prefix) : this
     {
         $this->_prefix = $prefix;
 
@@ -71,7 +73,7 @@ class Prefix extends AbstractFilter
      *
      * @return array data array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $this->setParam($this->_field, $this->_prefix);
 

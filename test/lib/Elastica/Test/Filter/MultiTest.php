@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Filter\AbstractMulti;
@@ -10,7 +10,7 @@ class AbstractMultiTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConstruct()
+    public function testConstruct() : void
     {
         $stub = $this->getStub();
 
@@ -20,7 +20,7 @@ class AbstractMultiTest extends BaseTest
     /**
      * @group unit
      */
-    public function testAddFilter()
+    public function testAddFilter() : void
     {
         $stub = $this->getStub();
 
@@ -37,7 +37,7 @@ class AbstractMultiTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetFilters()
+    public function testSetFilters() : void
     {
         $stub = $this->getStub();
 
@@ -54,7 +54,7 @@ class AbstractMultiTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $stub = $this->getStub();
 
@@ -73,7 +73,7 @@ class AbstractMultiTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArrayWithParam()
+    public function testToArrayWithParam() : void
     {
         $stub = $this->getStub();
 
@@ -83,18 +83,18 @@ class AbstractMultiTest extends BaseTest
         $stub->addFilter($filter);
 
         $expected = array(
-            $stub->getBaseName() => array(
+            $stub->getBaseName() => Map {
                 '_cache' => true,
                 'filters' => array(
                     $filter->toArray(),
                 ),
-            ),
+            },
         );
 
         $this->assertEquals($expected, $stub->toArray());
     }
 
-    private function getStub()
+    private function getStub() : \Elastica\Test\Filter\AbstractMultiDebug
     {
         return $this->getMockForAbstractClass('Elastica\Test\Filter\AbstractMultiDebug');
     }
@@ -102,7 +102,7 @@ class AbstractMultiTest extends BaseTest
 
 class AbstractMultiDebug extends AbstractMulti
 {
-    public function getBaseName()
+    public function getBaseName() : string
     {
         return parent::_getBaseName();
     }

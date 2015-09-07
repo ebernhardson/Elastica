@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\QueryBuilder;
 
 use Elastica\Exception\QueryBuilderException;
@@ -13,12 +13,12 @@ class Facade
     /**
      * @var DSL
      */
-    private $_dsl;
+    private DSL $_dsl;
 
     /**
      * @var Version
      */
-    private $_version;
+    private Version $_version;
 
     /**
      * Constructor.
@@ -42,7 +42,7 @@ class Facade
      *
      * @return mixed
      */
-    public function __call($name, array $arguments)
+    public function __call(string $name, array $arguments) : mixed
     {
         // defined check
         if (false === method_exists($this->_dsl, $name)) {

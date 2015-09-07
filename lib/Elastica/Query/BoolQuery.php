@@ -1,7 +1,8 @@
-<?php
+<?hh // strict
 namespace Elastica\Query;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Bool query.
@@ -19,7 +20,7 @@ class BoolQuery extends AbstractQuery
      *
      * @return $this
      */
-    public function addShould($args)
+    public function addShould(mixed $args) : this
     {
         return $this->_addQuery('should', $args);
     }
@@ -31,7 +32,7 @@ class BoolQuery extends AbstractQuery
      *
      * @return $this
      */
-    public function addMust($args)
+    public function addMust(mixed $args) : this
     {
         return $this->_addQuery('must', $args);
     }
@@ -43,7 +44,7 @@ class BoolQuery extends AbstractQuery
      *
      * @return $this
      */
-    public function addMustNot($args)
+    public function addMustNot(mixed $args) : this
     {
         return $this->_addQuery('must_not', $args);
     }
@@ -58,9 +59,9 @@ class BoolQuery extends AbstractQuery
      *
      * @return $this
      */
-    protected function _addQuery($type, $args)
+    protected function _addQuery(string $type, mixed $args) : this
     {
-        if (!is_array($args) && !($args instanceof AbstractQuery)) {
+        if (!$args instanceof Indexish && !($args instanceof AbstractQuery)) {
             throw new InvalidException('Invalid parameter. Has to be array or instance of Elastica\Query\AbstractQuery');
         }
 
@@ -74,7 +75,7 @@ class BoolQuery extends AbstractQuery
      *
      * @return $this
      */
-    public function setBoost($boost)
+    public function setBoost(float $boost) : this
     {
         return $this->setParam('boost', $boost);
     }
@@ -86,22 +87,8 @@ class BoolQuery extends AbstractQuery
      *
      * @return $this
      */
-    public function setMinimumNumberShouldMatch($minimumNumberShouldMatch)
+    public function setMinimumNumberShouldMatch(int $minimumNumberShouldMatch) : this
     {
         return $this->setParam('minimum_number_should_match', $minimumNumberShouldMatch);
-    }
-
-    /**
-     * Converts array to an object in case no queries are added.
-     *
-     * @return array
-     */
-    public function toArray()
-    {
-        if (empty($this->_params)) {
-            $this->_params = new \stdClass();
-        }
-
-        return parent::toArray();
     }
 }

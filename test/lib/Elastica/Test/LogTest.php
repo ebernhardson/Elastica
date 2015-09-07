@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Log;
@@ -7,10 +7,10 @@ use Psr\Log\LogLevel;
 
 class LogTest extends BaseTest
 {
-    private $_context = array();
-    private $_message = 'hello world';
+    private array $_context = array();
+    private string $_message = 'hello world';
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass() : void
     {
         if (!class_exists('Psr\Log\AbstractLogger')) {
             self::markTestSkipped('The Psr extension is not available.');
@@ -20,7 +20,7 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testLogInterface()
+    public function testLogInterface() : void
     {
         $log = new Log();
         $this->assertInstanceOf('Psr\Log\LoggerInterface', $log);
@@ -29,7 +29,7 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetLogConfigPath()
+    public function testSetLogConfigPath() : void
     {
         $logPath = '/tmp/php.log';
         $client = $this->_getClient(array('log' => $logPath));
@@ -39,7 +39,7 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetLogConfigEnable()
+    public function testSetLogConfigEnable() : void
     {
         $client = $this->_getClient(array('log' => true));
         $this->assertTrue($client->getConfig('log'));
@@ -48,7 +48,7 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetLogConfigEnable1()
+    public function testSetLogConfigEnable1() : void
     {
         $client = $this->_getClient();
         $client->setLogger(new Log());
@@ -58,7 +58,7 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testEmptyLogConfig()
+    public function testEmptyLogConfig() : void
     {
         $client = $this->_getClient();
         $this->assertEmpty($client->getConfig('log'));
@@ -67,7 +67,7 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetLastMessage()
+    public function testGetLastMessage() : void
     {
         $log = new Log('/tmp/php.log');
 
@@ -82,7 +82,7 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetLastMessage2()
+    public function testGetLastMessage2() : void
     {
         $client = $this->_getClient(array('log' => true));
         $log = new Log($client);
@@ -103,7 +103,7 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetLastMessageInfo()
+    public function testGetLastMessageInfo() : void
     {
         $log = $this->initLog();
         $log->info($this->_message, $this->_context);
@@ -113,7 +113,7 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetLastMessageCritical()
+    public function testGetLastMessageCritical() : void
     {
         $log = $this->initLog();
         $log->critical($this->_message, $this->_context);
@@ -123,7 +123,7 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetLastMessageAlert()
+    public function testGetLastMessageAlert() : void
     {
         $log = $this->initLog();
         $log->alert($this->_message, $this->_context);
@@ -133,7 +133,7 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetLastMessageDebug()
+    public function testGetLastMessageDebug() : void
     {
         $log = $this->initLog();
         $log->debug($this->_message, $this->_context);
@@ -143,7 +143,7 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetLastMessageEmergency()
+    public function testGetLastMessageEmergency() : void
     {
         $log = $this->initLog();
         $log->emergency($this->_message, $this->_context);
@@ -153,7 +153,7 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetLastMessageError()
+    public function testGetLastMessageError() : void
     {
         $log = $this->initLog();
         $log->error($this->_message, $this->_context);
@@ -163,7 +163,7 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetLastMessageNotice()
+    public function testGetLastMessageNotice() : void
     {
         $log = $this->initLog();
         $log->notice($this->_message, $this->_context);
@@ -173,21 +173,21 @@ class LogTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetLastMessageWarning()
+    public function testGetLastMessageWarning() : void
     {
         $log = $this->initLog();
         $log->warning($this->_message, $this->_context);
         $this->assertEquals($this->getMessage(), $log->getLastMessage());
     }
 
-    private function initLog()
+    private function initLog() : \Elastica\Log
     {
         $log = new Log('/tmp/php.log');
 
         return $log;
     }
 
-    private function getMessage()
+    private function getMessage() : string
     {
         $this->_context['error_message'] = $this->_message;
 

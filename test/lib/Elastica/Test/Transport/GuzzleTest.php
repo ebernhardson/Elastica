@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Transport;
 
 use Elastica\Document;
@@ -8,7 +8,7 @@ use Elastica\Test\Base as BaseTest;
 
 class GuzzleTest extends BaseTest
 {
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass() : void
     {
         if (!class_exists('GuzzleHttp\\Client')) {
             self::markTestSkipped('guzzlehttp/guzzle package should be installed to run guzzle transport tests');
@@ -20,7 +20,7 @@ class GuzzleTest extends BaseTest
      *
      * @return array[]
      */
-    public function getConfig()
+    public function getConfig() : array<array>
     {
         return array(
             array(
@@ -42,16 +42,16 @@ class GuzzleTest extends BaseTest
      * @group functional
      * @dataProvider getConfig
      */
-    public function testDynamicHttpMethodBasedOnConfigParameter(array $config, $httpMethod)
+    public function testDynamicHttpMethodBasedOnConfigParameter(array $config, $httpMethod) : void
     {
         $client = $this->_getClient($config);
 
         $index = $client->getIndex('dynamic_http_method_test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('test');
-        $type->addDocument(new Document(1, array('test' => 'test')));
-        $index->refresh();
-        $resultSet = $index->search('test');
+        $type->addDocument(new Document('1', array('test' => 'test')))->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
+        $resultSet = $index->search('test')->getWaitHandle()->join();
         $info = $resultSet->getResponse()->getTransferInfo();
         $this->assertStringStartsWith($httpMethod, $info['request_header']);
     }
@@ -60,11 +60,11 @@ class GuzzleTest extends BaseTest
      * @group functional
      * @dataProvider getConfig
      */
-    public function testDynamicHttpMethodOnlyAffectsRequestsWithBody(array $config, $httpMethod)
+    public function testDynamicHttpMethodOnlyAffectsRequestsWithBody(array $config, $httpMethod) : void
     {
         $client = $this->_getClient($config);
 
-        $status = $client->getStatus();
+        $status = $client->getStatus()->getWaitHandle()->join();
         $info = $status->getResponse()->getTransferInfo();
         $this->assertStringStartsWith('GET', $info['request_header']);
     }
@@ -72,16 +72,16 @@ class GuzzleTest extends BaseTest
     /**
      * @group functional
      */
-    public function testWithEnvironmentalProxy()
+    public function testWithEnvironmentalProxy() : void
     {
         putenv('http_proxy='.$this->_getProxyUrl().'/');
 
         $client = $this->_getClient(array('transport' => 'Guzzle', 'persistent' => false));
-        $transferInfo = $client->request('/_nodes')->getTransferInfo();
+        $transferInfo = $client->request('/_nodes')->getWaitHandle()->join()->getTransferInfo();
         $this->assertEquals(200, $transferInfo['http_code']);
 
         $client->getConnection()->setProxy(null); // will not change anything
-        $transferInfo = $client->request('/_nodes')->getTransferInfo();
+        $transferInfo = $client->request('/_nodes')->getWaitHandle()->join()->getTransferInfo();
         $this->assertEquals(200, $transferInfo['http_code']);
 
         putenv('http_proxy=');
@@ -90,17 +90,17 @@ class GuzzleTest extends BaseTest
     /**
      * @group functional
      */
-    public function testWithEnabledEnvironmentalProxy()
+    public function testWithEnabledEnvironmentalProxy() : void
     {
         putenv('http_proxy='.$this->_getProxyUrl403().'/');
 
         $client = $this->_getClient(array('transport' => 'Guzzle', 'persistent' => false));
-        $transferInfo = $client->request('/_nodes')->getTransferInfo();
+        $transferInfo = $client->request('/_nodes')->getWaitHandle()->join()->getTransferInfo();
         $this->assertEquals(403, $transferInfo['http_code']);
 
         $client = $this->_getClient(array('transport' => 'Guzzle', 'persistent' => false));
         $client->getConnection()->setProxy('');
-        $transferInfo = $client->request('/_nodes')->getTransferInfo();
+        $transferInfo = $client->request('/_nodes')->getWaitHandle()->join()->getTransferInfo();
         $this->assertEquals(200, $transferInfo['http_code']);
 
         putenv('http_proxy=');
@@ -109,54 +109,54 @@ class GuzzleTest extends BaseTest
     /**
      * @group functional
      */
-    public function testWithProxy()
+    public function testWithProxy() : void
     {
         $client = $this->_getClient(array('transport' => 'Guzzle', 'persistent' => false));
         $client->getConnection()->setProxy($this->_getProxyUrl());
 
-        $transferInfo = $client->request('/_nodes')->getTransferInfo();
+        $transferInfo = $client->request('/_nodes')->getWaitHandle()->join()->getTransferInfo();
         $this->assertEquals(200, $transferInfo['http_code']);
     }
 
     /**
      * @group functional
      */
-    public function testWithoutProxy()
+    public function testWithoutProxy() : void
     {
         $client = $this->_getClient(array('transport' => 'Guzzle', 'persistent' => false));
         $client->getConnection()->setProxy('');
 
-        $transferInfo = $client->request('/_nodes')->getTransferInfo();
+        $transferInfo = $client->request('/_nodes')->getWaitHandle()->join()->getTransferInfo();
         $this->assertEquals(200, $transferInfo['http_code']);
     }
 
     /**
      * @group functional
      */
-    public function testBodyReuse()
+    public function testBodyReuse() : void
     {
         $client = $this->_getClient(array('transport' => 'Guzzle', 'persistent' => false));
 
         $index = $client->getIndex('elastica_body_reuse_test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $this->_waitForAllocation($index);
 
         $type = $index->getType('test');
-        $type->addDocument(new Document(1, array('test' => 'test')));
+        $type->addDocument(new Document('1', array('test' => 'test')))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $index->search(array(
-            'query' => array(
-                'query_string' => array(
+        $resultSet = $index->search(Map {
+            'query' => Map {
+                'query_string' => Map {
                     'query' => 'pew pew pew',
-                ),
-            ),
-        ));
+                },
+            },
+        })->getWaitHandle()->join();
 
         $this->assertEquals(0, $resultSet->getTotalHits());
 
-        $response = $index->request('/_search', 'POST');
+        $response = $index->request('/_search', 'POST')->getWaitHandle()->join();
         $resultSet = new ResultSet($response, Query::create(array()));
 
         $this->assertEquals(1, $resultSet->getTotalHits());
@@ -166,13 +166,13 @@ class GuzzleTest extends BaseTest
      * @group unit
      * @expectedException Elastica\Exception\Connection\GuzzleException
      */
-    public function testInvalidConnection()
+    public function testInvalidConnection() : void
     {
         $client = $this->_getClient(array('transport' => 'Guzzle', 'port' => 4500, 'persistent' => false));
-        $response = $client->request('_status', 'GET');
+        $response = $client->request('_status', 'GET')->getWaitHandle()->join();
     }
 
-    protected function tearDown()
+    protected function tearDown() : void
     {
         parent::tearDown();
         putenv('http_proxy=');

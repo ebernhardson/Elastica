@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Exception\Connection;
 
 use Elastica\Exception\ConnectionException;

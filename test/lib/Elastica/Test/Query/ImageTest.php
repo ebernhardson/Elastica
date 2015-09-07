@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -15,7 +15,7 @@ class ImageTest extends BaseTest
      */
     protected $_testFileContent;
 
-    protected function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
         $this->_testFileContent = base64_encode(file_get_contents(BASE_PATH.'/data/test.jpg'));
@@ -24,7 +24,7 @@ class ImageTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArrayFromReference()
+    public function testToArrayFromReference() : void
     {
         $client = $this->_getClient();
         $index = new Index($client, 'test');
@@ -34,25 +34,25 @@ class ImageTest extends BaseTest
         $query = new Image();
         $query->setFieldFeature($field, 'CEDD');
         $query->setFieldHash($field, 'BIT_SAMPLING');
-        $query->setFieldBoost($field, 100);
+        $query->setFieldBoost($field, 100.0);
 
-        $query->setImageByReference($field, $index->getName(), $type->getName(), 10);
+        $query->setImageByReference($field, $index->getName(), $type->getName(), '10');
 
-        $jsonString = '{"image":{"image":{"feature":"CEDD","hash":"BIT_SAMPLING","boost":100,"index":"test","type":"helloworld","id":10,"path":"image"}}}';
+        $jsonString = '{"image":{"image":{"feature":"CEDD","hash":"BIT_SAMPLING","boost":100,"index":"test","type":"helloworld","id":"10","path":"image"}}}';
         $this->assertEquals($jsonString, json_encode($query->toArray()));
     }
 
     /**
      * @group unit
      */
-    public function testToArrayFromImage()
+    public function testToArrayFromImage() : void
     {
         $field = 'image';
 
         $query = new Image();
         $query->setFieldFeature($field, 'CEDD');
         $query->setFieldHash($field, 'BIT_SAMPLING');
-        $query->setFieldBoost($field, 100);
+        $query->setFieldBoost($field, 100.0);
 
         $query->setFieldImage($field, BASE_PATH.'/data/test.jpg');
 
@@ -63,13 +63,13 @@ class ImageTest extends BaseTest
     /**
      * @group functional
      */
-    public function testFromReference()
+    public function testFromReference() : void
     {
         $field = 'image';
 
         $client = $this->_getClient();
         $index = $client->getIndex('test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
         $type = $index->getType('test');
 
@@ -87,36 +87,36 @@ class ImageTest extends BaseTest
             )
         );
 
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
         $type->addDocuments(array(
-            new Document(1, array($field => $this->_testFileContent)),
-            new Document(2, array($field => $this->_testFileContent)),
-            new Document(3, array($field => $this->_testFileContent)),
-        ));
+            new Document('1', array($field => $this->_testFileContent)),
+            new Document('2', array($field => $this->_testFileContent)),
+            new Document('3', array($field => $this->_testFileContent)),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $query = new Image();
         $query->setFieldFeature($field, 'CEDD');
         $query->setFieldHash($field, 'BIT_SAMPLING');
-        $query->setFieldBoost($field, 100);
-        $query->setImageByReference($field, $index->getName(), $type->getName(), 1);
+        $query->setFieldBoost($field, 100.0);
+        $query->setImageByReference($field, $index->getName(), $type->getName(), '1');
 
-        $resultSet = $index->search($query);
+        $resultSet = $index->search($query)->getWaitHandle()->join();
         $this->assertEquals(3, $resultSet->count());
     }
 
     /**
      * @group functional
      */
-    public function testFromImage()
+    public function testFromImage() : void
     {
         $field = 'image';
 
         $client = $this->_getClient();
         $index = $client->getIndex('test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
         $type = $index->getType('test');
 
@@ -134,23 +134,23 @@ class ImageTest extends BaseTest
             )
         );
 
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
         $type->addDocuments(array(
-            new Document(1, array($field => $this->_testFileContent)),
-            new Document(2, array($field => $this->_testFileContent)),
-            new Document(3, array($field => $this->_testFileContent)),
-        ));
+            new Document('1', array($field => $this->_testFileContent)),
+            new Document('2', array($field => $this->_testFileContent)),
+            new Document('3', array($field => $this->_testFileContent)),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $query = new Image();
         $query->setFieldFeature($field, 'CEDD');
         $query->setFieldHash($field, 'BIT_SAMPLING');
-        $query->setFieldBoost($field, 100);
+        $query->setFieldBoost($field, 100.0);
         $query->setFieldImage($field, BASE_PATH.'/data/test.jpg');
 
-        $resultSet = $index->search($query);
+        $resultSet = $index->search($query)->getWaitHandle()->join();
         $this->assertEquals(3, $resultSet->count());
     }
 }

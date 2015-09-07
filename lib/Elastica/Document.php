@@ -1,9 +1,10 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Bulk\Action;
 use Elastica\Exception\InvalidException;
 use Elastica\Exception\NotImplementedException;
+use Indexish;
 
 /**
  * Single document stored in elastic search.
@@ -19,29 +20,34 @@ class Document extends AbstractUpdateAction
      *
      * @var array Document data
      */
-    protected $_data = array();
+    protected ?Indexish<string, mixed> $_data = null;
+
+    /**
+     * @var string Serialized document data
+     */
+    protected ?string $_serialized = null;
 
     /**
      * Whether to use this document to upsert if the document does not exist.
      *
      * @var bool
      */
-    protected $_docAsUpsert = false;
+    protected bool $_docAsUpsert = false;
 
     /**
      * @var bool
      */
-    protected $_autoPopulate = false;
+    protected bool $_autoPopulate = false;
 
     /**
      * Creates a new document.
      *
-     * @param int|string   $id    OPTIONAL $id Id is create if empty
+     * @param string       $id    OPTIONAL $id Id is create if empty
      * @param array|string $data  OPTIONAL Data array
-     * @param string       $type  OPTIONAL Type name
-     * @param string       $index OPTIONAL Index name
+     * @param string|Type  $type  OPTIONAL Type name
+     * @param string|Index $index OPTIONAL Index name
      */
-    public function __construct($id = '', $data = array(), $type = '', $index = '')
+    public function __construct(?string $id = '', mixed $data = array(), mixed $type = '', mixed $index = '')
     {
         $this->setId($id);
         $this->setData($data);
@@ -54,7 +60,7 @@ class Document extends AbstractUpdateAction
      *
      * @return mixed
      */
-    public function __get($key)
+    public function __get(string $key) : mixed
     {
         return $this->get($key);
     }
@@ -63,7 +69,7 @@ class Document extends AbstractUpdateAction
      * @param string $key
      * @param mixed  $value
      */
-    public function __set($key, $value)
+    public function __set(string $key, mixed $value) : void
     {
         $this->set($key, $value);
     }
@@ -73,7 +79,7 @@ class Document extends AbstractUpdateAction
      *
      * @return bool
      */
-    public function __isset($key)
+    public function __isset(string $key) : bool
     {
         return $this->has($key) && null !== $this->get($key);
     }
@@ -81,7 +87,7 @@ class Document extends AbstractUpdateAction
     /**
      * @param string $key
      */
-    public function __unset($key)
+    public function __unset(string $key) : void
     {
         $this->remove($key);
     }
@@ -93,13 +99,13 @@ class Document extends AbstractUpdateAction
      *
      * @return mixed
      */
-    public function get($key)
+    public function get(string $key) : mixed
     {
         if (!$this->has($key)) {
             throw new InvalidException("Field {$key} does not exist");
         }
 
-        return $this->_data[$key];
+        return /* UNSAFE_EXPR */ $this->_data[$key];
     }
 
     /**
@@ -110,9 +116,9 @@ class Document extends AbstractUpdateAction
      *
      * @return $this
      */
-    public function set($key, $value)
+    public function set(string $key, mixed $value) : this
     {
-        if (!is_array($this->_data)) {
+        if ($this->_data === null) {
             throw new InvalidException('Document data is serialized data. Data creation is forbidden.');
         }
         $this->_data[$key] = $value;
@@ -125,9 +131,9 @@ class Document extends AbstractUpdateAction
      *
      * @return bool
      */
-    public function has($key)
+    public function has(string $key) : bool
     {
-        return is_array($this->_data) && array_key_exists($key, $this->_data);
+        return $this->_data instanceof Indexish && array_key_exists($key, $this->_data);
     }
 
     /**
@@ -137,12 +143,12 @@ class Document extends AbstractUpdateAction
      *
      * @return $this
      */
-    public function remove($key)
+    public function remove(string $key) : this
     {
         if (!$this->has($key)) {
             throw new InvalidException("Field {$key} does not exist");
         }
-        unset($this->_data[$key]);
+        unset(/* UNSAFE_EXPR */ $this->_data[$key]);
 
         return $this;
     }
@@ -157,7 +163,7 @@ class Document extends AbstractUpdateAction
      *
      * @return $this
      */
-    public function add($key, $value)
+    public function add(string $key, mixed $value) : this
     {
         return $this->set($key, $value);
     }
@@ -179,7 +185,7 @@ class Document extends AbstractUpdateAction
      *
      * @return $this
      */
-    public function addFile($key, $filepath, $mimeType = '')
+    public function addFile(string $key, string $filepath, string $mimeType = '') : this
     {
         $value = base64_encode(file_get_contents($filepath));
 
@@ -200,7 +206,7 @@ class Document extends AbstractUpdateAction
      *
      * @return $this
      */
-    public function addFileContent($key, $content)
+    public function addFileContent(string $key, string $content) : this
     {
         return $this->set($key, base64_encode($content));
     }
@@ -218,7 +224,7 @@ class Document extends AbstractUpdateAction
      *
      * @return $this
      */
-    public function addGeoPoint($key, $latitude, $longitude)
+    public function addGeoPoint(string $key, float $latitude, float $longitude) : this
     {
         $value = array('lat' => $latitude, 'lon' => $longitude);
 
@@ -230,13 +236,19 @@ class Document extends AbstractUpdateAction
     /**
      * Overwrites the current document data with the given data.
      *
-     * @param array|string $data Data array
+     * @param array $data Data array
      *
      * @return $this
      */
-    public function setData($data)
+    public function setData(mixed $data) : this
     {
-        $this->_data = $data;
+        if ($data instanceof Indexish) {
+            $this->_data = $data;
+            $this->_serialized = null;
+        } elseif (is_string($data)) {
+            $this->_data = null;
+            $this->_serialized = $data;
+        }
 
         return $this;
     }
@@ -246,9 +258,14 @@ class Document extends AbstractUpdateAction
      *
      * @return array|string Document data
      */
-    public function getData()
+    public function getData() : mixed
     {
-        return $this->_data;
+        if ($this->_data !== null) {
+            return $this->_data;
+        } elseif ($this->_serialized !== null) {
+            return $this->_serialized;
+        }
+        throw new \RuntimeException('no data exists');
     }
 
     /**
@@ -258,7 +275,7 @@ class Document extends AbstractUpdateAction
      *
      * @throws NotImplementedException
      */
-    public function setScript($data)
+    public function setScript(Script $data) : void
     {
         throw new NotImplementedException('setScript() is no longer available as of 0.90.2. See http://elastica.io/migration/0.90.2/upsert.html to migrate');
     }
@@ -268,7 +285,7 @@ class Document extends AbstractUpdateAction
      *
      * @deprecated
      */
-    public function getScript()
+    public function getScript() : void
     {
         throw new NotImplementedException('getScript() is no longer available as of 0.90.2. See http://elastica.io/migration/0.90.2/upsert.html to migrate');
     }
@@ -278,7 +295,7 @@ class Document extends AbstractUpdateAction
      *
      * @deprecated
      */
-    public function hasScript()
+    public function hasScript() : void
     {
         throw new NotImplementedException('hasScript() is no longer available as of 0.90.2. See http://elastica.io/migration/0.90.2/upsert.html to migrate');
     }
@@ -288,7 +305,7 @@ class Document extends AbstractUpdateAction
      *
      * @return $this
      */
-    public function setDocAsUpsert($value)
+    public function setDocAsUpsert(bool $value) : this
     {
         $this->_docAsUpsert = (bool) $value;
 
@@ -298,7 +315,7 @@ class Document extends AbstractUpdateAction
     /**
      * @return bool
      */
-    public function getDocAsUpsert()
+    public function getDocAsUpsert() : bool
     {
         return $this->_docAsUpsert;
     }
@@ -308,7 +325,7 @@ class Document extends AbstractUpdateAction
      *
      * @return $this
      */
-    public function setAutoPopulate($autoPopulate = true)
+    public function setAutoPopulate(bool $autoPopulate = true) : this
     {
         $this->_autoPopulate = (bool) $autoPopulate;
 
@@ -318,7 +335,7 @@ class Document extends AbstractUpdateAction
     /**
      * @return bool
      */
-    public function isAutoPopulate()
+    public function isAutoPopulate() : bool
     {
         return $this->_autoPopulate;
     }
@@ -328,7 +345,7 @@ class Document extends AbstractUpdateAction
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $doc = $this->getParams();
         $doc['_source'] = $this->getData();
@@ -343,11 +360,11 @@ class Document extends AbstractUpdateAction
      *
      * @return self
      */
-    public static function create($data)
+    public static function create(mixed $data) : Document
     {
         if ($data instanceof self) {
             return $data;
-        } elseif (is_array($data)) {
+        } elseif ($data instanceof Indexish) {
             return new self('', $data);
         } else {
             throw new InvalidException('Failed to create document. Invalid data passed.');

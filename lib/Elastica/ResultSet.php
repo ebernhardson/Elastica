@@ -1,6 +1,7 @@
-<?php
+<?hh
 namespace Elastica;
 
+use ArrayAccess;
 use Elastica\Exception\InvalidException;
 
 /**
@@ -11,28 +12,28 @@ use Elastica\Exception\InvalidException;
  *
  * @author Nicolas Ruflin <spam@ruflin.com>
  */
-class ResultSet implements \Iterator, \Countable, \ArrayAccess
+class ResultSet implements \Iterator<Result>, \Countable, \ArrayAccess<int, Result>
 {
     /**
      * Class for the static create method to use.
      *
      * @var string
      */
-    protected static $_class = 'Elastica\\ResultSet';
+    protected static string $_class = 'Elastica\\ResultSet';
 
     /**
      * Results.
      *
      * @var array Results
      */
-    protected $_results = array();
+    protected array<Result> $_results = array();
 
     /**
      * Current position.
      *
      * @var int Current position
      */
-    protected $_position = 0;
+    protected int $_position = 0;
 
     /**
      * Response.
@@ -51,22 +52,22 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
     /**
      * @var int
      */
-    protected $_took = 0;
+    protected int $_took = 0;
 
     /**
      * @var bool
      */
-    protected $_timedOut = false;
+    protected bool $_timedOut = false;
 
     /**
      * @var int
      */
-    protected $_totalHits = 0;
+    protected int $_totalHits = 0;
 
     /**
      * @var float
      */
-    protected $_maxScore = 0;
+    protected int $_maxScore = 0;
 
     /**
      * Constructs ResultSet object.
@@ -90,7 +91,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return ResultSet
      */
-    public static function create(Response $response, Query $query)
+    public static function create(Response $response, Query $query) : ResultSet
     {
         $class = static::$_class;
 
@@ -102,7 +103,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @param string $class
      */
-    public static function setClass($class)
+    public static function setClass(string $class) : void
     {
         static::$_class = $class;
     }
@@ -112,16 +113,16 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @param \Elastica\Response $response Response object
      */
-    protected function _init(Response $response)
+    protected function _init(Response $response) : void
     {
         $this->_response = $response;
         $result = $response->getData();
-        $this->_totalHits = isset($result['hits']['total']) ? $result['hits']['total'] : 0;
-        $this->_maxScore = isset($result['hits']['max_score']) ? $result['hits']['max_score'] : 0;
-        $this->_took = isset($result['took']) ? $result['took'] : 0;
-        $this->_timedOut = !empty($result['timed_out']);
-        if (isset($result['hits']['hits'])) {
-            foreach ($result['hits']['hits'] as $hit) {
+        $this->_totalHits = /* UNSAFE_EXPR */ isset($result['hits']['total']) ? $result['hits']['total'] : 0;
+        $this->_maxScore = /* UNSAFE_EXPR */ isset($result['hits']['max_score']) ? $result['hits']['max_score'] : 0;
+        $this->_took = /* UNSAFE_EXPR */ isset($result['took']) ? $result['took'] : 0;
+        $this->_timedOut = !empty(/* UNSAFE_EXPR */ $result['timed_out']);
+        if (isset(/* UNSAFE_EXPR */ $result['hits']['hits'])) {
+            foreach (/* UNSAFE_EXPR */ $result['hits']['hits'] as $hit) {
                 $this->_results[] = new Result($hit);
             }
         }
@@ -132,7 +133,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return Result[] Results
      */
-    public function getResults()
+    public function getResults() : array<Result>
     {
         return $this->_results;
     }
@@ -142,7 +143,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return bool
      */
-    public function hasSuggests()
+    public function hasSuggests() : bool
     {
         $data = $this->_response->getData();
 
@@ -154,7 +155,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return array suggest results
      */
-    public function getSuggests()
+    public function getSuggests() : array
     {
         $data = $this->_response->getData();
 
@@ -168,7 +169,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @deprecated Facets are deprecated and will be removed in a future release. You are encouraged to migrate to aggregations instead.
      */
-    public function hasFacets()
+    public function hasFacets() : bool
     {
         $data = $this->_response->getData();
 
@@ -180,7 +181,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return bool Aggregation existence
      */
-    public function hasAggregations()
+    public function hasAggregations() : bool
     {
         $data = $this->_response->getData();
 
@@ -192,7 +193,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return array
      */
-    public function getAggregations()
+    public function getAggregations() : array
     {
         $data = $this->_response->getData();
 
@@ -208,7 +209,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return array
      */
-    public function getAggregation($name)
+    public function getAggregation(string $name) : array
     {
         $data = $this->_response->getData();
 
@@ -225,7 +226,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @deprecated Facets are deprecated and will be removed in a future release. You are encouraged to migrate to aggregations instead.
      */
-    public function getFacets()
+    public function getFacets() : array
     {
         $data = $this->_response->getData();
 
@@ -237,7 +238,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return int Total hits
      */
-    public function getTotalHits()
+    public function getTotalHits() : int
     {
         return (int) $this->_totalHits;
     }
@@ -247,7 +248,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return float Max Score
      */
-    public function getMaxScore()
+    public function getMaxScore() : float
     {
         return (float) $this->_maxScore;
     }
@@ -257,7 +258,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return int Total time
      */
-    public function getTotalTime()
+    public function getTotalTime() : int
     {
         return (int) $this->_took;
     }
@@ -267,7 +268,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return bool Timed out
      */
-    public function hasTimedOut()
+    public function hasTimedOut() : bool
     {
         return (bool) $this->_timedOut;
     }
@@ -277,7 +278,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return \Elastica\Response Response object
      */
-    public function getResponse()
+    public function getResponse() : Response
     {
         return $this->_response;
     }
@@ -285,7 +286,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
     /**
      * @return \Elastica\Query
      */
-    public function getQuery()
+    public function getQuery() : Query
     {
         return $this->_query;
     }
@@ -295,9 +296,9 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return int Size of set
      */
-    public function count()
+    public function count() : int
     {
-        return sizeof($this->_results);
+        return count($this->_results);
     }
 
     /**
@@ -305,33 +306,30 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return int Size of suggests
      */
-    public function countSuggests()
+    public function countSuggests() : int
     {
-        return sizeof($this->getSuggests());
+        return count($this->getSuggests());
     }
 
     /**
      * Returns the current object of the set.
      *
-     * @return \Elastica\Result|bool Set object or false if not valid (no more entries)
+     * @return \Elastica\Result Set object or false if not valid (no more entries)
      */
-    public function current()
+    public function current() : Result
     {
-        if ($this->valid()) {
-            return $this->_results[$this->key()];
-        } else {
-            return false;
+        if (!$this->valid()) {
+            throw new \OutOfBoundsException();
         }
+        return $this->_results[$this->key()];
     }
 
     /**
      * Sets pointer (current) to the next item of the set.
      */
-    public function next()
+    public function next() : void
     {
         ++$this->_position;
-
-        return $this->current();
     }
 
     /**
@@ -339,7 +337,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return int Current position
      */
-    public function key()
+    public function key() : int
     {
         return $this->_position;
     }
@@ -349,7 +347,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      *
      * @return bool True if object exists
      */
-    public function valid()
+    public function valid() : bool
     {
         return isset($this->_results[$this->key()]);
     }
@@ -357,7 +355,7 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
     /**
      * Resets position to 0, restarts iterator.
      */
-    public function rewind()
+    public function rewind() : void
     {
         $this->_position = 0;
     }
@@ -408,10 +406,6 @@ class ResultSet implements \Iterator, \Countable, \ArrayAccess
      */
     public function offsetSet($offset, $value)
     {
-        if (!($value instanceof Result)) {
-            throw new InvalidException('ResultSet is a collection of Result only.');
-        }
-
         if (!isset($this->_results[$offset])) {
             throw new InvalidException('Offset does not exist.');
         }

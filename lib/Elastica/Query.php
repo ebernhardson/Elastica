@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Aggregation\AbstractAggregation;
@@ -10,6 +10,7 @@ use Elastica\Query\AbstractQuery;
 use Elastica\Query\MatchAll;
 use Elastica\Query\QueryString;
 use Elastica\Suggest\AbstractSuggest;
+use Indexish;
 
 /**
  * Elastica query object.
@@ -27,28 +28,30 @@ class Query extends Param
      *
      * @var array Params
      */
-    protected $_params = array();
+    protected Map<string, mixed> $_params = Map {};
 
     /**
      * Suggest query or not.
      *
      * @var int Suggest
      */
-    protected $_suggest = 0;
+    protected int $_suggest = 0;
 
     /**
      * Creates a query object.
      *
      * @param array|\Elastica\Query\AbstractQuery $query OPTIONAL Query object (default = null)
      */
-    public function __construct($query = null)
+    public function __construct(mixed $query = null)
     {
-        if (is_array($query)) {
+        if ($query instanceof Map) {
             $this->setRawQuery($query);
         } elseif ($query instanceof AbstractQuery) {
             $this->setQuery($query);
         } elseif ($query instanceof Suggest) {
             $this->setSuggest($query);
+        } elseif ($query !== null) {
+            throw new \InvalidArgumentException('expected Map, AbstractQuery or Suggest');
         }
     }
 
@@ -63,30 +66,27 @@ class Query extends Param
      *
      * @return self
      */
-    public static function create($query)
+    public static function create(mixed $query) : Query
     {
-        switch (true) {
-            case $query instanceof self:
+        if ($query instanceof self) {
                 return $query;
-            case $query instanceof AbstractQuery:
+        } elseif ($query instanceof AbstractQuery) {
                 return new self($query);
-            case $query instanceof AbstractFilter:
+        } elseif ($query instanceof AbstractFilter) {
                 $newQuery = new self();
                 $newQuery->setPostFilter($query);
 
                 return $newQuery;
-            case empty($query):
+        } elseif (empty($query)) {
                 return new self(new MatchAll());
-            case is_array($query):
+        } elseif ($query instanceof Indexish) {
                 return new self($query);
-            case is_string($query):
+        } elseif (is_string($query)) {
                 return new self(new QueryString($query));
-            case $query instanceof AbstractSuggest:
+        } elseif ($query instanceof AbstractSuggest) {
                 return new self(new Suggest($query));
-
-            case $query instanceof Suggest:
+        } elseif ($query instanceof Suggest) {
                 return new self($query);
-
         }
 
         // TODO: Implement queries without
@@ -100,7 +100,7 @@ class Query extends Param
      *
      * @return $this
      */
-    public function setRawQuery(array $query)
+    public function setRawQuery(Map<string, mixed> $query) : this
     {
         $this->_params = $query;
 
@@ -114,7 +114,7 @@ class Query extends Param
      *
      * @return $this
      */
-    public function setQuery(AbstractQuery $query)
+    public function setQuery(AbstractQuery $query) : this
     {
         return $this->setParam('query', $query);
     }
@@ -122,11 +122,15 @@ class Query extends Param
     /**
      * Gets the query array.
      *
-     * @return array
+     * @return AbstractQuery
      **/
-    public function getQuery()
+    public function getQuery() : AbstractQuery
     {
-        return $this->getParam('query');
+        $query = $this->getParam('query');
+        if ($query instanceof AbstractQuery) {
+            return $query;
+        }
+        throw new \RuntimeException('expected AbstractQuery');
     }
 
     /**
@@ -139,7 +143,7 @@ class Query extends Param
      * @link    https://github.com/elasticsearch/elasticsearch/issues/7422
      * @deprecated
      */
-    public function setFilter(AbstractFilter $filter)
+    public function setFilter(AbstractFilter $filter) : this
     {
         trigger_error('Deprecated: Elastica\Query::setFilter() is deprecated. Use Elastica\Query::setPostFilter() instead.', E_USER_DEPRECATED);
 
@@ -153,7 +157,7 @@ class Query extends Param
      *
      * @return $this
      */
-    public function setFrom($from)
+    public function setFrom(int $from) : this
     {
         return $this->setParam('from', $from);
     }
@@ -168,7 +172,7 @@ class Query extends Param
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-sort.html
      */
-    public function setSort(array $sortArgs)
+    public function setSort(array $sortArgs) : this
     {
         return $this->setParam('sort', $sortArgs);
     }
@@ -182,7 +186,7 @@ class Query extends Param
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-sort.html
      */
-    public function addSort($sort)
+    public function addSort(mixed $sort) : this
     {
         return $this->addParam('sort', $sort);
     }
@@ -196,7 +200,7 @@ class Query extends Param
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-highlighting.html
      */
-    public function setHighlight(array $highlightArgs)
+    public function setHighlight(array $highlightArgs) : this
     {
         return $this->setParam('highlight', $highlightArgs);
     }
@@ -210,7 +214,7 @@ class Query extends Param
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-highlighting.html
      */
-    public function addHighlight($highlight)
+    public function addHighlight(mixed $highlight) : this
     {
         return $this->addParam('highlight', $highlight);
     }
@@ -222,7 +226,7 @@ class Query extends Param
      *
      * @return $this
      */
-    public function setSize($size = 10)
+    public function setSize(int $size = 10) : this
     {
         return $this->setParam('size', $size);
     }
@@ -236,7 +240,7 @@ class Query extends Param
      *
      * @return $this
      */
-    public function setLimit($limit = 10)
+    public function setLimit(int $limit = 10) : this
     {
         return $this->setSize($limit);
     }
@@ -250,7 +254,7 @@ class Query extends Param
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-explain.html
      */
-    public function setExplain($explain = true)
+    public function setExplain(bool $explain = true) : this
     {
         return $this->setParam('explain', $explain);
     }
@@ -264,7 +268,7 @@ class Query extends Param
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-version.html
      */
-    public function setVersion($version = true)
+    public function setVersion(bool $version = true) : this
     {
         return $this->setParam('version', $version);
     }
@@ -280,7 +284,7 @@ class Query extends Param
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-fields.html
      */
-    public function setFields(array $fields)
+    public function setFields(array $fields) : this
     {
         return $this->setParam('fields', $fields);
     }
@@ -294,9 +298,9 @@ class Query extends Param
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-script-fields.html
      */
-    public function setScriptFields($scriptFields)
+    public function setScriptFields(mixed $scriptFields) : this
     {
-        if (is_array($scriptFields)) {
+        if ($scriptFields instanceof Indexish) {
             $scriptFields = new ScriptFields($scriptFields);
         }
 
@@ -311,8 +315,13 @@ class Query extends Param
      *
      * @return $this
      */
-    public function addScriptField($name, AbstractScript $script)
+    public function addScriptField(string $name, AbstractScript $script) : this
     {
+        if (!isset(/* UNSAFE_EXPR */ $this->_params['script_fields'])) {
+			/* UNSAFE_EXPR */
+            $this->_params['script_fields'] = Map {};
+        }
+		/* UNSAFE_EXPR */
         $this->_params['script_fields'][$name] = $script;
 
         return $this;
@@ -328,7 +337,7 @@ class Query extends Param
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-facets.html
      * @deprecated Facets are deprecated and will be removed in a future release. You are encouraged to migrate to aggregations instead.
      */
-    public function setFacets(array $facets)
+    public function setFacets(array $facets) : this
     {
         $this->_params['facets'] = array();
         foreach ($facets as $facet) {
@@ -347,9 +356,14 @@ class Query extends Param
      *
      * @deprecated Facets are deprecated and will be removed in a future release. You are encouraged to migrate to aggregations instead.
      */
-    public function addFacet(AbstractFacet $facet)
+    public function addFacet(AbstractFacet $facet) : this
     {
-        $this->_params['facets'][] = $facet;
+        if (isset(/* UNSAFE_EXPR */ $this->_params['facets'])) {
+            /* UNSAFE_EXPR */
+            $this->_params['facets'][] = $facet;
+        } else {
+            $this->_params['facets'] = Vector {$facet};
+        }
 
         return $this;
     }
@@ -361,13 +375,18 @@ class Query extends Param
      *
      * @return $this
      */
-    public function addAggregation(AbstractAggregation $agg)
+    public function addAggregation(AbstractAggregation $agg) : this
     {
         if (!array_key_exists('aggs', $this->_params)) {
             $this->_params['aggs'] = array();
         }
 
-        $this->_params['aggs'][] = $agg;
+        if (isset(/* UNSAFE_EXPR */ $this->_params['aggs'])) {
+            /* UNSAFE_EXPR */
+            $this->_params['aggs'][] = $agg;
+        } else {
+            $this->_params['aggs'] = Vector {$agg};
+        }
 
         return $this;
     }
@@ -377,7 +396,7 @@ class Query extends Param
      *
      * @return array Query array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         if (!isset($this->_params['query']) && ($this->_suggest == 0)) {
             $this->setQuery(new MatchAll());
@@ -394,7 +413,7 @@ class Query extends Param
         $array = $this->_convertArrayable($this->_params);
 
         if (isset($array['suggest'])) {
-            $array['suggest'] = $array['suggest']['suggest'];
+            $array['suggest'] = /* UNSAFE_EXPR */ $array['suggest']['suggest'];
         }
 
         return $array;
@@ -409,7 +428,7 @@ class Query extends Param
      *
      * @return $this
      */
-    public function setMinScore($minScore)
+    public function setMinScore(float $minScore) : this
     {
         if (!is_numeric($minScore)) {
             throw new InvalidException('has to be numeric param');
@@ -425,7 +444,7 @@ class Query extends Param
      *
      * @return $this
      */
-    public function setSuggest(Suggest $suggest)
+    public function setSuggest(Suggest $suggest) : this
     {
         $this->setParam('suggest', $suggest);
 
@@ -441,9 +460,9 @@ class Query extends Param
      *
      * @return $this
      */
-    public function setRescore($rescore)
+    public function setRescore(mixed $rescore) : this
     {
-        if (is_array($rescore)) {
+        if ($rescore instanceof Indexish) {
             $buffer = array();
 
             foreach ($rescore as $rescoreQuery) {
@@ -465,7 +484,7 @@ class Query extends Param
      *
      * @link   http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-source-filtering.html
      */
-    public function setSource($params)
+    public function setSource(mixed $params) : this
     {
         return $this->setParam('_source', $params);
     }
@@ -479,7 +498,7 @@ class Query extends Param
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-post-filter.html
      */
-    public function setPostFilter($filter)
+    public function setPostFilter(mixed $filter) : this
     {
         if (!($filter instanceof AbstractFilter)) {
             trigger_error('Deprecated: Elastica\Query::setPostFilter() passing filter as array is deprecated. Pass instance of AbstractFilter instead.', E_USER_DEPRECATED);

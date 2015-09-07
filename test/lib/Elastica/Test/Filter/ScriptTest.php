@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Filter\Script as ScriptFilter;
@@ -10,7 +10,7 @@ class ScriptTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $string = '_score * 2.0';
 
@@ -30,13 +30,13 @@ class ScriptTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetScript()
+    public function testSetScript() : void
     {
         $string = '_score * 2.0';
-        $params = array(
+        $params = Map {
             'param1' => 'one',
             'param2' => 1,
-        );
+        };
         $lang = 'mvel';
         $script = new Script($string, $params, $lang);
 

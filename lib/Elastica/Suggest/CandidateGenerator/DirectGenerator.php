@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Suggest\CandidateGenerator;
 
 /**
@@ -15,7 +15,7 @@ class DirectGenerator extends AbstractCandidateGenerator
     /**
      * @param string $field
      */
-    public function __construct($field)
+    public function __construct(string $field)
     {
         $this->setField($field);
     }
@@ -27,7 +27,7 @@ class DirectGenerator extends AbstractCandidateGenerator
      *
      * @return $this
      */
-    public function setField($field)
+    public function setField(string $field) : this
     {
         return $this->setParam('field', $field);
     }
@@ -39,7 +39,7 @@ class DirectGenerator extends AbstractCandidateGenerator
      *
      * @return $this
      */
-    public function setSize($size)
+    public function setSize(int $size) : this
     {
         return $this->setParam('size', $size);
     }
@@ -49,7 +49,7 @@ class DirectGenerator extends AbstractCandidateGenerator
      *
      * @return $this
      */
-    public function setSuggestMode($mode)
+    public function setSuggestMode(string $mode) : this
     {
         return $this->setParam('suggest_mode', $mode);
     }
@@ -59,7 +59,7 @@ class DirectGenerator extends AbstractCandidateGenerator
      *
      * @return $this
      */
-    public function setMaxEdits($max)
+    public function setMaxEdits(int $max) : this
     {
         return $this->setParam('max_edits', $max);
     }
@@ -69,7 +69,7 @@ class DirectGenerator extends AbstractCandidateGenerator
      *
      * @return $this
      */
-    public function setPrefixLength($length)
+    public function setPrefixLength(int $length) : this
     {
         return $this->setParam('prefix_len', $length);
     }
@@ -79,7 +79,7 @@ class DirectGenerator extends AbstractCandidateGenerator
      *
      * @return $this
      */
-    public function setMinWordLength($min)
+    public function setMinWordLength(int $min) : this
     {
         return $this->setParam('min_word_len', $min);
     }
@@ -89,7 +89,7 @@ class DirectGenerator extends AbstractCandidateGenerator
      *
      * @return $this
      */
-    public function setMaxInspections($max)
+    public function setMaxInspections(int $max) : this
     {
         return $this->setParam('max_inspections', $max);
     }
@@ -99,7 +99,7 @@ class DirectGenerator extends AbstractCandidateGenerator
      *
      * @return $this
      */
-    public function setMinDocFrequency($min)
+    public function setMinDocFrequency(float $min) : this
     {
         return $this->setParam('min_doc_freq', $min);
     }
@@ -109,7 +109,7 @@ class DirectGenerator extends AbstractCandidateGenerator
      *
      * @return $this
      */
-    public function setMaxTermFrequency($max)
+    public function setMaxTermFrequency(float $max) : this
     {
         return $this->setParam('max_term_freq', $max);
     }
@@ -121,7 +121,7 @@ class DirectGenerator extends AbstractCandidateGenerator
      *
      * @return $this
      */
-    public function setPreFilter($pre)
+    public function setPreFilter(string $pre) : this
     {
         return $this->setParam('pre_filter', $pre);
     }
@@ -133,7 +133,7 @@ class DirectGenerator extends AbstractCandidateGenerator
      *
      * @return $this
      */
-    public function setPostFilter($post)
+    public function setPostFilter(string $post) : this
     {
         return $this->setParam('post_filter', $post);
     }

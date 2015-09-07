@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Elastica Request object.
@@ -32,7 +33,7 @@ class Request extends Param
      *
      * @return \Elastica\Request OPTIONAL Connection object
      */
-    public function __construct($path, $method = self::GET, $data = array(), array $query = array(), Connection $connection = null)
+    public function __construct(string $path, string $method = self::GET, mixed $data = array(), Indexish<string, mixed> $query = array(), ?Connection $connection = null)
     {
         $this->setPath($path);
         $this->setMethod($method);
@@ -51,7 +52,7 @@ class Request extends Param
      *
      * @return $this
      */
-    public function setMethod($method)
+    public function setMethod(string $method) : this
     {
         return $this->setParam('method', $method);
     }
@@ -61,9 +62,9 @@ class Request extends Param
      *
      * @return string Request method
      */
-    public function getMethod()
+    public function getMethod() : string
     {
-        return $this->getParam('method');
+        return (string)$this->getParam('method');
     }
 
     /**
@@ -73,7 +74,7 @@ class Request extends Param
      *
      * @return $this
      */
-    public function setData($data)
+    public function setData(mixed $data) : this
     {
         return $this->setParam('data', $data);
     }
@@ -81,9 +82,9 @@ class Request extends Param
     /**
      * Return request data.
      *
-     * @return array Request data
+     * @return string|array Request data
      */
-    public function getData()
+    public function getData() : mixed
     {
         return $this->getParam('data');
     }
@@ -95,7 +96,7 @@ class Request extends Param
      *
      * @return $this
      */
-    public function setPath($path)
+    public function setPath(string $path) : this
     {
         return $this->setParam('path', $path);
     }
@@ -105,9 +106,9 @@ class Request extends Param
      *
      * @return string Request path
      */
-    public function getPath()
+    public function getPath() : string
     {
-        return $this->getParam('path');
+        return (string)$this->getParam('path');
     }
 
     /**
@@ -115,9 +116,9 @@ class Request extends Param
      *
      * @return array Query params
      */
-    public function getQuery()
+    public function getQuery() : array
     {
-        return $this->getParam('query');
+        return (array)$this->getParam('query');
     }
 
     /**
@@ -125,7 +126,7 @@ class Request extends Param
      *
      * @return $this
      */
-    public function setQuery(array $query = array())
+    public function setQuery(Indexish<string, mixed> $query = array()) : this
     {
         return $this->setParam('query', $query);
     }
@@ -135,7 +136,7 @@ class Request extends Param
      *
      * @return $this
      */
-    public function setConnection(Connection $connection)
+    public function setConnection(Connection $connection) : this
     {
         $this->_connection = $connection;
 
@@ -149,7 +150,7 @@ class Request extends Param
      *
      * @return \Elastica\Connection
      */
-    public function getConnection()
+    public function getConnection() : Connection
     {
         if (empty($this->_connection)) {
             throw new InvalidException('No valid connection object set');
@@ -161,9 +162,9 @@ class Request extends Param
     /**
      * Sends request to server.
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function send()
+    public function send() : Awaitable<Response>
     {
         $transport = $this->getConnection()->getTransportObject();
 
@@ -174,7 +175,7 @@ class Request extends Param
     /**
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $data = $this->getParams();
         if ($this->_connection) {
@@ -189,7 +190,7 @@ class Request extends Param
      *
      * @return string
      */
-    public function toString()
+    public function toString() : string
     {
         return JSON::stringify($this->toArray());
     }
@@ -197,7 +198,7 @@ class Request extends Param
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString() : string
     {
         return $this->toString();
     }

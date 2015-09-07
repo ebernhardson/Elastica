@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Bulk;
 
 use Elastica\Bulk;
@@ -13,7 +13,7 @@ class ResponseSetTest extends BaseTest
      * @group unit
      * @dataProvider isOkDataProvider
      */
-    public function testIsOk($responseData, $actions, $expected)
+    public function testIsOk($responseData, $actions, $expected) : void
     {
         $responseSet = $this->_createResponseSet($responseData, $actions);
         $this->assertEquals($expected, $responseSet->isOk());
@@ -22,7 +22,7 @@ class ResponseSetTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetError()
+    public function testGetError() : void
     {
         list($responseData, $actions) = $this->_getFixture();
         $responseData['items'][1]['index']['ok'] = false;
@@ -60,7 +60,7 @@ class ResponseSetTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetBulkResponses()
+    public function testGetBulkResponses() : void
     {
         list($responseData, $actions) = $this->_getFixture();
 
@@ -75,7 +75,7 @@ class ResponseSetTest extends BaseTest
             $bulkResponseData = $bulkResponse->getData();
             $this->assertInternalType('array', $bulkResponseData);
             $this->assertArrayHasKey('_id', $bulkResponseData);
-            $this->assertEquals($responseData['items'][$i]['index']['_id'], $bulkResponseData['_id']);
+            $this->assertEquals($responseData['items'][$i]['index']['_id'], /* UNSAFE_EXPR */ $bulkResponseData['_id']);
             $this->assertSame($actions[$i], $bulkResponse->getAction());
             $this->assertEquals('index', $bulkResponse->getOpType());
         }
@@ -84,7 +84,7 @@ class ResponseSetTest extends BaseTest
     /**
      * @group unit
      */
-    public function testIterator()
+    public function testIterator() : void
     {
         list($responseData, $actions) = $this->_getFixture();
 
@@ -97,7 +97,7 @@ class ResponseSetTest extends BaseTest
             $bulkResponseData = $bulkResponse->getData();
             $this->assertInternalType('array', $bulkResponseData);
             $this->assertArrayHasKey('_id', $bulkResponseData);
-            $this->assertEquals($responseData['items'][$i]['index']['_id'], $bulkResponseData['_id']);
+            $this->assertEquals($responseData['items'][$i]['index']['_id'], /* UNSAFE_EXPR */$bulkResponseData['_id']);
             $this->assertSame($actions[$i], $bulkResponse->getAction());
             $this->assertEquals('index', $bulkResponse->getOpType());
         }
@@ -119,7 +119,7 @@ class ResponseSetTest extends BaseTest
         $this->assertInstanceOf('Elastica\Bulk\Response', $responseSet->current());
     }
 
-    public function isOkDataProvider()
+    public function isOkDataProvider() : array
     {
         list($responseData, $actions) = $this->_getFixture();
 
@@ -137,25 +137,30 @@ class ResponseSetTest extends BaseTest
      *
      * @return \Elastica\Bulk\ResponseSet
      */
-    protected function _createResponseSet(array $responseData, array $actions)
+    protected function _createResponseSet(array $responseData, array $actions) : \Elastica\Bulk\ResponseSet
     {
         $client = $this->getMock('Elastica\\Client', array('request'));
 
         $client->expects($this->once())
             ->method('request')
             ->withAnyParameters()
-            ->will($this->returnValue(new Response($responseData)));
+            ->will($this->returnValue($this->genAsyncResponse($responseData)));
 
         $bulk = new Bulk($client);
         $bulk->addActions($actions);
 
-        return $bulk->send();
+        return $bulk->send()->getWaitHandle()->join();
+    }
+
+    private async function genAsyncResponse(array $responseData): Awaitable<\Elastica\Response>
+    {
+        return new Response($responseData);
     }
 
     /**
      * @return array
      */
-    protected function _getFixture()
+    protected function _getFixture() : array
     {
         $responseData = array(
             'took' => 5,

@@ -1,9 +1,10 @@
-<?php
+<?hh
 namespace Elastica\Type;
 
 use Elastica\Exception\InvalidException;
 use Elastica\Request;
 use Elastica\Type;
+use Indexish;
 
 /**
  * Elastica Mapping object.
@@ -19,14 +20,14 @@ class Mapping
      *
      * @var array Mapping
      */
-    protected $_mapping = array();
+    protected array $_mapping = array();
 
     /**
      * Type.
      *
      * @var \Elastica\Type Type object
      */
-    protected $_type = null;
+    protected ?Type $_type;
 
     /**
      * Construct Mapping.
@@ -34,14 +35,14 @@ class Mapping
      * @param \Elastica\Type $type       OPTIONAL Type object
      * @param array          $properties OPTIONAL Properties
      */
-    public function __construct(Type $type = null, array $properties = array())
+    public function __construct(?Type $type = null, array $properties = array())
     {
         if ($type) {
-            $this->setType($type);
+            $this->_type = $type;
         }
 
         if (!empty($properties)) {
-            $this->setProperties($properties);
+            $this->_mapping['properties'] = $properties;
         }
     }
 
@@ -53,7 +54,7 @@ class Mapping
      *
      * @return $this
      */
-    public function setType(Type $type)
+    public function setType(Type $type) : this
     {
         $this->_type = $type;
 
@@ -67,7 +68,7 @@ class Mapping
      *
      * @return $this
      */
-    public function setProperties(array $properties)
+    public function setProperties(Indexish<string, mixed> $properties) : this
     {
         return $this->setParam('properties', $properties);
     }
@@ -77,9 +78,9 @@ class Mapping
      *
      * @return array $properties Properties
      */
-    public function getProperties()
+    public function getProperties() : array
     {
-        return $this->getParam('properties');
+        return (array) $this->getParam('properties');
     }
 
     /**
@@ -91,7 +92,7 @@ class Mapping
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-meta.html
      */
-    public function setMeta(array $meta)
+    public function setMeta(array $meta) : this
     {
         return $this->setParam('_meta', $meta);
     }
@@ -101,7 +102,7 @@ class Mapping
      *
      * @return \Elastica\Type Type
      */
-    public function getType()
+    public function getType() : ?Type
     {
         return $this->_type;
     }
@@ -118,7 +119,7 @@ class Mapping
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-source-field.html
      */
-    public function setSource(array $source)
+    public function setSource(array $source) : this
     {
         return $this->setParam('_source', $source);
     }
@@ -132,7 +133,7 @@ class Mapping
      *
      * @return $this
      */
-    public function disableSource($enabled = false)
+    public function disableSource(bool $enabled = false) : this
     {
         return $this->setSource(array('enabled' => $enabled));
     }
@@ -159,7 +160,7 @@ class Mapping
      *
      * @return $this
      */
-    public function setParam($key, $value)
+    public function setParam(string $key, mixed $value) : this
     {
         $this->_mapping[$key] = $value;
 
@@ -175,7 +176,7 @@ class Mapping
      *
      * @return mixed $value Key value
      */
-    public function getParam($key)
+    public function getParam(string $key) : mixed
     {
         return isset($this->_mapping[$key]) ? $this->_mapping[$key] : null;
     }
@@ -187,7 +188,7 @@ class Mapping
      *
      * @return $this
      */
-    public function setAllField(array $params)
+    public function setAllField(array $params) : this
     {
         return $this->setParam('_all', $params);
     }
@@ -199,7 +200,7 @@ class Mapping
      *
      * @return $this
      */
-    public function enableAllField($enabled = true)
+    public function enableAllField(bool $enabled = true) : this
     {
         return $this->setAllField(array('enabled' => $enabled));
     }
@@ -211,7 +212,7 @@ class Mapping
      *
      * @return $this
      */
-    public function setTtl(array $params)
+    public function setTtl(array $params) : this
     {
         return $this->setParam('_ttl', $params);
     }
@@ -223,9 +224,9 @@ class Mapping
      *
      * @return $this
      */
-    public function enableTtl($enabled = true)
+    public function enableTtl(bool $enabled = true) : this
     {
-        return $this->setTTL(array('enabled' => $enabled));
+        return $this->setTtl(array('enabled' => $enabled));
     }
 
     /**
@@ -235,7 +236,7 @@ class Mapping
      *
      * @return $this
      */
-    public function setParent($type)
+    public function setParent(string $type) : this
     {
         return $this->setParam('_parent', array('type' => $type));
     }
@@ -247,11 +248,11 @@ class Mapping
      *
      * @return array Mapping as array
      */
-    public function toArray()
+    public function toArray() : array<string, array>
     {
         $type = $this->getType();
 
-        if (empty($type)) {
+        if ($type === null) {
             throw new InvalidException('Type has to be set');
         }
 
@@ -261,13 +262,17 @@ class Mapping
     /**
      * Submits the mapping and sends it to the server.
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function send()
+    public function send() : Awaitable<\Elastica\Response>
     {
-        $path = '_mapping';
+        $type = $this->getType();
+        if ($type === null) {
+            throw new InvalidException('Type has to be set');
+        }
 
-        return $this->getType()->request($path, Request::PUT, $this->toArray());
+        $path = '_mapping';
+        return $type->request($path, Request::PUT, $this->toArray());
     }
 
     /**
@@ -279,9 +284,9 @@ class Mapping
      *
      * @return self
      */
-    public static function create($mapping)
+    public static function create(mixed $mapping) : Mapping
     {
-        if (is_array($mapping)) {
+        if ($mapping instanceof Indexish) {
             $mappingObject = new self();
             $mappingObject->setProperties($mapping);
         } else {

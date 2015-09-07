@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Exception\Connection;
 
 use Elastica\Exception\ConnectionException;
@@ -16,17 +16,17 @@ class ThriftException extends ConnectionException
     /**
      * @var TException
      */
-    protected $_thriftException;
+    protected TException $_thriftException;
 
     /**
      * @param \Thrift\Exception\TException $thriftException
      * @param \Elastica\Request            $request
      * @param \Elastica\Response           $response
      */
-    public function __construct(TException $thriftException, Request $request = null, Response $response = null)
+    public function __construct(TException $thriftException, ?Request $request = null, ?Response $response = null)
     {
         $this->_thriftException = $thriftException;
-        $message = $this->getErrorMessage($this->getThriftException());
+        $message = $thriftException->getMessage();
         parent::__construct($message, $request, $response);
     }
 
@@ -35,14 +35,14 @@ class ThriftException extends ConnectionException
      *
      * @return string
      */
-    public function getErrorMessage(TException $thriftException)
+    public function getErrorMessage(TException $thriftException) : string
     {
         return $thriftException->getMessage();
     }
     /**
      * @return TException
      */
-    public function getThriftException()
+    public function getThriftException() : TException
     {
         return $this->_thriftException;
     }

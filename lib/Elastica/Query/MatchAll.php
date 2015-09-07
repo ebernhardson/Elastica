@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Query;
 
 /**
@@ -10,11 +10,4 @@ namespace Elastica\Query;
  */
 class MatchAll extends AbstractQuery
 {
-    /**
-     * Creates match all query.
-     */
-    public function __construct()
-    {
-        $this->_params = new \stdClass();
-    }
 }

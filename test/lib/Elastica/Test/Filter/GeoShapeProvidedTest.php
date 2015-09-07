@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Document;
@@ -14,7 +14,7 @@ class GeoShapeProvidedTest extends BaseTest
     /**
      * @group functional
      */
-    public function testConstructEnvelope()
+    public function testConstructEnvelope() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
@@ -25,10 +25,10 @@ class GeoShapeProvidedTest extends BaseTest
                 'type' => 'geo_shape',
             ),
         ));
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
         // add docs
-        $type->addDocument(new Document(1, array(
+        $type->addDocument(new Document('1', array(
             'location' => array(
                 'type' => 'envelope',
                 'coordinates' => array(
@@ -36,10 +36,10 @@ class GeoShapeProvidedTest extends BaseTest
                     array(50.0, -50.0),
                 ),
             ),
-        )));
+        )))->getWaitHandle()->join();
 
-        $index->optimize();
-        $index->refresh();
+        $index->optimize()->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         $envelope = array(
             array(25.0, 75.0),
@@ -62,7 +62,7 @@ class GeoShapeProvidedTest extends BaseTest
         $this->assertEquals($expected, $gsp->toArray());
 
         $query = new Filtered(new MatchAll(), $gsp);
-        $results = $type->search($query);
+        $results = $type->search($query)->getWaitHandle()->join();
 
         $this->assertEquals(1, $results->count());
     }
@@ -70,7 +70,7 @@ class GeoShapeProvidedTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConstructPolygon()
+    public function testConstructPolygon() : void
     {
         $polygon = array(array(102.0, 2.0), array(103.0, 2.0), array(103.0, 3.0), array(103.0, 3.0), array(102.0, 2.0));
         $gsp = new GeoShapeProvided('location', $polygon, GeoShapeProvided::TYPE_POLYGON);
@@ -93,7 +93,7 @@ class GeoShapeProvidedTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetRelation()
+    public function testSetRelation() : void
     {
         $gsp = new GeoShapeProvided('location', array(array(25.0, 75.0), array(75.0, 25.0)));
         $gsp->setRelation(AbstractGeoShape::RELATION_INTERSECT);

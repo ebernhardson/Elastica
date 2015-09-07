@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Connection;
 
 use Elastica\Connection;
@@ -14,7 +14,7 @@ class ConnectionPoolTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConstruct()
+    public function testConstruct() : void
     {
         $pool = $this->createPool();
 
@@ -24,7 +24,7 @@ class ConnectionPoolTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetConnections()
+    public function testSetConnections() : void
     {
         $pool = $this->createPool();
 
@@ -40,7 +40,7 @@ class ConnectionPoolTest extends BaseTest
     /**
      * @group unit
      */
-    public function testAddConnection()
+    public function testAddConnection() : void
     {
         $pool = $this->createPool();
         $pool->setConnections(array());
@@ -59,7 +59,7 @@ class ConnectionPoolTest extends BaseTest
     /**
      * @group unit
      */
-    public function testHasConnection()
+    public function testHasConnection() : void
     {
         $pool = $this->createPool();
 
@@ -69,7 +69,7 @@ class ConnectionPoolTest extends BaseTest
     /**
      * @group unit
      */
-    public function testFailHasConnections()
+    public function testFailHasConnections() : void
     {
         $pool = $this->createPool();
 
@@ -81,16 +81,16 @@ class ConnectionPoolTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetConnection()
+    public function testGetConnection() : void
     {
         $pool = $this->createPool();
 
         $this->assertInstanceOf('Elastica\Connection', $pool->getConnection());
     }
 
-    protected function getConnections($quantity = 1)
+    protected function getConnections(@int $quantity = 1) : array
     {
-        $params = array();
+        $params = Map {};
         $connections = array();
 
         for ($i = 0; $i < $quantity; ++$i) {
@@ -100,7 +100,7 @@ class ConnectionPoolTest extends BaseTest
         return $connections;
     }
 
-    protected function createPool()
+    protected function createPool() : \Elastica\Connection\ConnectionPool
     {
         $connections = $this->getConnections();
         $strategy = StrategyFactory::create('Simple');

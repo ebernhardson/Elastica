@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Cluster\Health;
 
 use Elastica\Cluster\Health\Shard as HealthShard;
@@ -11,7 +11,7 @@ class ShardTest extends BaseTest
      */
     protected $_shard;
 
-    public function setUp()
+    public function setUp() : void
     {
         parent::setUp();
 
@@ -30,7 +30,7 @@ class ShardTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetShardNumber()
+    public function testGetShardNumber() : void
     {
         $this->assertEquals(2, $this->_shard->getShardNumber());
     }
@@ -38,7 +38,7 @@ class ShardTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetStatus()
+    public function testGetStatus() : void
     {
         $this->assertEquals('red', $this->_shard->getStatus());
     }
@@ -46,7 +46,7 @@ class ShardTest extends BaseTest
     /**
      * @group unit
      */
-    public function testisPrimaryActive()
+    public function testisPrimaryActive() : void
     {
         $this->assertTrue($this->_shard->isPrimaryActive());
     }
@@ -54,7 +54,7 @@ class ShardTest extends BaseTest
     /**
      * @group unit
      */
-    public function testIsActive()
+    public function testIsActive() : void
     {
         $this->assertTrue($this->_shard->isActive());
     }
@@ -62,7 +62,7 @@ class ShardTest extends BaseTest
     /**
      * @group unit
      */
-    public function testIsRelocating()
+    public function testIsRelocating() : void
     {
         $this->assertFalse($this->_shard->isRelocating());
     }
@@ -70,7 +70,7 @@ class ShardTest extends BaseTest
     /**
      * @group unit
      */
-    public function testIsInitialized()
+    public function testIsInitialized() : void
     {
         $this->assertFalse($this->_shard->isInitialized());
     }
@@ -78,7 +78,7 @@ class ShardTest extends BaseTest
     /**
      * @group unit
      */
-    public function testIsUnassigned()
+    public function testIsUnassigned() : void
     {
         $this->assertTrue($this->_shard->isUnassigned());
     }

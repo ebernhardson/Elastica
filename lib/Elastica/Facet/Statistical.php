@@ -1,5 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Facet;
+
+use Indexish;
 
 /**
  * Implements the statistical facet.
@@ -18,7 +20,7 @@ class Statistical extends AbstractFacet
      *
      * @return $this
      */
-    public function setField($field)
+    public function setField(string $field) : this
     {
         return $this->setParam('field', $field);
     }
@@ -30,7 +32,7 @@ class Statistical extends AbstractFacet
      *
      * @return $this
      */
-    public function setFields(array $fields)
+    public function setFields(array $fields) : this
     {
         return $this->setParam('fields', $fields);
     }
@@ -42,7 +44,7 @@ class Statistical extends AbstractFacet
      *
      * @return $this
      */
-    public function setScript($script)
+    public function setScript(string $script) : this
     {
         return $this->setParam('script', $script);
     }
@@ -55,7 +57,7 @@ class Statistical extends AbstractFacet
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $this->_setFacetParam('statistical', $this->_params);
 

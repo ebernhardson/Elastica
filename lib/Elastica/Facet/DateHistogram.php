@@ -1,5 +1,7 @@
-<?php
+<?hh // strict
 namespace Elastica\Facet;
+
+use Indexish;
 
 /**
  * Implements the Date Histogram facet.
@@ -19,7 +21,7 @@ class DateHistogram extends Histogram
      *
      * @return $this
      */
-    public function setTimezone($tzOffset)
+    public function setTimezone(string $tzOffset) : this
     {
         return $this->setParam('time_zone', $tzOffset);
     }
@@ -31,7 +33,7 @@ class DateHistogram extends Histogram
      *
      * @return $this
      */
-    public function setFactor($factor)
+    public function setFactor(int $factor) : this
     {
         return $this->setParam('factor', $factor);
     }
@@ -46,7 +48,7 @@ class DateHistogram extends Histogram
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         /*
          * Set the range in the abstract as param.

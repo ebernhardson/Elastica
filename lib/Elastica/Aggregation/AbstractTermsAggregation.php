@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Aggregation;
 
 /**
@@ -13,7 +13,7 @@ abstract class AbstractTermsAggregation extends AbstractSimpleAggregation
      *
      * @return $this
      */
-    public function setMinimumDocumentCount($count)
+    public function setMinimumDocumentCount(int $count) : this
     {
         return $this->setParam('min_doc_count', $count);
     }
@@ -26,7 +26,7 @@ abstract class AbstractTermsAggregation extends AbstractSimpleAggregation
      *
      * @return $this
      */
-    public function setInclude($pattern, $flags = null)
+    public function setInclude(string $pattern, ?string $flags = null) : this
     {
         if (is_null($flags)) {
             return $this->setParam('include', $pattern);
@@ -46,7 +46,7 @@ abstract class AbstractTermsAggregation extends AbstractSimpleAggregation
      *
      * @return $this
      */
-    public function setExclude($pattern, $flags = null)
+    public function setExclude(string $pattern, ?string $flags = null) : this
     {
         if (is_null($flags)) {
             return $this->setParam('exclude', $pattern);
@@ -65,7 +65,7 @@ abstract class AbstractTermsAggregation extends AbstractSimpleAggregation
      *
      * @return $this
      */
-    public function setSize($size)
+    public function setSize(int $size) : this
     {
         return $this->setParam('size', $size);
     }
@@ -77,7 +77,7 @@ abstract class AbstractTermsAggregation extends AbstractSimpleAggregation
      *
      * @return $this
      */
-    public function setShardSize($shard_size)
+    public function setShardSize(int $shard_size) : this
     {
         return $this->setParam('shard_size', $shard_size);
     }
@@ -90,7 +90,7 @@ abstract class AbstractTermsAggregation extends AbstractSimpleAggregation
      *
      * @return $this
      */
-    public function setExecutionHint($hint)
+    public function setExecutionHint(string $hint) : this
     {
         return $this->setParam('execution_hint', $hint);
     }

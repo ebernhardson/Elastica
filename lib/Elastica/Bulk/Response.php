@@ -1,6 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Bulk;
 
+use Elastica\Bulk\Action;
 use Elastica\Response as BaseResponse;
 
 class Response extends BaseResponse
@@ -8,12 +9,12 @@ class Response extends BaseResponse
     /**
      * @var \Elastica\Bulk\Action
      */
-    protected $_action;
+    protected Action $_action;
 
     /**
      * @var string
      */
-    protected $_opType;
+    protected string $_opType;
 
     /**
      * @param array|string          $responseData
@@ -31,7 +32,7 @@ class Response extends BaseResponse
     /**
      * @return \Elastica\Bulk\Action
      */
-    public function getAction()
+    public function getAction() : Action
     {
         return $this->_action;
     }
@@ -39,7 +40,7 @@ class Response extends BaseResponse
     /**
      * @return string
      */
-    public function getOpType()
+    public function getOpType() : string
     {
         return $this->_opType;
     }

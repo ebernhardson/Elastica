@@ -1,8 +1,10 @@
-<?php
+<?hh
 namespace Elastica\Cluster;
 
 use Elastica\Client;
 use Elastica\Request;
+use Elastica\Response;
+use Indexish;
 
 /**
  * Cluster settings.
@@ -16,7 +18,7 @@ class Settings
     /**
      * @var \Elastica\Client Client object
      */
-    protected $_client = null;
+    protected Client $_client;
 
     /**
      * Creates a cluster object.
@@ -31,11 +33,16 @@ class Settings
     /**
      * Returns settings data.
      *
-     * @return array Settings data (persistent and transient)
+     * @return Awaitable<array> Settings data (persistent and transient)
      */
-    public function get()
+    public async function get() : Awaitable<Indexish<string, mixed>>
     {
-        return $this->request()->getData();
+        $response = await $this->request();
+        $data = $response->getData();
+        if (!$data instanceof Indexish) {
+            throw new \RuntimeException('expected array');
+        }
+        return $data;
     }
 
     /**
@@ -45,16 +52,16 @@ class Settings
      *
      * @param string $setting OPTIONAL Setting name to return
      *
-     * @return array|string|null Settings data
+     * @return Awaitable<array|string|null> Settings data
      */
-    public function getPersistent($setting = '')
+    public async function getPersistent(string $setting = '') : Awaitable<mixed>
     {
-        $data = $this->get();
+        $data = await $this->get();
         $settings = $data['persistent'];
 
         if (!empty($setting)) {
-            if (isset($settings[$setting])) {
-                return $settings[$setting];
+            if (isset(/* UNSAFE_EXPR */ $settings[$setting])) {
+                return /* UNSAFE_EXPR */ $settings[$setting];
             } else {
                 return;
             }
@@ -70,23 +77,23 @@ class Settings
      *
      * @param string $setting OPTIONAL Setting name to return
      *
-     * @return array|string|null Settings data
+     * @return Awaitable<array|string|null> Settings data
      */
-    public function getTransient($setting = '')
+    public async function getTransient(string $setting = '') : Awaitable<mixed>
     {
-        $data = $this->get();
+        $data = await $this->get();
         $settings = $data['transient'];
 
         if (!empty($setting)) {
-            if (isset($settings[$setting])) {
-                return $settings[$setting];
+            if (isset(/* UNSAFE_EXPR */ $settings[$setting])) {
+                return /* UNSAFE_EXPR */ $settings[$setting];
             } else {
                 if (strpos($setting, '.') !== false) {
                     // convert dot notation to nested arrays
                     $keys = explode('.', $setting);
                     foreach ($keys as $key) {
-                        if (isset($settings[$key])) {
-                            $settings = $settings[$key];
+                        if (isset(/* UNSAFE_EXPR */ $settings[$key])) {
+                            $settings = /* UNSAFE_EXPR */ $settings[$key];
                         } else {
                             return;
                         }
@@ -106,11 +113,11 @@ class Settings
      * Sets persistent setting.
      *
      * @param string $key
-     * @param string $value
+     * @param mixed $value
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      */
-    public function setPersistent($key, $value)
+    public function setPersistent(string $key, mixed $value) : Awaitable<Response>
     {
         return $this->set(
             array(
@@ -125,11 +132,11 @@ class Settings
      * Sets transient settings.
      *
      * @param string $key
-     * @param string $value
+     * @param string|bool  $value
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      */
-    public function setTransient($key, $value)
+    public function setTransient(string $key, mixed $value) : Awaitable<Response>
     {
         return $this->set(
             array(
@@ -148,9 +155,9 @@ class Settings
      * @param bool $readOnly
      * @param bool $persistent
      *
-     * @return \Elastica\Response $response
+     * @return Awaitable<\Elastica\Response> $response
      */
-    public function setReadOnly($readOnly = true, $persistent = false)
+    public function setReadOnly(bool $readOnly = true, bool $persistent = false) : Awaitable<Response>
     {
         $key = 'cluster.blocks.read_only';
 
@@ -168,9 +175,9 @@ class Settings
      *
      * @param array $settings Raw settings (including persistent or transient)
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      */
-    public function set(array $settings)
+    public function set(array $settings) : Awaitable<Response>
     {
         return $this->request($settings, Request::PUT);
     }
@@ -180,7 +187,7 @@ class Settings
      *
      * @return \Elastica\Client
      */
-    public function getClient()
+    public function getClient() : Client
     {
         return $this->_client;
     }
@@ -191,9 +198,9 @@ class Settings
      * @param array  $data   OPTIONAL Data array
      * @param string $method OPTIONAL Transfer method (default = \Elastica\Request::GET)
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function request(array $data = array(), $method = Request::GET)
+    public function request(array $data = array(), string $method = Request::GET) : Awaitable<Response>
     {
         $path = '_cluster/settings';
 

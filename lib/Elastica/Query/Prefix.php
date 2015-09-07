@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Query;
 
 /**
@@ -13,7 +13,7 @@ class Prefix extends AbstractQuery
      *
      * @param array $prefix OPTIONAL Calls setRawPrefix with the given $prefix array
      */
-    public function __construct(array $prefix = array())
+    public function __construct(Map<string, mixed> $prefix = Map {})
     {
         $this->setRawPrefix($prefix);
     }
@@ -26,7 +26,7 @@ class Prefix extends AbstractQuery
      *
      * @return $this
      */
-    public function setRawPrefix(array $prefix)
+    public function setRawPrefix(Map<string, mixed> $prefix) : this
     {
         return $this->setParams($prefix);
     }
@@ -40,8 +40,8 @@ class Prefix extends AbstractQuery
      *
      * @return $this
      */
-    public function setPrefix($key, $value, $boost = 1.0)
+    public function setPrefix(string $key, mixed $value, float $boost = 1.0) : this
     {
-        return $this->setRawPrefix(array($key => array('value' => $value, 'boost' => $boost)));
+        return $this->setRawPrefix(Map {$key => Map {'value' => $value, 'boost' => $boost}});
     }
 }

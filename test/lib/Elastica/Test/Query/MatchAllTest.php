@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -11,11 +11,11 @@ class MatchAllTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $query = new MatchAll();
 
-        $expectedArray = array('match_all' => new \stdClass());
+        $expectedArray = array('match_all' => Map {});
 
         $this->assertEquals($expectedArray, $query->toArray());
     }
@@ -23,7 +23,7 @@ class MatchAllTest extends BaseTest
     /**
      * @group functional
      */
-    public function testMatchAllIndicesTypes()
+    public function testMatchAllIndicesTypes() : void
     {
         $index1 = $this->_createIndex();
         $index2 = $this->_createIndex();
@@ -31,18 +31,18 @@ class MatchAllTest extends BaseTest
         $client = $index1->getClient();
 
         $search1 = new Search($client);
-        $resultSet1 = $search1->search(new MatchAll());
+        $resultSet1 = $search1->search(new MatchAll())->getWaitHandle()->join();
 
-        $doc1 = new Document(1, array('name' => 'ruflin'));
-        $doc2 = new Document(1, array('name' => 'ruflin'));
-        $index1->getType('test')->addDocument($doc1);
-        $index2->getType('test')->addDocument($doc2);
+        $doc1 = new Document('1', array('name' => 'ruflin'));
+        $doc2 = new Document('1', array('name' => 'ruflin'));
+        $index1->getType('test')->addDocument($doc1)->getWaitHandle()->join();
+        $index2->getType('test')->addDocument($doc2)->getWaitHandle()->join();
 
-        $index1->refresh();
-        $index2->refresh();
+        $index1->refresh()->getWaitHandle()->join();
+        $index2->refresh()->getWaitHandle()->join();
 
         $search2 = new Search($client);
-        $resultSet2 = $search2->search(new MatchAll());
+        $resultSet2 = $search2->search(new MatchAll())->getWaitHandle()->join();
 
         $this->assertEquals($resultSet1->getTotalHits() + 2, $resultSet2->getTotalHits());
     }

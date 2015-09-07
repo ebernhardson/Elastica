@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Query;
 
 /**
@@ -19,7 +19,7 @@ class Boosting extends AbstractQuery
      *
      * @return $this
      */
-    public function setPositiveQuery(AbstractQuery $query)
+    public function setPositiveQuery(AbstractQuery $query) : this
     {
         return $this->setParam('positive', $query);
     }
@@ -31,7 +31,7 @@ class Boosting extends AbstractQuery
      *
      * @return $this
      */
-    public function setNegativeQuery(AbstractQuery $query)
+    public function setNegativeQuery(AbstractQuery $query) : this
     {
         return $this->setParam('negative', $query);
     }
@@ -39,11 +39,11 @@ class Boosting extends AbstractQuery
     /**
      * Set the negative_boost parameter for this Boosting Query.
      *
-     * @param Float $negativeBoost
+     * @param float $negativeBoost
      *
      * @return $this
      */
-    public function setNegativeBoost($negativeBoost)
+    public function setNegativeBoost(float $negativeBoost) : this
     {
         return $this->setParam('negative_boost', (float) $negativeBoost);
     }

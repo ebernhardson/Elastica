@@ -1,8 +1,10 @@
-<?php
+<?hh
 namespace Elastica\Node;
 
 use Elastica\Node as BaseNode;
 use Elastica\Request;
+use Elastica\Response;
+use Indexish;
 
 /**
  * Elastica cluster node object.
@@ -18,31 +20,44 @@ class Stats
      *
      * @var \Elastica\Response Response object
      */
-    protected $_response = null;
+    protected Response $_response;
 
     /**
      * Stats data.
      *
      * @var array stats data
      */
-    protected $_data = array();
+    protected array $_data = array();
 
     /**
      * Node.
      *
      * @var \Elastica\Node Node object
      */
-    protected $_node = null;
+    protected BaseNode $_node;
+
+    /**
+     * Create new stats for node.
+     *
+     * @param \Elastica\Node $node Elastica node object
+     *
+     * @return Awaitable<\Elastica\Node\Stats>
+     */
+    static public async function create(BaseNode $node) : Awaitable<Stats>
+    {
+        $response = await self::_refreshRequest($node);
+        return new self($node, $response);
+    }
 
     /**
      * Create new stats for node.
      *
      * @param \Elastica\Node $node Elastica node object
      */
-    public function __construct(BaseNode $node)
+    protected function __construct(BaseNode $node, Response $response)
     {
         $this->_node = $node;
-        $this->refresh();
+        $this->onResponse($response);
     }
 
     /**
@@ -51,9 +66,9 @@ class Stats
      * Several arguments can be use
      * get('index', 'test', 'example')
      *
-     * @return array Node stats for the given field or null if not found
+     * @return ?array Node stats for the given field or null if not found
      */
-    public function get()
+    public function get() : ?array
     {
         $data = $this->getData();
 
@@ -61,7 +76,7 @@ class Stats
             if (isset($data[$arg])) {
                 $data = $data[$arg];
             } else {
-                return;
+                return null;
             }
         }
 
@@ -73,7 +88,7 @@ class Stats
      *
      * @return array Data array
      */
-    public function getData()
+    public function getData() : array
     {
         return $this->_data;
     }
@@ -83,7 +98,7 @@ class Stats
      *
      * @return \Elastica\Node Node object
      */
-    public function getNode()
+    public function getNode() : BaseNode
     {
         return $this->_node;
     }
@@ -93,7 +108,7 @@ class Stats
      *
      * @return \Elastica\Response Response object
      */
-    public function getResponse()
+    public function getResponse() : Response
     {
         return $this->_response;
     }
@@ -101,13 +116,29 @@ class Stats
     /**
      * Reloads all nodes information. Has to be called if informations changed.
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function refresh()
+    public async function refresh() : Awaitable<Response>
     {
-        $path = '_nodes/'.$this->getNode()->getName().'/stats';
-        $this->_response = $this->getNode()->getClient()->request($path, Request::GET);
+        $response = await self::_refreshRequest($this->getNode());
+        return $this->onResponse($response);
+    }
+
+    protected static async function _refreshRequest(BaseNode $node) : Awaitable<Response>
+    {
+        $name = await $node->getName();
+        $path = '_nodes/'.$name.'/stats';
+        return await $node->getClient()->request($path, Request::GET);
+    }
+
+    private function onResponse(Response $response) : Response
+    {
+        $this->_response = $response;
         $data = $this->getResponse()->getData();
+        if (!$data instanceof Indexish) {
+            throw new \RuntimeException('expected array');
+        }
         $this->_data = reset($data['nodes']);
+        return $this->getResponse();
     }
 }

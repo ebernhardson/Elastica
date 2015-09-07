@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica;
 
 /**
@@ -15,7 +15,7 @@ class Result
      *
      * @var array Hit array
      */
-    protected $_hit = array();
+    protected array $_hit = array();
 
     /**
      * Constructs a single results object.
@@ -36,9 +36,9 @@ class Result
      *
      * @param string $name Param name
      *
-     * @return array Result data
+     * @return string|array data
      */
-    public function getParam($name)
+    public function getParam(string $name) : mixed
     {
         if (isset($this->_hit[$name])) {
             return $this->_hit[$name];
@@ -54,7 +54,7 @@ class Result
      *
      * @return bool True if the param is set, false otherwise
      */
-    public function hasParam($name)
+    public function hasParam(string $name) : bool
     {
         return isset($this->_hit[$name]);
     }
@@ -64,9 +64,9 @@ class Result
      *
      * @return string Hit id
      */
-    public function getId()
+    public function getId() : string
     {
-        return $this->getParam('_id');
+        return (string) $this->getParam('_id');
     }
 
     /**
@@ -74,9 +74,9 @@ class Result
      *
      * @return string Result type
      */
-    public function getType()
+    public function getType() : string
     {
-        return $this->getParam('_type');
+        return (string) $this->getParam('_type');
     }
 
     /**
@@ -84,9 +84,9 @@ class Result
      *
      * @return array Fields list
      */
-    public function getFields()
+    public function getFields() : array
     {
-        return $this->getParam('fields');
+        return (array) $this->getParam('fields');
     }
 
     /**
@@ -94,9 +94,9 @@ class Result
      *
      * @return bool
      */
-    public function hasFields()
+    public function hasFields() : bool
     {
-        return $this->hasParam('fields');
+        return (bool) $this->hasParam('fields');
     }
 
     /**
@@ -104,9 +104,9 @@ class Result
      *
      * @return string Index name
      */
-    public function getIndex()
+    public function getIndex() : string
     {
-        return $this->getParam('_index');
+        return (string) $this->getParam('_index');
     }
 
     /**
@@ -114,9 +114,9 @@ class Result
      *
      * @return float Result score
      */
-    public function getScore()
+    public function getScore() : float
     {
-        return $this->getParam('_score');
+        return (float) $this->getParam('_score');
     }
 
     /**
@@ -124,9 +124,9 @@ class Result
      *
      * @return array Hit array
      */
-    public function getHit()
+    public function getHit() : array
     {
-        return $this->_hit;
+        return (array) $this->_hit;
     }
 
     /**
@@ -134,7 +134,7 @@ class Result
      *
      * @return string|int Document version
      */
-    public function getVersion()
+    public function getVersion() : mixed
     {
         return $this->getParam('_version');
     }
@@ -146,7 +146,7 @@ class Result
      *
      * @return array Result data array
      */
-    public function getData()
+    public function getData() : array
     {
         if (isset($this->_hit['fields']) && !isset($this->_hit['_source'])) {
             return $this->getFields();
@@ -160,9 +160,9 @@ class Result
      *
      * @return array Source data array
      */
-    public function getSource()
+    public function getSource() : array
     {
-        return $this->getParam('_source');
+        return (array) $this->getParam('_source');
     }
 
     /**
@@ -170,9 +170,9 @@ class Result
      *
      * @return array Result data array
      */
-    public function getHighlights()
+    public function getHighlights() : array
     {
-        return $this->getParam('highlight');
+        return (array) $this->getParam('highlight');
     }
 
     /**
@@ -180,9 +180,9 @@ class Result
      *
      * @return array explanations
      */
-    public function getExplanation()
+    public function getExplanation() : array
     {
-        return $this->getParam('_explanation');
+        return (array) $this->getParam('_explanation');
     }
 
     /**
@@ -194,7 +194,7 @@ class Result
      *
      * @return mixed Key value
      */
-    public function __get($key)
+    public function __get(string $key) : mixed
     {
         $source = $this->getData();
 
@@ -208,7 +208,7 @@ class Result
      *
      * @return bool
      */
-    public function __isset($key)
+    public function __isset(string $key) : bool
     {
         $source = $this->getData();
 

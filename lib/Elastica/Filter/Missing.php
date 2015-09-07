@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Filter;
 
 /**
@@ -15,7 +15,7 @@ class Missing extends AbstractFilter
      *
      * @param string $field OPTIONAL
      */
-    public function __construct($field = '')
+    public function __construct(string $field = '')
     {
         if (strlen($field)) {
             $this->setField($field);
@@ -29,7 +29,7 @@ class Missing extends AbstractFilter
      *
      * @return $this
      */
-    public function setField($field)
+    public function setField(string $field) : this
     {
         return $this->setParam('field', (string) $field);
     }
@@ -41,7 +41,7 @@ class Missing extends AbstractFilter
      *
      * @return $this
      */
-    public function setExistence($existence)
+    public function setExistence(bool $existence) : this
     {
         return $this->setParam('existence', (bool) $existence);
     }
@@ -53,7 +53,7 @@ class Missing extends AbstractFilter
      *
      * @return $this
      */
-    public function setNullValue($nullValue)
+    public function setNullValue(bool $nullValue) : this
     {
         return $this->setParam('null_value', (bool) $nullValue);
     }

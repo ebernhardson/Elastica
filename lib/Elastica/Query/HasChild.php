@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 use Elastica\Query as BaseQuery;
+use Indexish;
 
 /**
  * Returns parent documents having child docs matching the query.
@@ -18,7 +19,7 @@ class HasChild extends AbstractQuery
      * @param string|\Elastica\Query|\Elastica\Query\AbstractQuery $query
      * @param string                                               $type  Parent document type
      */
-    public function __construct($query, $type = null)
+    public function __construct(mixed $query, ?string $type = null)
     {
         $this->setType($type);
         $this->setQuery($query);
@@ -31,7 +32,7 @@ class HasChild extends AbstractQuery
      *
      * @return $this
      */
-    public function setQuery($query)
+    public function setQuery(mixed $query) : this
     {
         return $this->setParam('query', BaseQuery::create($query));
     }
@@ -43,7 +44,7 @@ class HasChild extends AbstractQuery
      *
      * @return $this
      */
-    public function setType($type)
+    public function setType(?string $type) : this
     {
         return $this->setParam('type', $type);
     }
@@ -55,7 +56,7 @@ class HasChild extends AbstractQuery
      *
      * @return $this
      */
-    public function setScope($scope)
+    public function setScope(string $scope) : this
     {
         return $this->setParam('_scope', $scope);
     }
@@ -63,13 +64,14 @@ class HasChild extends AbstractQuery
     /**
      * {@inheritdoc}
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $array = parent::toArray();
 
         $baseName = $this->_getBaseName();
 
-        if (isset($array[$baseName]['query'])) {
+        if (isset(/* UNSAFE_EXPR */ $array[$baseName]['query'])) {
+            /* UNSAFE_EXPR */
             $array[$baseName]['query'] = $array[$baseName]['query']['query'];
         }
 

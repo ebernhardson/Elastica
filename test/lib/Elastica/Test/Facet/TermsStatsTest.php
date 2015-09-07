@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Facet;
 
 use Elastica\Document;
@@ -12,25 +12,25 @@ class TermsStatsTest extends BaseTest
     /**
      * @group functional
      */
-    public function testOrder()
+    public function testOrder() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('helloworld');
 
-        $doc = new Document(1, array('name' => 'tom', 'paid' => 7));
-        $type->addDocument($doc);
-        $doc = new Document(2, array('name' => 'tom', 'paid' => 2));
-        $type->addDocument($doc);
-        $doc = new Document(3, array('name' => 'tom', 'paid' => 5));
-        $type->addDocument($doc);
-        $doc = new Document(4, array('name' => 'mike', 'paid' => 13));
-        $type->addDocument($doc);
-        $doc = new Document(5, array('name' => 'mike', 'paid' => 1));
-        $type->addDocument($doc);
-        $doc = new Document(6, array('name' => 'mike', 'paid' => 15));
-        $type->addDocument($doc);
+        $doc = new Document('1', array('name' => 'tom', 'paid' => 7));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('2', array('name' => 'tom', 'paid' => 2));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('3', array('name' => 'tom', 'paid' => 5));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('4', array('name' => 'mike', 'paid' => 13));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('5', array('name' => 'mike', 'paid' => 1));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('6', array('name' => 'mike', 'paid' => 15));
+        $type->addDocument($doc)->getWaitHandle()->join();
 
         $facet = new TermsStats('test');
         $facet->setKeyField('name');
@@ -41,9 +41,9 @@ class TermsStatsTest extends BaseTest
         $query->addFacet($facet);
         $query->setQuery(new MatchAll());
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $response = $type->search($query);
+        $response = $type->search($query)->getWaitHandle()->join();
         $facets = $response->getFacets();
 
         $this->assertEquals(14, $facets[ 'test' ][ 'terms' ][0]['total']);
@@ -53,25 +53,25 @@ class TermsStatsTest extends BaseTest
     /**
      * @group functional
      */
-    public function testQuery()
+    public function testQuery() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('helloworld');
 
-        $doc = new Document(1, array('name' => 'tom', 'paid' => 7));
-        $type->addDocument($doc);
-        $doc = new Document(2, array('name' => 'tom', 'paid' => 2));
-        $type->addDocument($doc);
-        $doc = new Document(3, array('name' => 'tom', 'paid' => 5));
-        $type->addDocument($doc);
-        $doc = new Document(4, array('name' => 'mike', 'paid' => 13));
-        $type->addDocument($doc);
-        $doc = new Document(5, array('name' => 'mike', 'paid' => 1));
-        $type->addDocument($doc);
-        $doc = new Document(6, array('name' => 'mike', 'paid' => 15));
-        $type->addDocument($doc);
+        $doc = new Document('1', array('name' => 'tom', 'paid' => 7));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('2', array('name' => 'tom', 'paid' => 2));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('3', array('name' => 'tom', 'paid' => 5));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('4', array('name' => 'mike', 'paid' => 13));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('5', array('name' => 'mike', 'paid' => 1));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('6', array('name' => 'mike', 'paid' => 15));
+        $type->addDocument($doc)->getWaitHandle()->join();
 
         $facet = new TermsStats('test');
         $facet->setKeyField('name');
@@ -81,9 +81,9 @@ class TermsStatsTest extends BaseTest
         $query->addFacet($facet);
         $query->setQuery(new MatchAll());
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $response = $type->search($query);
+        $response = $type->search($query)->getWaitHandle()->join();
         $facets = $response->getFacets();
 
         $this->assertEquals(2, count($facets[ 'test' ][ 'terms' ]));
@@ -100,14 +100,13 @@ class TermsStatsTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetSize()
+    public function testSetSize() : void
     {
         $facet = new TermsStats('test');
         $facet->setSize(100);
 
         $data = $facet->toArray();
 
-        $this->assertArrayHasKey('size', $data['terms_stats']);
-        $this->assertEquals(100, $data['terms_stats']['size']);
+		$this->assertEquals(Map {'size' => 100}, $data['terms_stats']);
     }
 }

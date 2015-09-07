@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Aggregation;
 
 /**
@@ -12,7 +12,7 @@ class Percentiles extends AbstractSimpleAggregation
      * @param string $name  the name of this aggregation
      * @param string $field the field on which to perform this aggregation
      */
-    public function __construct($name, $field = null)
+    public function __construct(string $name, ?string $field = null)
     {
         parent::__construct($name);
 
@@ -28,9 +28,9 @@ class Percentiles extends AbstractSimpleAggregation
      *
      * @return $this
      */
-    public function setCompression($value)
+    public function setCompression(float $value) : this
     {
-        return $this->setParam('compression', (float) $value);
+        return $this->setParam('compression', $value);
     }
 
     /**
@@ -40,7 +40,7 @@ class Percentiles extends AbstractSimpleAggregation
      *
      * @return $this
      */
-    public function setPercents(array $percents)
+    public function setPercents(array<float> $percents) : this
     {
         return $this->setParam('percents', $percents);
     }
@@ -52,8 +52,8 @@ class Percentiles extends AbstractSimpleAggregation
      *
      * @return $this
      */
-    public function addPercent($percent)
+    public function addPercent(float $percent) : this
     {
-        return $this->addParam('percents', (float) $percent);
+        return $this->addParam('percents', $percent);
     }
 }

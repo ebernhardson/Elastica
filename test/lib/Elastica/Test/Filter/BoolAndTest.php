@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Document;
@@ -11,7 +11,7 @@ class BoolAndTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $and = new BoolAnd();
         $this->assertEquals(array('and' => array()), $and->toArray());
@@ -35,18 +35,18 @@ class BoolAndTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSetCache()
+    public function testSetCache() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('test');
 
         $type->addDocuments(array(
-            new Document(1, array('name' => 'hello world')),
-            new Document(2, array('name' => 'nicolas ruflin')),
-            new Document(3, array('name' => 'ruflin')),
-        ));
+            new Document('1', array('name' => 'hello world')),
+            new Document('2', array('name' => 'nicolas ruflin')),
+            new Document('3', array('name' => 'ruflin')),
+        ))->getWaitHandle()->join();
 
         $and = new BoolAnd();
 
@@ -59,10 +59,10 @@ class BoolAndTest extends BaseTest
         $and->addFilter($idsFilter1);
         $and->addFilter($idsFilter2);
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
         $and->setCached(true);
 
-        $resultSet = $type->search($and);
+        $resultSet = $type->search($and)->getWaitHandle()->join();
 
         $this->assertEquals(1, $resultSet->count());
     }
@@ -70,7 +70,7 @@ class BoolAndTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConstruct()
+    public function testConstruct() : void
     {
         $ids1 = new Ids('foo', array(1, 2));
         $ids2 = new Ids('bar', array(3, 4));

@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 use Elastica\Exception\InvalidException;
@@ -18,9 +18,9 @@ class Fuzzy extends AbstractQuery
      * @param string $fieldName Field name
      * @param string $value     String to search for
      */
-    public function __construct($fieldName = null, $value = null)
+    public function __construct(?string $fieldName = null, ?string $value = null)
     {
-        if ($fieldName and $value) {
+        if ($fieldName && $value) {
             $this->setField($fieldName, $value);
         }
     }
@@ -33,12 +33,12 @@ class Fuzzy extends AbstractQuery
      *
      * @return $this
      */
-    public function setField($fieldName, $value)
+    public function setField(string $fieldName, string $value) : this
     {
-        if (!is_string($value) or !is_string($fieldName)) {
+        if (!is_string($value) || !is_string($fieldName)) {
             throw new InvalidException('The field and value arguments must be of type string.');
         }
-        if (count($this->getParams()) > 0 and array_shift(array_keys($this->getParams())) != $fieldName) {
+        if (count($this->getParams()) > 0 && array_shift(array_keys($this->getParams())) != $fieldName) {
             throw new InvalidException('Fuzzy query can only support a single field.');
         }
 
@@ -53,7 +53,7 @@ class Fuzzy extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldOption($param, $value)
+    public function setFieldOption(string $param, mixed $value) : this
     {
         //Retrieve the single existing field for alteration.
         $params = $this->getParams();
@@ -61,6 +61,7 @@ class Fuzzy extends AbstractQuery
             throw new InvalidException('No field has been set');
         }
         $keyArray = array_keys($params);
+        /* UNSAFE_EXPR */
         $params[$keyArray[0]][$param] = $value;
 
         return $this->setParam($keyArray[0], $params[$keyArray[0]]);
@@ -71,7 +72,7 @@ class Fuzzy extends AbstractQuery
      *
      * @deprecated
      */
-    public function addField($fieldName, $args)
+    public function addField(@string $fieldName, @array $args) : this
     {
         if (!array_key_exists('value', $args)) {
             throw new InvalidException('Fuzzy query can only support a single field.');

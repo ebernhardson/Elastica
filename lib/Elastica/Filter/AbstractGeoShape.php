@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Filter;
 
 /**
@@ -21,21 +21,21 @@ abstract class AbstractGeoShape extends AbstractFilter
      *
      * elasticsearch path of the pre-indexed shape
      */
-    protected $_path;
+    protected ?string $_path;
 
     /**
      * @var string
      *
      * the relation of the 2 shaped: intersects, disjoint, within
      */
-    protected $_relation = self::RELATION_INTERSECT;
+    protected string $_relation = self::RELATION_INTERSECT;
 
     /**
      * @param string $relation
      *
      * @return $this
      */
-    public function setRelation($relation)
+    public function setRelation(string $relation) : this
     {
         $this->_relation = $relation;
 
@@ -45,7 +45,7 @@ abstract class AbstractGeoShape extends AbstractFilter
     /**
      * @return string
      */
-    public function getRelation()
+    public function getRelation() : string
     {
         return $this->_relation;
     }

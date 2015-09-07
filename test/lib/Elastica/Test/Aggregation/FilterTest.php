@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Aggregation;
 
 use Elastica\Aggregation\Avg;
@@ -10,18 +10,18 @@ use Elastica\Query;
 
 class FilterTest extends BaseAggregationTest
 {
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : \Elastica\Index
     {
         $index = $this->_createIndex();
 
         $index->getType('test')->addDocuments(array(
-            new Document(1, array('price' => 5, 'color' => 'blue')),
-            new Document(2, array('price' => 8, 'color' => 'blue')),
-            new Document(3, array('price' => 1, 'color' => 'red')),
-            new Document(4, array('price' => 3, 'color' => 'green')),
-        ));
+            new Document('1', array('price' => 5, 'color' => 'blue')),
+            new Document('2', array('price' => 8, 'color' => 'blue')),
+            new Document('3', array('price' => 1, 'color' => 'red')),
+            new Document('4', array('price' => 3, 'color' => 'green')),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -29,12 +29,12 @@ class FilterTest extends BaseAggregationTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $expected = array(
-            'filter' => array('range' => array('stock' => array('gt' => 0))),
+            'filter' => array('range' => Map {'stock' => array('gt' => 0)}),
             'aggs' => array(
-                'avg_price' => array('avg' => array('field' => 'price')),
+                'avg_price' => array('avg' => Map {'field' => 'price'}),
             ),
         );
 
@@ -50,10 +50,10 @@ class FilterTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testFilterAggregation()
+    public function testFilterAggregation() : void
     {
         $agg = new Filter('filter');
-        $agg->setFilter(new Term(array('color' => 'blue')));
+        $agg->setFilter(new Term(Map {'color' => 'blue'}));
         $avg = new Avg('price');
         $avg->setField('price');
         $agg->addAggregation($avg);
@@ -61,7 +61,7 @@ class FilterTest extends BaseAggregationTest
         $query = new Query();
         $query->addAggregation($agg);
 
-        $results = $this->_getIndexForTest()->search($query)->getAggregation('filter');
+        $results = $this->_getIndexForTest()->search($query)->getWaitHandle()->join()->getAggregation('filter');
         $results = $results['price']['value'];
 
         $this->assertEquals((5 + 8) / 2.0, $results);
@@ -70,7 +70,7 @@ class FilterTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testFilterNoSubAggregation()
+    public function testFilterNoSubAggregation() : void
     {
         $agg = new Avg('price');
         $agg->setField('price');
@@ -78,7 +78,7 @@ class FilterTest extends BaseAggregationTest
         $query = new Query();
         $query->addAggregation($agg);
 
-        $results = $this->_getIndexForTest()->search($query)->getAggregation('price');
+        $results = $this->_getIndexForTest()->search($query)->getWaitHandle()->join()->getAggregation('price');
         $results = $results['value'];
 
         $this->assertEquals((5 + 8 + 1 + 3) / 4.0, $results);
@@ -87,15 +87,15 @@ class FilterTest extends BaseAggregationTest
     /**
      * @group unit
      */
-    public function testConstruct()
+    public function testConstruct() : void
     {
-        $agg = new Filter('foo', new Term(array('color' => 'blue')));
+        $agg = new Filter('foo', new Term(Map {'color' => 'blue'}));
 
         $expected = array(
             'filter' => array(
-                'term' => array(
+                'term' => Map {
                     'color' => 'blue',
-                ),
+                },
             ),
         );
 
@@ -105,7 +105,7 @@ class FilterTest extends BaseAggregationTest
     /**
      * @group unit
      */
-    public function testConstructWithoutFilter()
+    public function testConstructWithoutFilter() : void
     {
         $agg = new Filter('foo');
         $this->assertEquals('foo', $agg->getName());

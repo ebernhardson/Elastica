@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Document;
@@ -14,54 +14,54 @@ class IndicesTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $expected = array(
-            'indices' => array(
+            'indices' => Map {
                 'indices' => array('index1', 'index2'),
                 'filter' => array(
-                    'term' => array('tag' => 'wow'),
+                    'term' => Map {'tag' => 'wow'},
                 ),
                 'no_match_filter' => array(
-                    'term' => array('tag' => 'such filter'),
+                    'term' => Map {'tag' => 'such filter'},
                 ),
-            ),
+            },
         );
-        $filter = new Indices(new Term(array('tag' => 'wow')), array('index1', 'index2'));
-        $filter->setNoMatchFilter(new Term(array('tag' => 'such filter')));
+        $filter = new Indices(new Term(Map {'tag' => 'wow'}), array('index1', 'index2'));
+        $filter->setNoMatchFilter(new Term(Map {'tag' => 'such filter'}));
         $this->assertEquals($expected, $filter->toArray());
     }
 
     /**
      * @group functional
      */
-    public function testIndicesFilter()
+    public function testIndicesFilter() : void
     {
         $docs = array(
-            new Document(1, array('color' => 'blue')),
-            new Document(2, array('color' => 'green')),
-            new Document(3, array('color' => 'blue')),
-            new Document(4, array('color' => 'yellow')),
+            new Document('1', array('color' => 'blue')),
+            new Document('2', array('color' => 'green')),
+            new Document('3', array('color' => 'blue')),
+            new Document('4', array('color' => 'yellow')),
         );
 
         $index1 = $this->_createIndex();
-        $index1->addAlias('indices_filter');
-        $index1->getType('test')->addDocuments($docs);
-        $index1->refresh();
+        $index1->addAlias('indices_filter')->getWaitHandle()->join();
+        $index1->getType('test')->addDocuments($docs)->getWaitHandle()->join();
+        $index1->refresh()->getWaitHandle()->join();
 
         $index2 = $this->_createIndex();
-        $index2->addAlias('indices_filter');
-        $index2->getType('test')->addDocuments($docs);
-        $index2->refresh();
+        $index2->addAlias('indices_filter')->getWaitHandle()->join();
+        $index2->getType('test')->addDocuments($docs)->getWaitHandle()->join();
+        $index2->refresh()->getWaitHandle()->join();
 
-        $filter = new Indices(new BoolNot(new Term(array('color' => 'blue'))), array($index1->getName()));
-        $filter->setNoMatchFilter(new BoolNot(new Term(array('color' => 'yellow'))));
+        $filter = new Indices(new BoolNot(new Term(Map {'color' => 'blue'})), array($index1->getName()));
+        $filter->setNoMatchFilter(new BoolNot(new Term(Map {'color' => 'yellow'})));
         $query = new Query();
         $query->setPostFilter($filter);
 
         // search over the alias
         $index = $this->_getClient()->getIndex('indices_filter');
-        $results = $index->search($query);
+        $results = $index->search($query)->getWaitHandle()->join();
 
         // ensure that the proper docs have been filtered out for each index
         $this->assertEquals(5, $results->count());
@@ -79,14 +79,14 @@ class IndicesTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetIndices()
+    public function testSetIndices() : void
     {
         $client = $this->_getClient();
         $index1 = $client->getIndex('index1');
         $index2 = $client->getIndex('index2');
 
         $indices = array('one', 'two');
-        $filter = new Indices(new Term(array('color' => 'blue')), $indices);
+        $filter = new Indices(new Term(Map {'color' => 'blue'}), $indices);
         $this->assertEquals($indices, $filter->getParam('indices'));
 
         $indices[] = 'three';
@@ -104,12 +104,12 @@ class IndicesTest extends BaseTest
     /**
      * @group unit
      */
-    public function testAddIndex()
+    public function testAddIndex() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('someindex');
 
-        $filter = new Indices(new Term(array('color' => 'blue')), array());
+        $filter = new Indices(new Term(Map {'color' => 'blue'}), array());
 
         $filter->addIndex($index);
         $expected = array($index->getName());

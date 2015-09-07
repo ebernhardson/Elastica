@@ -1,5 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Facet;
+
+use Indexish;
 
 /**
  * Implements the Geo Distance facet.
@@ -25,7 +27,7 @@ class GeoDistance extends AbstractFacet
      *
      * @return $this
      */
-    public function setRanges(array $ranges)
+    public function setRanges(array $ranges) : this
     {
         return $this->setParam('ranges', $ranges);
     }
@@ -39,7 +41,7 @@ class GeoDistance extends AbstractFacet
      *
      * @return $this
      */
-    public function setGeoPoint($typeField, $latitude, $longitude)
+    public function setGeoPoint(string $typeField, float $latitude, float $longitude) : this
     {
         return $this->setParam($typeField, array(
             'lat' => $latitude,
@@ -57,7 +59,7 @@ class GeoDistance extends AbstractFacet
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         /*
          * Set the geo_distance in the abstract as param.

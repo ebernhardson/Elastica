@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Script objects, containing script internals.
@@ -21,7 +22,7 @@ class Script extends AbstractScript
     /**
      * @var string
      */
-    private $_script;
+    private string $_script;
 
     /**
      * @var string
@@ -32,14 +33,15 @@ class Script extends AbstractScript
      * @param string      $script
      * @param array|null  $params
      * @param string|null $lang
+     * @param string|null $id
      */
-    public function __construct($script, array $params = null, $lang = null, $id = null)
+    public function __construct(string $script, ?Map<string, mixed> $params = null, ?string $lang = null, ?string $id = null)
     {
         parent::__construct($params, $id);
 
-        $this->setScript($script);
+        $this->_script = $script;
 
-        if ($lang) {
+        if ($lang !== null) {
             $this->setLang($lang);
         }
     }
@@ -49,7 +51,7 @@ class Script extends AbstractScript
      *
      * @return $this
      */
-    public function setLang($lang)
+    public function setLang(string $lang) : this
     {
         $this->_lang = $lang;
 
@@ -59,7 +61,7 @@ class Script extends AbstractScript
     /**
      * @return string
      */
-    public function getLang()
+    public function getLang() : string
     {
         return $this->_lang;
     }
@@ -69,7 +71,7 @@ class Script extends AbstractScript
      *
      * @return $this
      */
-    public function setScript($script)
+    public function setScript(string $script) : this
     {
         $this->_script = $script;
 
@@ -79,7 +81,7 @@ class Script extends AbstractScript
     /**
      * @return string
      */
-    public function getScript()
+    public function getScript() : string
     {
         return $this->_script;
     }
@@ -91,11 +93,11 @@ class Script extends AbstractScript
      *
      * @return self
      */
-    public static function create($data)
+    public static function create(mixed $data) : Script
     {
         if ($data instanceof self) {
             $script = $data;
-        } elseif (is_array($data)) {
+        } elseif ($data instanceof Indexish) {
             $script = self::_createFromArray($data);
         } elseif (is_string($data)) {
             $script = new self($data);
@@ -113,23 +115,24 @@ class Script extends AbstractScript
      *
      * @return self
      */
-    protected static function _createFromArray(array $data)
+    protected static function _createFromArray(Indexish<string, mixed> $data) : Script
     {
         if (!isset($data['script'])) {
             throw new InvalidException("\$data['script'] is required");
         }
 
-        $script = new self($data['script']);
+        $script = new self((string) $data['script']);
 
         if (isset($data['lang'])) {
-            $script->setLang($data['lang']);
+            $script->setLang((string) $data['lang']);
         }
 
         if (isset($data['params'])) {
-            if (!is_array($data['params'])) {
-                throw new InvalidException("\$data['params'] should be array");
+            $params = $data['params'];
+            if (!$params instanceof Map) {
+                throw new InvalidException("\$data['params'] should be Map");
             }
-            $script->setParams($data['params']);
+            $script->setParams($params);
         }
 
         return $script;
@@ -138,7 +141,7 @@ class Script extends AbstractScript
     /**
      * {@inheritdoc}
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $array = array(
             'script' => $this->_script,

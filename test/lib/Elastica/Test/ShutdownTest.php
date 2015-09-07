@@ -1,4 +1,4 @@
-<?php
+<?hh
 
 use Elastica\Test\Base as BaseTest;
 
@@ -11,11 +11,11 @@ class ShutdownTest extends BaseTest
     /**
      * @group shutdown
      */
-    public function testNodeShutdown()
+    public function testNodeShutdown() : void
     {
         // Get cluster nodes
         $client = $this->_getClient();
-        $cluster = $client->getCluster();
+        $cluster = $client->getCluster()->getWaitHandle()->join();
         $nodes = $cluster->getNodes();
 
         $nodesCount = count($nodes);
@@ -28,9 +28,9 @@ class ShutdownTest extends BaseTest
 
         // Shuts down host on port 9201 in travis or vagrant environment where multiple instance run on one host
         foreach ($nodes as $node) {
-            if ((int) $node->getInfo()->getPort() === 9201) {
+            if ((int) $node->getInfo()->getWaitHandle()->join()->getPort() === 9201) {
                 $portFound = true;
-                $node->shutdown('1s');
+                $node->shutdown('1s')->getWaitHandle()->join();
                 break;
             }
         }
@@ -45,7 +45,7 @@ class ShutdownTest extends BaseTest
 
         // Get nodes again
         $client = $this->_getClient();
-        $cluster = $client->getCluster();
+        $cluster = $client->getCluster()->getWaitHandle()->join();
         $nodes = $cluster->getNodes();
 
         // Only one left
@@ -57,20 +57,20 @@ class ShutdownTest extends BaseTest
      * @depends testNodeShutdown
      * @expectedException \Elastica\Exception\Connection\HttpException
      */
-    public function testClusterShutdown()
+    public function testClusterShutdown() : void
     {
         // Get cluster nodes
         $client = $this->_getClient();
-        $cluster = $client->getCluster();
+        $cluster = $client->getCluster()->getWaitHandle()->join();
         $nodes = $cluster->getNodes();
 
         // Shutdown cluster
-        $cluster->shutdown('1s');
+        $cluster->shutdown('1s')->getWaitHandle()->join();
 
         // Wait...
         sleep(5);
 
         // Now exception must be thrown
-        $client->getStatus();
+        $client->getStatus()->getWaitHandle()->join();
     }
 }

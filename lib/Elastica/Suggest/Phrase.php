@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Suggest;
 
 use Elastica\Suggest\CandidateGenerator\AbstractCandidateGenerator;
+use Indexish;
 
 /**
  * Class Phrase.
@@ -15,7 +16,7 @@ class Phrase extends AbstractSuggest
      *
      * @return $this
      */
-    public function setAnalyzer($analyzer)
+    public function setAnalyzer(string $analyzer) : this
     {
         return $this->setParam('analyzer', $analyzer);
     }
@@ -27,7 +28,7 @@ class Phrase extends AbstractSuggest
      *
      * @return $this
      */
-    public function setGramSize($size)
+    public function setGramSize(int $size) : this
     {
         return $this->setParam('gram_size', $size);
     }
@@ -39,7 +40,7 @@ class Phrase extends AbstractSuggest
      *
      * @return $this
      */
-    public function setRealWordErrorLikelihood($likelihood)
+    public function setRealWordErrorLikelihood(float $likelihood) : this
     {
         return $this->setParam('real_word_error_likelihood', $likelihood);
     }
@@ -52,7 +53,7 @@ class Phrase extends AbstractSuggest
      *
      * @return $this
      */
-    public function setConfidence($confidence)
+    public function setConfidence(float $confidence) : this
     {
         return $this->setParam('confidence', $confidence);
     }
@@ -64,7 +65,7 @@ class Phrase extends AbstractSuggest
      *
      * @return $this
      */
-    public function setMaxErrors($max)
+    public function setMaxErrors(float $max) : this
     {
         return $this->setParam('max_errors', $max);
     }
@@ -74,7 +75,7 @@ class Phrase extends AbstractSuggest
      *
      * @return $this
      */
-    public function setSeparator($separator)
+    public function setSeparator(string $separator) : this
     {
         return $this->setParam('separator', $separator);
     }
@@ -87,7 +88,7 @@ class Phrase extends AbstractSuggest
      *
      * @return $this
      */
-    public function setHighlight($preTag, $postTag)
+    public function setHighlight(string $preTag, string $postTag) : this
     {
         return $this->setParam('highlight', array(
             'pre_tag' => $preTag,
@@ -100,7 +101,7 @@ class Phrase extends AbstractSuggest
      *
      * @return $this
      */
-    public function setStupidBackoffSmoothing($discount = 0.4)
+    public function setStupidBackoffSmoothing(float $discount = 0.4) : this
     {
         return $this->setSmoothingModel('stupid_backoff', array(
             'discount' => $discount,
@@ -112,7 +113,7 @@ class Phrase extends AbstractSuggest
      *
      * @return $this
      */
-    public function setLaplaceSmoothing($alpha = 0.5)
+    public function setLaplaceSmoothing(float $alpha = 0.5) : this
     {
         return $this->setSmoothingModel('laplace', array(
             'alpha' => $alpha,
@@ -126,7 +127,7 @@ class Phrase extends AbstractSuggest
      *
      * @return $this
      */
-    public function setLinearInterpolationSmoothing($trigramLambda, $bigramLambda, $unigramLambda)
+    public function setLinearInterpolationSmoothing(float $trigramLambda, float $bigramLambda, float $unigramLambda) : this
     {
         return $this->setSmoothingModel('linear_interpolation', array(
             'trigram_lambda' => $trigramLambda,
@@ -141,7 +142,7 @@ class Phrase extends AbstractSuggest
      *
      * @return $this
      */
-    public function setSmoothingModel($model, array $params)
+    public function setSmoothingModel(string $model, array $params) : this
     {
         return $this->setParam('smoothing', array(
             $model => $params,
@@ -153,7 +154,7 @@ class Phrase extends AbstractSuggest
      *
      * @return $this
      */
-    public function addCandidateGenerator(AbstractCandidateGenerator $generator)
+    public function addCandidateGenerator(AbstractCandidateGenerator $generator) : this
     {
         return $this->setParam('candidate_generator', $generator);
     }
@@ -161,23 +162,25 @@ class Phrase extends AbstractSuggest
     /**
      * {@inheritdoc}
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $array = parent::toArray();
 
         $baseName = $this->_getBaseName();
 
-        if (isset($array[$baseName]['candidate_generator'])) {
-            $generator = $array[$baseName]['candidate_generator'];
-            unset($array[$baseName]['candidate_generator']);
+        if (isset(/* UNSAFE_EXPR */ $array[$baseName]['candidate_generator'])) {
+            $generator = /* UNSAFE_EXPR */ $array[$baseName]['candidate_generator'];
+            unset(/* UNSAFE_EXPR */ $array[$baseName]['candidate_generator']);
 
             $keys = array_keys($generator);
             $values = array_values($generator);
 
-            if (!isset($array[$baseName][$keys[0]])) {
+            if (!isset(/* UNSAFE_EXPR */ $array[$baseName][$keys[0]])) {
+                /* UNSAFE_EXPR */
                 $array[$baseName][$keys[0]] = array();
             }
 
+            /* UNSAFE_EXPR */
             $array[$baseName][$keys[0]][] = $values[0];
         }
 

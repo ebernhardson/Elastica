@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Exception;
 
 use Elastica\Exception\NotImplementedException;
@@ -8,7 +8,7 @@ class NotImplementedExceptionTest extends AbstractExceptionTest
     /**
      * @group unit
      */
-    public function testInstance()
+    public function testInstance() : void
     {
         $code = 4;
         $message = 'Hello world';

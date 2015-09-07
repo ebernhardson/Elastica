@@ -1,8 +1,9 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Document;
 use Elastica\Filter\HasChild;
+use Elastica\Index;
 use Elastica\Query\MatchAll;
 use Elastica\Test\Base as BaseTest;
 
@@ -11,7 +12,7 @@ class HasChildTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $q = new MatchAll();
 
@@ -20,10 +21,10 @@ class HasChildTest extends BaseTest
         $filter = new HasChild($q, $type);
 
         $expectedArray = array(
-            'has_child' => array(
+            'has_child' => Map {
                 'query' => $q->toArray(),
                 'type' => $type,
-            ),
+            },
         );
 
         $this->assertEquals($expectedArray, $filter->toArray());
@@ -32,7 +33,7 @@ class HasChildTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSetType()
+    public function testSetType() : void
     {
         $index = $this->prepareSearchData();
 
@@ -57,7 +58,7 @@ class HasChildTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetMinimumChildrenCount()
+    public function testSetMinimumChildrenCount() : void
     {
         $query = new MatchAll();
         $filter = new HasChild($query, 'test');
@@ -72,7 +73,7 @@ class HasChildTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetMaximumChildrenCount()
+    public function testSetMaximumChildrenCount() : void
     {
         $query = new MatchAll();
         $filter = new HasChild($query, 'test');
@@ -87,7 +88,7 @@ class HasChildTest extends BaseTest
     /**
      * @group unit
      */
-    public function testFilterInsideHasChild()
+    public function testFilterInsideHasChild() : void
     {
         $f = new \Elastica\Filter\MatchAll();
 
@@ -96,10 +97,10 @@ class HasChildTest extends BaseTest
         $filter = new HasChild($f, $type);
 
         $expectedArray = array(
-            'has_child' => array(
+            'has_child' => Map {
                 'filter' => $f->toArray(),
                 'type' => $type,
-            ),
+            },
         );
 
         $this->assertEquals($expectedArray, $filter->toArray());
@@ -108,7 +109,7 @@ class HasChildTest extends BaseTest
     /**
      * @group functional
      */
-    public function testFilterInsideHasChildSearch()
+    public function testFilterInsideHasChildSearch() : void
     {
         $index = $this->prepareSearchData();
 
@@ -118,7 +119,7 @@ class HasChildTest extends BaseTest
 
         $searchQuery = new \Elastica\Query();
         $searchQuery->setPostFilter($filter);
-        $searchResults = $index->search($searchQuery);
+        $searchResults = $index->search($searchQuery)->getWaitHandle()->join();
 
         $this->assertEquals(1, $searchResults->count());
 
@@ -131,7 +132,7 @@ class HasChildTest extends BaseTest
     /**
      * @group functional
      */
-    public function testQueryInsideHasChildSearch()
+    public function testQueryInsideHasChildSearch() : void
     {
         $index = $this->prepareSearchData();
 
@@ -141,7 +142,7 @@ class HasChildTest extends BaseTest
 
         $searchQuery = new \Elastica\Query();
         $searchQuery->setPostFilter($filter);
-        $searchResults = $index->search($searchQuery);
+        $searchResults = $index->search($searchQuery)->getWaitHandle()->join();
 
         $this->assertEquals(1, $searchResults->count());
 
@@ -154,7 +155,7 @@ class HasChildTest extends BaseTest
     /**
      * @group functional
      */
-    public function testTypeInsideHasChildSearch()
+    public function testTypeInsideHasChildSearch() : void
     {
         $index = $this->prepareSearchData();
 
@@ -164,7 +165,7 @@ class HasChildTest extends BaseTest
 
         $searchQuery = new \Elastica\Query();
         $searchQuery->setPostFilter($filter);
-        $searchResults = $index->search($searchQuery);
+        $searchResults = $index->search($searchQuery)->getWaitHandle()->join();
 
         $this->assertEquals(1, $searchResults->count());
 
@@ -174,39 +175,39 @@ class HasChildTest extends BaseTest
         $this->assertEquals($expected, $result);
     }
 
-    private function prepareSearchData()
+    private function prepareSearchData() : Index
     {
         $client = $this->_getClient();
         $index = $client->getIndex('has_child_test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
         $parentType = $index->getType('parent');
 
         $childType = $index->getType('child');
         $childMapping = new \Elastica\Type\Mapping($childType);
         $childMapping->setParent('parent');
-        $childMapping->send();
+        $childMapping->send()->getWaitHandle()->join();
 
         $altType = $index->getType('alt');
         $altDoc = new Document('alt1', array('name' => 'altname'));
-        $altType->addDocument($altDoc);
+        $altType->addDocument($altDoc)->getWaitHandle()->join();
 
         $parent1 = new Document('parent1', array('id' => 'parent1', 'user' => 'parent1', 'email' => 'parent1@test.com'));
-        $parentType->addDocument($parent1);
+        $parentType->addDocument($parent1)->getWaitHandle()->join();
         $parent2 = new Document('parent2', array('id' => 'parent2', 'user' => 'parent2', 'email' => 'parent2@test.com'));
-        $parentType->addDocument($parent2);
+        $parentType->addDocument($parent2)->getWaitHandle()->join();
 
         $child1 = new Document('child1', array('id' => 'child1', 'user' => 'child1', 'email' => 'child1@test.com'));
         $child1->setParent('parent1');
-        $childType->addDocument($child1);
+        $childType->addDocument($child1)->getWaitHandle()->join();
         $child2 = new Document('child2', array('id' => 'child2', 'user' => 'child2', 'email' => 'child2@test.com'));
         $child2->setParent('parent2');
-        $childType->addDocument($child2);
+        $childType->addDocument($child2)->getWaitHandle()->join();
         $child3 = new Document('child3', array('id' => 'child3', 'user' => 'child3', 'email' => 'child3@test.com', 'alt' => array(array('name' => 'testname'))));
         $child3->setParent('parent2');
-        $childType->addDocument($child3);
+        $childType->addDocument($child3)->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }

@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\QueryBuilder\DSL;
 
 use Elastica\Exception\NotImplementedException;
@@ -21,7 +21,7 @@ class Suggest implements DSL
      *
      * @return string
      */
-    public function getType()
+    public function getType() : string
     {
         return self::TYPE_SUGGEST;
     }
@@ -31,12 +31,12 @@ class Suggest implements DSL
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-suggesters-term.html
      *
-     * @param $name
-     * @param $field
+     * @param string $name
+     * @param string $field
      *
      * @return Term
      */
-    public function term($name, $field)
+    public function term(string $name, string $field) : Term
     {
         return new Term($name, $field);
     }
@@ -46,12 +46,12 @@ class Suggest implements DSL
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-suggesters-phrase.html
      *
-     * @param $name
-     * @param $field
+     * @param string $name
+     * @param string $field
      *
      * @return Phrase
      */
-    public function phrase($name, $field)
+    public function phrase(string $name, string $field) : Phrase
     {
         return new Phrase($name, $field);
     }
@@ -66,7 +66,7 @@ class Suggest implements DSL
      *
      * @return Completion
      */
-    public function completion($name, $field)
+    public function completion(string $name, string $field) : Completion
     {
         return new Completion($name, $field);
     }
@@ -76,7 +76,7 @@ class Suggest implements DSL
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/suggester-context.html
      */
-    public function context()
+    public function context() : void
     {
         throw new NotImplementedException();
     }

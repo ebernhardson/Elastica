@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Multi;
 
 use Elastica\Client;
@@ -18,17 +18,17 @@ class Search
     /**
      * @var array|\Elastica\Search[]
      */
-    protected $_searches = array();
+    protected array $_searches = array();
 
     /**
      * @var array
      */
-    protected $_options = array();
+    protected array $_options = array();
 
     /**
      * @var \Elastica\Client
      */
-    protected $_client;
+    protected Client $_client;
 
     /**
      * Constructs search object.
@@ -37,13 +37,13 @@ class Search
      */
     public function __construct(Client $client)
     {
-        $this->setClient($client);
+        $this->_client = $client;
     }
 
     /**
      * @return \Elastica\Client
      */
-    public function getClient()
+    public function getClient() : Client
     {
         return $this->_client;
     }
@@ -53,7 +53,7 @@ class Search
      *
      * @return $this
      */
-    public function setClient(Client $client)
+    public function setClient(Client $client) : Search
     {
         $this->_client = $client;
 
@@ -63,7 +63,7 @@ class Search
     /**
      * @return $this
      */
-    public function clearSearches()
+    public function clearSearches() : Search
     {
         $this->_searches = array();
 
@@ -76,9 +76,9 @@ class Search
      *
      * @return $this
      */
-    public function addSearch(BaseSearch $search, $key = null)
+    public function addSearch(BaseSearch $search, ?string $key = null) : Search
     {
-        if ($key) {
+        if ($key !== null && $key) {
             $this->_searches[$key] = $search;
         } else {
             $this->_searches[] = $search;
@@ -92,10 +92,10 @@ class Search
      *
      * @return $this
      */
-    public function addSearches(array $searches)
+    public function addSearches(array $searches) : Search
     {
         foreach ($searches as $key => $search) {
-            $this->addSearch($search, $key);
+            $this->addSearch($search, (string)$key);
         }
 
         return $this;
@@ -106,7 +106,7 @@ class Search
      *
      * @return $this
      */
-    public function setSearches(array $searches)
+    public function setSearches(array $searches) : Search
     {
         $this->clearSearches();
         $this->addSearches($searches);
@@ -117,7 +117,7 @@ class Search
     /**
      * @return array|\Elastica\Search[]
      */
-    public function getSearches()
+    public function getSearches() : array
     {
         return $this->_searches;
     }
@@ -127,7 +127,7 @@ class Search
      *
      * @return $this
      */
-    public function setSearchType($searchType)
+    public function setSearchType(string $searchType) : Search
     {
         $this->_options[BaseSearch::OPTION_SEARCH_TYPE] = $searchType;
 
@@ -135,13 +135,13 @@ class Search
     }
 
     /**
-     * @return \Elastica\Multi\ResultSet
+     * @return Awaitable<\Elastica\Multi\ResultSet>
      */
-    public function search()
+    public async function search() : Awaitable<ResultSet>
     {
         $data = $this->_getData();
 
-        $response = $this->getClient()->request(
+        $response = await $this->getClient()->request(
             '_msearch',
             Request::POST,
             $data,
@@ -154,7 +154,7 @@ class Search
     /**
      * @return string
      */
-    protected function _getData()
+    protected function _getData() : string
     {
         $data = '';
         foreach ($this->getSearches() as $search) {
@@ -169,7 +169,7 @@ class Search
      *
      * @return string
      */
-    protected function _getSearchData(BaseSearch $search)
+    protected function _getSearchData(BaseSearch $search) : string
     {
         $header = $this->_getSearchDataHeader($search);
         $header = (empty($header)) ? new \stdClass() : $header;
@@ -186,7 +186,7 @@ class Search
      *
      * @return array
      */
-    protected function _getSearchDataHeader(BaseSearch $search)
+    protected function _getSearchDataHeader(BaseSearch $search) : array
     {
         $header = $search->getOptions();
 

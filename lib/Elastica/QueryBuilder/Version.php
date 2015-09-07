@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\QueryBuilder;
 
 /**
@@ -13,38 +13,38 @@ abstract class Version
      *
      * @var string[]
      */
-    protected $queries = array();
+    protected array<string> $queries = array();
 
     /**
      * supported filter methods.
      *
      * @var string[]
      */
-    protected $filters = array();
+    protected array<string> $filters = array();
 
     /**
      * supported aggregation methods.
      *
      * @var string[]
      */
-    protected $aggregations = array();
+    protected array<string> $aggregations = array();
 
     /**
      * supported $suggester methods.
      *
      * @var string[]
      */
-    protected $suggesters = array();
+    protected array<string> $suggesters = array();
 
     /**
      * returns true if $name is supported, false otherwise.
      *
      * @param string $name
-     * @param $type
+     * @param string $type
      *
      * @return bool
      */
-    public function supports($name, $type)
+    public function supports(string $name, string $type) : bool
     {
         switch ($type) {
             case DSL::TYPE_QUERY:
@@ -70,7 +70,7 @@ abstract class Version
     /**
      * @return string[]
      */
-    public function getAggregations()
+    public function getAggregations() : array<string>
     {
         return $this->aggregations;
     }
@@ -78,7 +78,7 @@ abstract class Version
     /**
      * @return string[]
      */
-    public function getFilters()
+    public function getFilters() : array<string>
     {
         return $this->filters;
     }
@@ -86,7 +86,7 @@ abstract class Version
     /**
      * @return string[]
      */
-    public function getQueries()
+    public function getQueries() : array<string>
     {
         return $this->queries;
     }
@@ -94,7 +94,7 @@ abstract class Version
     /**
      * @return string[]
      */
-    public function getSuggesters()
+    public function getSuggesters() : array<string>
     {
         return $this->suggesters;
     }

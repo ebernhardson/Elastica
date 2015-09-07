@@ -1,10 +1,11 @@
-<?php
+<?hh
 namespace Elastica\Bulk;
 
 use Elastica\Bulk;
 use Elastica\Index;
 use Elastica\JSON;
 use Elastica\Type;
+use Indexish;
 
 class Action
 {
@@ -16,7 +17,7 @@ class Action
     /**
      * @var array
      */
-    public static $opTypes = array(
+    public static array<string> $opTypes = array(
         self::OP_TYPE_CREATE,
         self::OP_TYPE_INDEX,
         self::OP_TYPE_DELETE,
@@ -26,28 +27,28 @@ class Action
     /**
      * @var string
      */
-    protected $_opType;
+    protected string $_opType;
 
     /**
      * @var array
      */
-    protected $_metadata = array();
+    protected Indexish<string, mixed> $_metadata;
 
     /**
-     * @var array
+     * @var array|string
      */
-    protected $_source = array();
+    protected mixed $_source;
 
     /**
-     * @param string $opType
-     * @param array  $metadata
-     * @param array  $source
+     * @param string        $opType
+     * @param array         $metadata
+     * @param array|string  $source
      */
-    public function __construct($opType = self::OP_TYPE_INDEX, array $metadata = array(), array $source = array())
+    public function __construct(string $opType = self::OP_TYPE_INDEX, array $metadata = array(), mixed $source = array())
     {
-        $this->setOpType($opType);
-        $this->setMetadata($metadata);
-        $this->setSource($source);
+        $this->_opType = $opType;
+        $this->_metadata = $metadata;
+        $this->_source = $source;
     }
 
     /**
@@ -55,7 +56,7 @@ class Action
      *
      * @return $this
      */
-    public function setOpType($type)
+    public function setOpType(string $type) : this
     {
         $this->_opType = $type;
 
@@ -65,7 +66,7 @@ class Action
     /**
      * @return string
      */
-    public function getOpType()
+    public function getOpType() : string
     {
         return $this->_opType;
     }
@@ -75,7 +76,7 @@ class Action
      *
      * @return $this
      */
-    public function setMetadata(array $metadata)
+    public function setMetadata(Indexish<string, mixed> $metadata) : this
     {
         $this->_metadata = $metadata;
 
@@ -85,7 +86,7 @@ class Action
     /**
      * @return array
      */
-    public function getMetadata()
+    public function getMetadata() : Indexish<string, mixed>
     {
         return $this->_metadata;
     }
@@ -93,7 +94,7 @@ class Action
     /**
      * @return array
      */
-    public function getActionMetadata()
+    public function getActionMetadata() : array
     {
         return array($this->_opType => $this->getMetadata());
     }
@@ -103,7 +104,7 @@ class Action
      *
      * @return $this
      */
-    public function setSource($source)
+    public function setSource(mixed $source) : this
     {
         $this->_source = $source;
 
@@ -113,7 +114,7 @@ class Action
     /**
      * @return array
      */
-    public function getSource()
+    public function getSource() : mixed
     {
         return $this->_source;
     }
@@ -121,7 +122,7 @@ class Action
     /**
      * @return bool
      */
-    public function hasSource()
+    public function hasSource() : bool
     {
         return !empty($this->_source);
     }
@@ -131,7 +132,7 @@ class Action
      *
      * @return $this
      */
-    public function setIndex($index)
+    public function setIndex(mixed $index) : this
     {
         if ($index instanceof Index) {
             $index = $index->getName();
@@ -146,7 +147,7 @@ class Action
      *
      * @return $this
      */
-    public function setType($type)
+    public function setType(mixed $type) : this
     {
         if ($type instanceof Type) {
             $this->setIndex($type->getIndex()->getName());
@@ -162,7 +163,7 @@ class Action
      *
      * @return $this
      */
-    public function setId($id)
+    public function setId(string $id) : this
     {
         $this->_metadata['_id'] = $id;
 
@@ -170,11 +171,11 @@ class Action
     }
 
     /**
-     * @param string $routing
+     * @param string|false $routing
      *
      * @return $this
      */
-    public function setRouting($routing)
+    public function setRouting(mixed $routing) : this
     {
         $this->_metadata['_routing'] = $routing;
 
@@ -184,9 +185,9 @@ class Action
     /**
      * @return array
      */
-    public function toArray()
+    public function toArray() : array
     {
-        $data[] = $this->getActionMetadata();
+        $data = array($this->getActionMetadata());
         if ($this->hasSource()) {
             $data[] = $this->getSource();
         }
@@ -197,14 +198,14 @@ class Action
     /**
      * @return string
      */
-    public function toString()
+    public function toString() : string
     {
         $string = JSON::stringify($this->getActionMetadata(), JSON_FORCE_OBJECT).Bulk::DELIMITER;
         if ($this->hasSource()) {
             $source = $this->getSource();
             if (is_string($source)) {
                 $string .= $source;
-            } elseif (is_array($source) && array_key_exists('doc', $source) && is_string($source['doc'])) {
+            } elseif ($source instanceof Indexish && array_key_exists('doc', $source) && is_string($source['doc'])) {
                 $docAsUpsert = (isset($source['doc_as_upsert'])) ? ', "doc_as_upsert": '.$source['doc_as_upsert'] : '';
                 $string .= '{"doc": '.$source['doc'].$docAsUpsert.'}';
             } else {
@@ -221,8 +222,8 @@ class Action
      *
      * @return bool
      */
-    public static function isValidOpType($opType)
+    public static function isValidOpType(mixed $opType) : bool
     {
-        return in_array($opType, self::$opTypes);
+        return is_string($opType) && in_array($opType, self::$opTypes);
     }
 }

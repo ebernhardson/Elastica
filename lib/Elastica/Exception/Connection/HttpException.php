@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Exception\Connection;
 
 use Elastica\Exception\ConnectionException;
@@ -17,7 +17,7 @@ class HttpException extends ConnectionException
      *
      * @var string Error code / message
      */
-    protected $_error = 0;
+    protected string $_error = '0';
 
     /**
      * Construct Exception.
@@ -26,11 +26,11 @@ class HttpException extends ConnectionException
      * @param \Elastica\Request  $request
      * @param \Elastica\Response $response
      */
-    public function __construct($error, Request $request = null, Response $response = null)
+    public function __construct(string $error, ?Request $request = null, ?Response $response = null)
     {
         $this->_error = $error;
 
-        $message = $this->getErrorMessage($this->getError());
+        $message = $this->_getErrorMessage($error);
         parent::__construct($message, $request, $response);
     }
 
@@ -42,7 +42,12 @@ class HttpException extends ConnectionException
      *
      * @return string Error message
      */
-    public function getErrorMessage($error)
+    public function getErrorMessage(string $error) : string
+    {
+        return $this->_getErrorMessage($error);
+    }
+
+    private function _getErrorMessage(string $error) : string
     {
         switch ($error) {
             case CURLE_UNSUPPORTED_PROTOCOL:
@@ -79,7 +84,7 @@ class HttpException extends ConnectionException
      *
      * @return string Error code / message
      */
-    public function getError()
+    public function getError() : string
     {
         return $this->_error;
     }

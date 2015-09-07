@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Exception\QueryBuilderException;
@@ -11,7 +11,7 @@ class QueryBuilderTest extends \PHPUnit_Framework_TestCase
     /**
      * @group unit
      */
-    public function testCustomDSL()
+    public function testCustomDSL() : void
     {
         $qb = new QueryBuilder();
 
@@ -34,7 +34,7 @@ class QueryBuilderTest extends \PHPUnit_Framework_TestCase
     /**
      * @group unit
      */
-    public function testFacade()
+    public function testFacade() : void
     {
         $qb = new QueryBuilder();
 
@@ -48,13 +48,14 @@ class QueryBuilderTest extends \PHPUnit_Framework_TestCase
     /**
      * @group unit
      */
-    public function testFacadeException()
+    public function testFacadeException() : void
     {
         $qb = new QueryBuilder(new QueryBuilder\Version\Version100());
 
         // undefined
         $exceptionMessage = '';
         try {
+            /* UNSAFE_EXPR */
             $qb->query()->invalid();
         } catch (QueryBuilderException $exception) {
             $exceptionMessage = $exception->getMessage();
@@ -65,6 +66,7 @@ class QueryBuilderTest extends \PHPUnit_Framework_TestCase
         // unsupported
         $exceptionMessage = '';
         try {
+            /* UNSAFE_EXPR */
             $qb->aggregation()->top_hits('top_hits');
         } catch (QueryBuilderException $exception) {
             $exceptionMessage = $exception->getMessage();
@@ -76,12 +78,12 @@ class QueryBuilderTest extends \PHPUnit_Framework_TestCase
 
 class CustomDSL implements QueryBuilder\DSL
 {
-    public function getType()
+    public function getType() : string
     {
         return 'custom';
     }
 
-    public function custom_method()
+    public function custom_method() : bool
     {
         return true;
     }

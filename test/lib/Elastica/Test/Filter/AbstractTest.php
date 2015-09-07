@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Test\Base as BaseTest;
@@ -8,7 +8,7 @@ class AbstractTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetCached()
+    public function testSetCached() : void
     {
         $stubFilter = $this->getStub();
 
@@ -24,7 +24,7 @@ class AbstractTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetCachedDefaultValue()
+    public function testSetCachedDefaultValue() : void
     {
         $stubFilter = $this->getStub();
 
@@ -36,7 +36,7 @@ class AbstractTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetCacheKey()
+    public function testSetCacheKey() : void
     {
         $stubFilter = $this->getStub();
 
@@ -51,7 +51,7 @@ class AbstractTest extends BaseTest
      * @group unit
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testSetCacheKeyEmptyKey()
+    public function testSetCacheKeyEmptyKey() : void
     {
         $stubFilter = $this->getStub();
 
@@ -63,7 +63,7 @@ class AbstractTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetName()
+    public function testSetName() : void
     {
         $stubFilter = $this->getStub();
 
@@ -74,7 +74,7 @@ class AbstractTest extends BaseTest
         $this->assertEquals($name, $arrayFilter['_name']);
     }
 
-    private function getStub()
+    private function getStub() : \Elastica\Filter\AbstractFilter
     {
         return $this->getMockForAbstractClass('Elastica\Filter\AbstractFilter');
     }

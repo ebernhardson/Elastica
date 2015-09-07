@@ -1,11 +1,11 @@
-<?php
+<?hh
 namespace Elastica\Test\Exception;
 
 use Elastica\Test\Base as BaseTest;
 
 abstract class AbstractExceptionTest extends BaseTest
 {
-    protected function _getExceptionClass()
+    protected function _getExceptionClass() : string
     {
         $reflection = new \ReflectionObject($this);
 
@@ -21,7 +21,7 @@ abstract class AbstractExceptionTest extends BaseTest
     /**
      * @group unit
      */
-    public function testInheritance()
+    public function testInheritance() : void
     {
         $className = $this->_getExceptionClass();
         $reflection = new \ReflectionClass($className);

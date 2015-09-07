@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\QueryBuilder\DSL;
 
 use Elastica\QueryBuilder\DSL;
@@ -8,7 +8,7 @@ class SuggestTest extends AbstractDSLTest
     /**
      * @group unit
      */
-    public function testType()
+    public function testType() : void
     {
         $suggestDSL = new DSL\Suggest();
 
@@ -19,7 +19,7 @@ class SuggestTest extends AbstractDSLTest
     /**
      * @group unit
      */
-    public function testInterface()
+    public function testInterface() : void
     {
         $suggestDSL = new DSL\Suggest();
 

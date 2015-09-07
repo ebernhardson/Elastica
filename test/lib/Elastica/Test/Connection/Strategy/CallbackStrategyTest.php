@@ -1,6 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Test\Connection\Strategy;
 
+use Elastica\Connection;
 use Elastica\Connection\Strategy\CallbackStrategy;
 use Elastica\Test\Base;
 
@@ -14,16 +15,17 @@ class CallbackStrategyTest extends Base
     /**
      * @group unit
      */
-    public function testInvoke()
+    public function testInvoke() : void
     {
         $count = 0;
 
-        $callback = function ($connections) use (&$count) {
+        $callback = function (array<Connection> $connections) : Connection use (&$count) {
             ++$count;
+            return reset($connections);
         };
 
         $strategy = new CallbackStrategy($callback);
-        $strategy->getConnection(array());
+        $strategy->getConnection(array($this->_getClient()->getConnection()));
 
         $this->assertEquals(1, $count);
     }
@@ -31,7 +33,7 @@ class CallbackStrategyTest extends Base
     /**
      * @group unit
      */
-    public function testIsValid()
+    public function testIsValid() : void
     {
         // closure is valid
         $isValid = CallbackStrategy::isValid(function () {});
@@ -61,7 +63,7 @@ class CallbackStrategyTest extends Base
     /**
      * @group unit
      */
-    public function testFailIsValid()
+    public function testFailIsValid() : void
     {
         $isValid = CallbackStrategy::isValid(new \stdClass());
         $this->assertFalse($isValid);
@@ -73,7 +75,7 @@ class CallbackStrategyTest extends Base
     /**
      * @group functional
      */
-    public function testConnection()
+    public function testConnection() : void
     {
         $count = 0;
 
@@ -84,7 +86,7 @@ class CallbackStrategyTest extends Base
        });
 
         $client = $this->_getClient($config);
-        $response = $client->request('/_aliases');
+        $response = $client->request('/_aliases')->getWaitHandle()->join();
 
         $this->assertEquals(1, $count);
 

@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Filter;
 
 /**
@@ -27,7 +27,7 @@ class BoolNot extends AbstractFilter
      *
      * @return $this
      */
-    public function setFilter(AbstractFilter $filter)
+    public function setFilter(AbstractFilter $filter) : this
     {
         return $this->setParam('filter', $filter);
     }
@@ -35,7 +35,7 @@ class BoolNot extends AbstractFilter
     /**
      * @return string
      */
-    protected function _getBaseName()
+    protected function _getBaseName() : string
     {
         return 'not';
     }

@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 /**
@@ -14,7 +14,7 @@ class Simple extends AbstractQuery
      *
      * @var array Query
      */
-    protected $_query = array();
+    protected array $_query = array();
 
     /**
      * Constructs a query based on an array.
@@ -33,7 +33,7 @@ class Simple extends AbstractQuery
      *
      * @return $this
      */
-    public function setQuery(array $query)
+    public function setQuery(array $query) : this
     {
         $this->_query = $query;
 
@@ -47,7 +47,7 @@ class Simple extends AbstractQuery
      *
      * @see \Elastica\Query\AbstractQuery::toArray()
      */
-    public function toArray()
+    public function toArray() : array
     {
         return $this->_query;
     }

@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Exception;
 
 use Elastica\JSON;

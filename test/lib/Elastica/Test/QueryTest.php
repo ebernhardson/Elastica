@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Document;
@@ -19,7 +19,7 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testStringConversion()
+    public function testStringConversion() : void
     {
         $queryString = '{
             "query" : {
@@ -54,20 +54,20 @@ class QueryTest extends BaseTest
 
         $this->assertInternalType('array', $queryArray);
 
-        $this->assertEquals('2011-07-18 00:00:00', $queryArray['query']['filtered']['filter']['range']['due']['gte']);
+        $this->assertEquals('2011-07-18 00:00:00', /* UNSAFE_EXPR */ $queryArray['query']['filtered']['filter']['range']['due']['gte']);
     }
 
     /**
      * @group unit
      */
-    public function testRawQuery()
+    public function testRawQuery() : void
     {
-        $textQuery = new Term(array('title' => 'test'));
+        $textQuery = new Term(Map {'title' => 'test'});
 
         $query1 = Query::create($textQuery);
 
         $query2 = new Query();
-        $query2->setRawQuery(array('query' => array('term' => array('title' => 'test'))));
+        $query2->setRawQuery(Map {'query' => array('term' => Map {'title' => 'test'})});
 
         $this->assertEquals($query1->toArray(), $query2->toArray());
     }
@@ -75,7 +75,7 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSuggestShouldNotRemoveOtherParameters()
+    public function testSuggestShouldNotRemoveOtherParameters() : void
     {
         $query1 = new Query();
         $query2 = new Query();
@@ -95,7 +95,7 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetSuggestMustReturnQueryInstance()
+    public function testSetSuggestMustReturnQueryInstance() : void
     {
         $query = new Query();
         $suggest = new Suggest();
@@ -105,20 +105,20 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testArrayQuery()
+    public function testArrayQuery() : void
     {
-        $query = array(
-            'query' => array(
-                'text' => array(
+        $query = Map {
+            'query' => Map {
+                'text' => Map {
                     'title' => 'test',
-                ),
-            ),
-        );
+                },
+            },
+        };
 
         $query1 = Query::create($query);
 
         $query2 = new Query();
-        $query2->setRawQuery(array('query' => array('text' => array('title' => 'test'))));
+        $query2->setRawQuery(Map {'query' => Map {'text' => Map {'title' => 'test'}}});
 
         $this->assertEquals($query1->toArray(), $query2->toArray());
     }
@@ -126,42 +126,44 @@ class QueryTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSetSort()
+    public function testSetSort() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
 
         $type->addDocuments(array(
-            new Document(1, array('name' => 'hello world')),
-            new Document(2, array('firstname' => 'guschti', 'lastname' => 'ruflin')),
-            new Document(3, array('firstname' => 'nicolas', 'lastname' => 'ruflin')),
-        ));
+            new Document('1', array('name' => 'hello world')),
+            new Document('2', array('firstname' => 'guschti', 'lastname' => 'ruflin')),
+            new Document('3', array('firstname' => 'nicolas', 'lastname' => 'ruflin')),
+        ))->getWaitHandle()->join();
 
         $queryTerm = new Term();
         $queryTerm->setTerm('lastname', 'ruflin');
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $query = Query::create($queryTerm);
 
         // ASC order
         $query->setSort(array(array('firstname' => array('order' => 'asc'))));
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
         $this->assertEquals(2, $resultSet->count());
 
         $first = $resultSet->current()->getData();
-        $second = $resultSet->next()->getData();
+        $resultSet->next();
+        $second = $resultSet->current()->getData();
 
         $this->assertEquals('guschti', $first['firstname']);
         $this->assertEquals('nicolas', $second['firstname']);
 
         // DESC order
         $query->setSort(array('firstname' => array('order' => 'desc')));
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
         $this->assertEquals(2, $resultSet->count());
 
         $first = $resultSet->current()->getData();
-        $second = $resultSet->next()->getData();
+        $resultSet->next();
+        $second = $resultSet->current()->getData();
 
         $this->assertEquals('nicolas', $first['firstname']);
         $this->assertEquals('guschti', $second['firstname']);
@@ -170,7 +172,7 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testAddSort()
+    public function testAddSort() : void
     {
         $query = new Query();
         $sortParam = array('firstname' => array('order' => 'asc'));
@@ -182,11 +184,11 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetRawQuery()
+    public function testSetRawQuery() : void
     {
         $query = new Query();
 
-        $params = array('query' => 'test');
+        $params = Map {'query' => 'test'};
         $query->setRawQuery($params);
 
         $this->assertEquals($params, $query->toArray());
@@ -195,7 +197,7 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetFields()
+    public function testSetFields() : void
     {
         $query = new Query();
 
@@ -213,7 +215,7 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetQuery()
+    public function testGetQuery() : void
     {
         $query = new Query();
 
@@ -234,7 +236,7 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetFacets()
+    public function testSetFacets() : void
     {
         $query = new Query();
 
@@ -243,18 +245,18 @@ class QueryTest extends BaseTest
 
         $data = $query->toArray();
 
-        $this->assertArrayHasKey('facets', $data);
-        $this->assertEquals(array('text' => array('terms' => array())), $data['facets']);
+		$this->assertTrue(/* UNSAFE_EXPR */ $data->contains('facets'));
+        $this->assertEquals(array('text' => array('terms' => Map {})), $data['facets']);
 
         $query->setFacets(array());
 
-        $this->assertArrayNotHasKey('facets', $query->toArray());
+        $this->assertFalse(/* UNSAFE_EXPR */ $query->toArray()->contains('facets'));
     }
 
     /**
      * @group unit
      */
-    public function testSetQueryToArrayCast()
+    public function testSetQueryToArrayCast() : void
     {
         $query = new Query();
         $termQuery = new Term();
@@ -272,7 +274,7 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetQueryToArrayChangeQuery()
+    public function testSetQueryToArrayChangeQuery() : void
     {
         $query = new Query();
         $termQuery = new Term();
@@ -282,6 +284,8 @@ class QueryTest extends BaseTest
         $queryArray = $query->toArray();
 
         $termQuery = $query->getQuery();
+        $this->assertInstanceOf( 'Elastica\Query\Term', $termQuery );
+        /* UNSAFE_EXPR */
         $termQuery->setTerm('text', 'another value');
 
         $this->assertNotEquals($queryArray, $query->toArray());
@@ -290,7 +294,7 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetScriptFieldsToArrayCast()
+    public function testSetScriptFieldsToArrayCast() : void
     {
         $query = new Query();
         $scriptFields = new ScriptFields();
@@ -309,7 +313,7 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testAddScriptFieldsToArrayCast()
+    public function testAddScriptFieldsToArrayCast() : void
     {
         $query = new Query();
         $scriptField = new Script('script');
@@ -327,7 +331,7 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testAddFacetToArrayCast()
+    public function testAddFacetToArrayCast() : void
     {
         $query = new Query();
         $facet = new Terms('text');
@@ -345,7 +349,7 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testAddAggregationToArrayCast()
+    public function testAddAggregationToArrayCast() : void
     {
         $query = new Query();
         $aggregation = new \Elastica\Aggregation\Terms('text');
@@ -363,7 +367,7 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetSuggestToArrayCast()
+    public function testSetSuggestToArrayCast() : void
     {
         $query = new Query();
         $suggest = new Suggest();
@@ -382,15 +386,15 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetRescoreToArrayCast()
+    public function testSetRescoreToArrayCast() : void
     {
         $query = new Query();
         $rescore = new \Elastica\Rescore\Query();
-        $rescore->setQueryWeight(1);
+        $rescore->setQueryWeight(1.0);
 
         $query->setRescore($rescore);
 
-        $rescore->setQueryWeight(2);
+        $rescore->setQueryWeight(2.0);
 
         $anotherQuery = new Query();
         $anotherQuery->setRescore($rescore);
@@ -401,7 +405,7 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetPostFilterToArrayCast()
+    public function testSetPostFilterToArrayCast() : void
     {
         $query = new Query();
         $postFilter = new \Elastica\Filter\Terms();
@@ -419,28 +423,28 @@ class QueryTest extends BaseTest
     /**
      * @group functional
      */
-    public function testNoSource()
+    public function testNoSource() : void
     {
         $index = $this->_createIndex();
 
         $type = new Type($index, 'user');
 
         // Adds 1 document to the index
-        $doc1 = new Document(1,
+        $doc1 = new Document('1',
             array('username' => 'ruflin', 'test' => array('2', '3', '5'))
         );
-        $type->addDocument($doc1);
+        $type->addDocument($doc1)->getWaitHandle()->join();
 
         // To update index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $query = Query::create('ruflin');
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
 
         // Disable source
         $query->setSource(false);
 
-        $resultSetNoSource = $type->search($query);
+        $resultSetNoSource = $type->search($query)->getWaitHandle()->join();
 
         $this->assertEquals(1, $resultSet->count());
         $this->assertEquals(1, $resultSetNoSource->count());

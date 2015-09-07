@@ -1,8 +1,10 @@
-<?php
+<?hh
 namespace Elastica\Index;
 
 use Elastica\Index as BaseIndex;
 use Elastica\Request;
+use Elastica\Response;
+use Indexish;
 
 /**
  * Elastica index stats object.
@@ -18,31 +20,44 @@ class Stats
      *
      * @var \Elastica\Response Response object
      */
-    protected $_response = null;
+    protected Response $_response;
 
     /**
      * Stats info.
      *
      * @var array Stats info
      */
-    protected $_data = array();
+    protected Indexish<string, mixed> $_data;
 
     /**
      * Index.
      *
      * @var \Elastica\Index Index object
      */
-    protected $_index = null;
+    protected BaseIndex $_index;
+
+    /**
+     * Construct.
+     *
+     * @param \Elastica\Index $index Index object
+     *
+     * @return Awaitable<\Elastica\Index\Stats>
+     */
+    static public async function create(BaseIndex $index) : Awaitable<Stats>
+    {
+        $response = await self::_refreshRequest($index);
+        return new self($index, $response);
+    }
 
     /**
      * Construct.
      *
      * @param \Elastica\Index $index Index object
      */
-    public function __construct(BaseIndex $index)
+    protected function __construct(BaseIndex $index, Response $response)
     {
         $this->_index = $index;
-        $this->refresh();
+        $this->onResponse($response);
     }
 
     /**
@@ -50,7 +65,7 @@ class Stats
      *
      * @return array Stats info
      */
-    public function getData()
+    public function getData() : Indexish<string, mixed>
     {
         return $this->_data;
     }
@@ -61,13 +76,13 @@ class Stats
      *
      * @return mixed Data array entry or null if not found
      */
-    public function get()
+    public function get(...) : mixed
     {
         $data = $this->getData();
 
         foreach (func_get_args() as $arg) {
-            if (isset($data[$arg])) {
-                $data = $data[$arg];
+            if (isset(/* UNSAFE_EXPR */ $data[$arg])) {
+                $data = /* UNSAFE_EXPR */ $data[$arg];
             } else {
                 return;
             }
@@ -81,7 +96,7 @@ class Stats
      *
      * @return \Elastica\Index Index object
      */
-    public function getIndex()
+    public function getIndex() : BaseIndex
     {
         return $this->_index;
     }
@@ -91,18 +106,36 @@ class Stats
      *
      * @return \Elastica\Response Response object
      */
-    public function getResponse()
+    public function getResponse() : Response
     {
         return $this->_response;
     }
 
-    /**
-     * Reloads all status data of this object.
-     */
-    public function refresh()
+    protected static function _refreshRequest(BaseIndex $index) : Awaitable<Response>
     {
         $path = '_stats';
-        $this->_response = $this->getIndex()->request($path, Request::GET);
-        $this->_data = $this->getResponse()->getData();
+        return $index->request($path, Request::GET);
+    }
+
+    /**
+     * Reloads all status data of this object.
+     *
+     * @return Awaitable<null>
+     */
+    public async function refresh() : Awaitable<Response>
+    {
+        $response = await self::_refreshRequest($this->getIndex());
+        $this->onResponse($response);
+        return $response;
+    }
+
+    private function onResponse(Response $response) : void
+    {
+        $this->_response = $response;
+        $data = $response->getData();
+        if (!$data instanceof Indexish) {
+            throw new \RuntimeException('expected array');
+        }
+        $this->_data = $data;
     }
 }

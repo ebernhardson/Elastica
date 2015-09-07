@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Aggregation;
 
 use Elastica\Aggregation\ScriptedMetric;
@@ -8,7 +8,7 @@ use Elastica\Type\Mapping;
 
 class ScriptedMetricTest extends BaseAggregationTest
 {
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : \Elastica\Index
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
@@ -16,15 +16,15 @@ class ScriptedMetricTest extends BaseAggregationTest
         $type->setMapping(new Mapping(null, array(
             'start' => array('type' => 'long'),
             'end' => array('type' => 'long'),
-        )));
+        )))->getWaitHandle()->join();
 
         $type->addDocuments(array(
-            new Document(1, array('start' => 100, 'end' => 200)),
-            new Document(2, array('start' => 200, 'end' => 250)),
-            new Document(3, array('start' => 300, 'end' => 450)),
-        ));
+            new Document('1', array('start' => 100, 'end' => 200)),
+            new Document('2', array('start' => 200, 'end' => 250)),
+            new Document('3', array('start' => 300, 'end' => 450)),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -32,7 +32,7 @@ class ScriptedMetricTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testScriptedMetricAggregation()
+    public function testScriptedMetricAggregation() : void
     {
         $agg = new ScriptedMetric(
             'scripted',
@@ -43,7 +43,8 @@ class ScriptedMetricTest extends BaseAggregationTest
 
         $query = new Query();
         $query->addAggregation($agg);
-        $results = $this->_getIndexForTest()->search($query)->getAggregation('scripted');
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
+        $results = $response->getAggregation('scripted');
 
         $this->assertEquals(array(100, 50, 150), $results['value'][0]);
     }

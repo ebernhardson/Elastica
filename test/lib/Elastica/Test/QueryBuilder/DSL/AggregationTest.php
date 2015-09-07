@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\QueryBuilder\DSL;
 
 use Elastica\Filter\Exists;
@@ -9,7 +9,7 @@ class AggregationTest extends AbstractDSLTest
     /**
      * @group unit
      */
-    public function testType()
+    public function testType() : void
     {
         $aggregationDSL = new DSL\Aggregation();
 
@@ -20,13 +20,13 @@ class AggregationTest extends AbstractDSLTest
     /**
      * @group unit
      */
-    public function testInterface()
+    public function testInterface() : void
     {
         $aggregationDSL = new DSL\Aggregation();
 
         $this->_assertImplemented($aggregationDSL, 'avg', 'Elastica\Aggregation\Avg', array('name'));
         $this->_assertImplemented($aggregationDSL, 'cardinality', 'Elastica\Aggregation\Cardinality', array('name'));
-        $this->_assertImplemented($aggregationDSL, 'date_histogram', 'Elastica\Aggregation\DateHistogram', array('name', 'field', 1));
+        $this->_assertImplemented($aggregationDSL, 'date_histogram', 'Elastica\Aggregation\DateHistogram', array('name', 'field', '1'));
         $this->_assertImplemented($aggregationDSL, 'date_range', 'Elastica\Aggregation\DateRange', array('name'));
         $this->_assertImplemented($aggregationDSL, 'extended_stats', 'Elastica\Aggregation\ExtendedStats', array('name'));
         $this->_assertImplemented($aggregationDSL, 'filter', 'Elastica\Aggregation\Filter', array('name', new Exists('field')));
@@ -34,7 +34,7 @@ class AggregationTest extends AbstractDSLTest
         $this->_assertImplemented($aggregationDSL, 'geo_distance', 'Elastica\Aggregation\GeoDistance', array('name', 'field', 'origin'));
         $this->_assertImplemented($aggregationDSL, 'geohash_grid', 'Elastica\Aggregation\GeohashGrid', array('name', 'field'));
         $this->_assertImplemented($aggregationDSL, 'global_agg', 'Elastica\Aggregation\GlobalAggregation', array('name'));
-        $this->_assertImplemented($aggregationDSL, 'histogram', 'Elastica\Aggregation\Histogram', array('name', 'field', 1));
+        $this->_assertImplemented($aggregationDSL, 'histogram', 'Elastica\Aggregation\Histogram', array('name', 'field', '1'));
         $this->_assertImplemented($aggregationDSL, 'ipv4_range', 'Elastica\Aggregation\IpRange', array('name', 'field'));
         $this->_assertImplemented($aggregationDSL, 'max', 'Elastica\Aggregation\Max', array('name'));
         $this->_assertImplemented($aggregationDSL, 'min', 'Elastica\Aggregation\Min', array('name'));

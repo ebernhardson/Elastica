@@ -1,7 +1,8 @@
-<?php
+<?hh // strict
 namespace Elastica;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Container for scripts as fields.
@@ -15,9 +16,9 @@ class ScriptFields extends Param
     /**
      * @param \Elastica\Script[]|array $scripts OPTIONAL
      */
-    public function __construct(array $scripts = array())
+    public function __construct(Indexish<string, Script> $scripts = array())
     {
-        if ($scripts) {
+        if (count($scripts) > 0) {
             $this->setScripts($scripts);
         }
     }
@@ -30,7 +31,7 @@ class ScriptFields extends Param
      *
      * @return $this
      */
-    public function addScript($name, Script $script)
+    public function addScript(string $name, Script $script) : this
     {
         if (!is_string($name) || !strlen($name)) {
             throw new InvalidException('The name of a Script is required and must be a string');
@@ -45,9 +46,9 @@ class ScriptFields extends Param
      *
      * @return $this
      */
-    public function setScripts(array $scripts)
+    public function setScripts(Indexish<string, Script> $scripts) : this
     {
-        $this->_params = array();
+        $this->_params = Map {};
         foreach ($scripts as $name => $script) {
             $this->addScript($name, $script);
         }
@@ -58,7 +59,7 @@ class ScriptFields extends Param
     /**
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         return $this->_convertArrayable($this->_params);
     }

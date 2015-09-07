@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Filter;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Geo distance filter.
@@ -23,35 +24,35 @@ abstract class AbstractGeoDistance extends AbstractFilter
      *
      * @var string
      */
-    protected $_locationType = null;
+    protected ?string $_locationType = null;
 
     /**
      * Key.
      *
      * @var string
      */
-    protected $_key = null;
+    protected string $_key;
 
     /**
      * Latitude.
      *
      * @var float
      */
-    protected $_latitude = null;
+    protected ?float $_latitude = null;
 
     /**
      * Longitude.
      *
      * @var float
      */
-    protected $_longitude = null;
+    protected ?float $_longitude = null;
 
     /**
      * Geohash.
      *
      * @var string
      */
-    protected $_geohash = null;
+    protected ?string $_geohash = null;
 
     /**
      * Create GeoDistance object.
@@ -61,10 +62,9 @@ abstract class AbstractGeoDistance extends AbstractFilter
      *
      * @internal param string $distance Distance
      */
-    public function __construct($key, $location)
+    public function __construct(string $key, mixed $location)
     {
-        // Key
-        $this->setKey($key);
+        $this->_key = $key;
         $this->setLocation($location);
     }
 
@@ -73,7 +73,7 @@ abstract class AbstractGeoDistance extends AbstractFilter
      *
      * @return $this
      */
-    public function setKey($key)
+    public function setKey(string $key) : this
     {
         $this->_key = $key;
 
@@ -87,10 +87,10 @@ abstract class AbstractGeoDistance extends AbstractFilter
      *
      * @return $this
      */
-    public function setLocation($location)
+    public function setLocation(mixed $location) : this
     {
         // Location
-        if (is_array($location)) { // Latitude/Longitude
+        if ($location instanceof Indexish) { // Latitude/Longitude
             // Latitude
             if (isset($location['lat'])) {
                 $this->setLatitude($location['lat']);
@@ -118,7 +118,7 @@ abstract class AbstractGeoDistance extends AbstractFilter
      *
      * @return $this
      */
-    public function setLatitude($latitude)
+    public function setLatitude(float $latitude) : this
     {
         $this->_latitude = (float) $latitude;
         $this->_locationType = self::LOCATION_TYPE_LATLON;
@@ -131,7 +131,7 @@ abstract class AbstractGeoDistance extends AbstractFilter
      *
      * @return $this
      */
-    public function setLongitude($longitude)
+    public function setLongitude(float $longitude) : this
     {
         $this->_longitude = (float) $longitude;
         $this->_locationType = self::LOCATION_TYPE_LATLON;
@@ -144,7 +144,7 @@ abstract class AbstractGeoDistance extends AbstractFilter
      *
      * @return $this
      */
-    public function setGeohash($geohash)
+    public function setGeohash(string $geohash) : this
     {
         $this->_geohash = $geohash;
         $this->_locationType = self::LOCATION_TYPE_GEOHASH;
@@ -157,7 +157,7 @@ abstract class AbstractGeoDistance extends AbstractFilter
      *
      * @return array|string
      */
-    protected function _getLocationData()
+    protected function _getLocationData() : mixed
     {
         if ($this->_locationType === self::LOCATION_TYPE_LATLON) { // Latitude/longitude
             $location = array();
@@ -189,7 +189,7 @@ abstract class AbstractGeoDistance extends AbstractFilter
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $this->setParam($this->_key, $this->_getLocationData());
 

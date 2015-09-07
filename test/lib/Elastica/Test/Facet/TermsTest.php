@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Facet;
 
 use Elastica\Document;
@@ -12,19 +12,19 @@ class TermsTest extends BaseTest
     /**
      * @group functional
      */
-    public function testQuery()
+    public function testQuery() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('helloworld');
 
-        $doc = new Document(1, array('name' => 'nicolas ruflin'));
-        $type->addDocument($doc);
-        $doc = new Document(2, array('name' => 'ruflin test'));
-        $type->addDocument($doc);
-        $doc = new Document(2, array('name' => 'nicolas helloworld'));
-        $type->addDocument($doc);
+        $doc = new Document('1', array('name' => 'nicolas ruflin'));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('2', array('name' => 'ruflin test'));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('2', array('name' => 'nicolas helloworld'));
+        $type->addDocument($doc)->getWaitHandle()->join();
 
         $facet = new Terms('test');
         $facet->setField('name');
@@ -33,9 +33,9 @@ class TermsTest extends BaseTest
         $query->addFacet($facet);
         $query->setQuery(new MatchAll());
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $response = $type->search($query);
+        $response = $type->search($query)->getWaitHandle()->join();
         $facets = $response->getFacets();
 
         $this->assertEquals(3, count($facets['test']['terms']));
@@ -44,17 +44,17 @@ class TermsTest extends BaseTest
     /**
      * @group functional
      */
-    public function testFacetScript()
+    public function testFacetScript() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('helloworld');
 
-        $doc = new Document(1, array('name' => 'rodolfo', 'last_name' => 'moraes'));
-        $type->addDocument($doc);
-        $doc = new Document(2, array('name' => 'jose', 'last_name' => 'honjoya'));
-        $type->addDocument($doc);
+        $doc = new Document('1', array('name' => 'rodolfo', 'last_name' => 'moraes'));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('2', array('name' => 'jose', 'last_name' => 'honjoya'));
+        $type->addDocument($doc)->getWaitHandle()->join();
 
         $facet = new Terms('test');
         $facet->setField('name');
@@ -64,9 +64,9 @@ class TermsTest extends BaseTest
         $query->addFacet($facet);
         $query->setQuery(new MatchAll());
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $response = $type->search($query);
+        $response = $type->search($query)->getWaitHandle()->join();
         $facets = $response->getFacets();
 
         $this->assertEquals(2, count($facets['test']['terms']));

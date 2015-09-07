@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Filter;
 
 /**
@@ -15,7 +15,7 @@ class Exists extends AbstractFilter
      *
      * @param string $field
      */
-    public function __construct($field)
+    public function __construct(string $field)
     {
         $this->setField($field);
     }
@@ -27,7 +27,7 @@ class Exists extends AbstractFilter
      *
      * @return $this
      */
-    public function setField($field)
+    public function setField(string $field) : this
     {
         return $this->setParam('field', $field);
     }

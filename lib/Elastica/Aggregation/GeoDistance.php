@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Aggregation;
 
 use Elastica\Exception\InvalidException;
@@ -19,7 +19,7 @@ class GeoDistance extends AbstractAggregation
      * @param string       $field  the field on which to perform this aggregation
      * @param string|array $origin the point from which distances will be calculated
      */
-    public function __construct($name, $field, $origin)
+    public function __construct(string $name, string $field, mixed $origin)
     {
         parent::__construct($name);
         $this->setField($field)->setOrigin($origin);
@@ -32,7 +32,7 @@ class GeoDistance extends AbstractAggregation
      *
      * @return $this
      */
-    public function setField($field)
+    public function setField(string $field) : this
     {
         return $this->setParam('field', $field);
     }
@@ -44,7 +44,7 @@ class GeoDistance extends AbstractAggregation
      *
      * @return $this
      */
-    public function setOrigin($origin)
+    public function setOrigin(mixed $origin) : this
     {
         return $this->setParam('origin', $origin);
     }
@@ -59,7 +59,7 @@ class GeoDistance extends AbstractAggregation
      *
      * @return $this
      */
-    public function addRange($fromValue = null, $toValue = null)
+    public function addRange(?int $fromValue = null, ?int $toValue = null) : this
     {
         if (is_null($fromValue) && is_null($toValue)) {
             throw new InvalidException('Either fromValue or toValue must be set. Both cannot be null.');
@@ -85,7 +85,7 @@ class GeoDistance extends AbstractAggregation
      *
      * @return $this
      */
-    public function setUnit($unit)
+    public function setUnit(string $unit) : this
     {
         return $this->setParam('unit', $unit);
     }
@@ -97,7 +97,7 @@ class GeoDistance extends AbstractAggregation
      *
      * @return $this
      */
-    public function setDistanceType($distanceType)
+    public function setDistanceType(string $distanceType) : this
     {
         return $this->setParam('distance_type', $distanceType);
     }

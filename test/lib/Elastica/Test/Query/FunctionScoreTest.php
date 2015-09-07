@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -10,9 +10,9 @@ use Elastica\Test\Base as BaseTest;
 
 class FunctionScoreTest extends BaseTest
 {
-    protected $locationOrigin = '32.804654, -117.242594';
+    protected string $locationOrigin = '32.804654, -117.242594';
 
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : \Elastica\Index
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
@@ -21,22 +21,22 @@ class FunctionScoreTest extends BaseTest
             'name' => array('type' => 'string', 'index' => 'not_analyzed'),
             'location' => array('type' => 'geo_point'),
             'price' => array('type' => 'float'),
-        ));
+        ))->getWaitHandle()->join();
 
         $type->addDocuments(array(
-            new Document(1, array(
+            new Document('1', array(
                 'name' => "Mr. Frostie's",
                 'location' => array('lat' => 32.799605, 'lon' => -117.243027),
                 'price' => 4.5,
             )),
-            new Document(2, array(
+            new Document('2', array(
                 'name' => "Miller's Field",
                 'location' => array('lat' => 32.795964, 'lon' => -117.255028),
                 'price' => 9.5,
             )),
-        ));
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -44,18 +44,18 @@ class FunctionScoreTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
-        $priceOrigin = 0;
+        $priceOrigin = '0';
         $locationScale = '2mi';
-        $priceScale = 9.25;
+        $priceScale = '9.25';
         $query = new FunctionScore();
         $childQuery = new MatchAll();
         $query->setQuery($childQuery);
         $query->addDecayFunction(FunctionScore::DECAY_GAUSS, 'location', $this->locationOrigin, $locationScale);
         $query->addDecayFunction(FunctionScore::DECAY_GAUSS, 'price', $priceOrigin, $priceScale);
         $expected = array(
-            'function_score' => array(
+            'function_score' => Map {
                 'query' => $childQuery->toArray(),
                 'functions' => array(
                     array(
@@ -75,7 +75,7 @@ class FunctionScoreTest extends BaseTest
                         ),
                     ),
                 ),
-            ),
+            },
         );
         $this->assertEquals($expected, $query->toArray());
     }
@@ -83,11 +83,11 @@ class FunctionScoreTest extends BaseTest
     /**
      * @group unit
      */
-    public function testDecayWeight()
+    public function testDecayWeight() : void
     {
-        $priceOrigin = 0;
+        $priceOrigin = '0';
         $locationScale = '2mi';
-        $priceScale = 9.25;
+        $priceScale = '9.25';
         $query = new FunctionScore();
         $childQuery = new MatchAll();
         $query->setQuery($childQuery);
@@ -100,9 +100,9 @@ class FunctionScoreTest extends BaseTest
             null,
             .5
         );
-        $query->addDecayFunction(FunctionScore::DECAY_GAUSS, 'price', $priceOrigin, $priceScale, null, null, 2);
+        $query->addDecayFunction(FunctionScore::DECAY_GAUSS, 'price', $priceOrigin, $priceScale, null, null, 2.0);
         $expected = array(
-            'function_score' => array(
+            'function_score' => Map {
                 'query' => $childQuery->toArray(),
                 'functions' => array(
                     array(
@@ -124,7 +124,7 @@ class FunctionScoreTest extends BaseTest
                         'weight' => 2,
                     ),
                 ),
-            ),
+            },
         );
         $this->assertEquals($expected, $query->toArray());
     }
@@ -132,12 +132,12 @@ class FunctionScoreTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGauss()
+    public function testGauss() : void
     {
         $query = new FunctionScore();
         $query->addDecayFunction(FunctionScore::DECAY_GAUSS, 'location', $this->locationOrigin, '4mi');
-        $query->addDecayFunction(FunctionScore::DECAY_GAUSS, 'price', 0, 10);
-        $response = $this->_getIndexForTest()->search($query);
+        $query->addDecayFunction(FunctionScore::DECAY_GAUSS, 'price', '0', '10');
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
         $results = $response->getResults();
 
         // the document with the closest location and lowest price should be scored highest
@@ -148,29 +148,29 @@ class FunctionScoreTest extends BaseTest
     /**
      * @group functional
      */
-    public function testWeight()
+    public function testWeight() : void
     {
-        $filter = new Term(array('price' => 4.5));
+        $filter = new Term(Map {'price' => 4.5});
         $query = new FunctionScore();
         $query->addBoostFactorFunction(5.0, $filter);
         $expected = array(
-            'function_score' => array(
+            'function_score' => Map {
                 'functions' => array(
                     array(
                         'weight' => 5.0,
                         'filter' => array(
-                            'term' => array(
+                            'term' => Map {
                                 'price' => 4.5,
-                            ),
+                            },
                         ),
                     ),
                 ),
-            ),
+            },
         );
 
         $this->assertEquals($expected, $query->toArray());
 
-        $response = $this->_getIndexForTest()->search($query);
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
         $results = $response->getResults();
 
         // the document with price = 4.5 should be scored highest
@@ -181,31 +181,31 @@ class FunctionScoreTest extends BaseTest
     /**
      * @group functional
      */
-    public function testRandomScore()
+    public function testRandomScore() : void
     {
-        $filter = new Term(array('price' => 4.5));
+        $filter = new Term(Map {'price' => 4.5});
         $query = new FunctionScore();
         $query->addRandomScoreFunction(2, $filter);
         $expected = array(
-            'function_score' => array(
+            'function_score' => Map {
                 'functions' => array(
                     array(
                         'random_score' => array(
                             'seed' => 2,
                         ),
                         'filter' => array(
-                            'term' => array(
+                            'term' => Map {
                                 'price' => 4.5,
-                            ),
+                            },
                         ),
                     ),
                 ),
-            ),
+            },
         );
 
         $this->assertEquals($expected, $query->toArray());
 
-        $response = $this->_getIndexForTest()->search($query);
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
         $results = $response->getResults();
 
         // the document with the random score should have a score > 1, means it is the first result
@@ -217,27 +217,27 @@ class FunctionScoreTest extends BaseTest
     /**
      * @group unit
      */
-    public function testRandomScoreWeight()
+    public function testRandomScoreWeight() : void
     {
-        $filter = new Term(array('price' => 4.5));
+        $filter = new Term(Map {'price' => 4.5});
         $query = new FunctionScore();
-        $query->addRandomScoreFunction(2, $filter, 2);
+        $query->addRandomScoreFunction(2, $filter, 2.0);
         $expected = array(
-            'function_score' => array(
+            'function_score' => Map {
                 'functions' => array(
                     array(
                         'random_score' => array(
                             'seed' => 2,
                         ),
                         'filter' => array(
-                            'term' => array(
+                            'term' => Map {
                                 'price' => 4.5,
-                            ),
+                            },
                         ),
-                        'weight' => 2,
+                        'weight' => 2.0,
                     ),
                 ),
-            ),
+            },
         );
 
         $this->assertEquals($expected, $query->toArray());
@@ -246,12 +246,12 @@ class FunctionScoreTest extends BaseTest
     /**
      * @group functional
      */
-    public function testRandomScoreWithoutSeed()
+    public function testRandomScoreWithoutSeed() : void
     {
         $query = new FunctionScore();
         $query->setRandomScore();
 
-        $response = $this->_getIndexForTest()->search($query);
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
 
         $this->assertEquals(2, $response->count());
     }
@@ -259,14 +259,14 @@ class FunctionScoreTest extends BaseTest
     /**
      * @group functional
      */
-    public function testScriptScore()
+    public function testScriptScore() : void
     {
         $scriptString = "_score * doc['price'].value";
         $script = new Script($scriptString);
         $query = new FunctionScore();
         $query->addScriptScoreFunction($script);
         $expected = array(
-            'function_score' => array(
+            'function_score' => Map {
                 'functions' => array(
                     array(
                         'script_score' => array(
@@ -274,12 +274,12 @@ class FunctionScoreTest extends BaseTest
                         ),
                     ),
                 ),
-            ),
+            },
         );
 
         $this->assertEquals($expected, $query->toArray());
 
-        $response = $this->_getIndexForTest()->search($query);
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
         $results = $response->getResults();
 
         // the document the highest price should be scored highest
@@ -290,10 +290,10 @@ class FunctionScoreTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSetMinScore()
+    public function testSetMinScore() : void
     {
         $expected = array(
-            'function_score' => array(
+            'function_score' => Map {
                 'min_score' => 0.8,
                 'functions' => array(
                     array(
@@ -305,17 +305,17 @@ class FunctionScoreTest extends BaseTest
                         ),
                     ),
                 ),
-            ),
+            },
         );
 
         $query = new FunctionScore();
-        $query->addDecayFunction(FunctionScore::DECAY_GAUSS, 'price', 0, 10);
+        $query->addDecayFunction(FunctionScore::DECAY_GAUSS, 'price', '0', '10');
         $returnedValue = $query->setMinScore(0.8);
 
         $this->assertEquals($expected, $query->toArray());
         $this->assertInstanceOf('Elastica\Query\FunctionScore', $returnedValue);
 
-        $response = $this->_getIndexForTest()->search($query);
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
         $results = $response->getResults();
 
         $this->assertCount(1, $results);

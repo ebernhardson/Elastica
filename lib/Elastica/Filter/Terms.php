@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Filter;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Terms filter.
@@ -17,21 +18,21 @@ class Terms extends AbstractFilter
      *
      * @var array Terms
      */
-    protected $_terms = array();
+    protected array $_terms = array();
 
     /**
      * Params.
      *
      * @var array Params
      */
-    protected $_params = array();
+    protected Map<string, mixed> $_params = Map {};
 
     /**
      * Terms key.
      *
      * @var string Terms key
      */
-    protected $_key = '';
+    protected string $_key = '';
 
     /**
      * Creates terms filter.
@@ -39,7 +40,7 @@ class Terms extends AbstractFilter
      * @param string $key   Terms key
      * @param array  $terms Terms values
      */
-    public function __construct($key = '', array $terms = array())
+    public function __construct(@string $key = '', array $terms = array())
     {
         $this->setTerms($key, $terms);
     }
@@ -52,7 +53,7 @@ class Terms extends AbstractFilter
      *
      * @return $this
      */
-    public function setTerms($key, array $terms)
+    public function setTerms(string $key, array $terms) : this
     {
         $this->_key = $key;
         $this->_terms = array_values($terms);
@@ -71,7 +72,7 @@ class Terms extends AbstractFilter
      *
      * @return $this
      */
-    public function setLookup($key, $type, $id, $path, $options = array())
+    public function setLookup(string $key, mixed $type, string $id, string $path, mixed $options = array()) : this
     {
         $this->_key = $key;
         if ($type instanceof \Elastica\Type) {
@@ -84,7 +85,7 @@ class Terms extends AbstractFilter
         );
 
         $index = $options;
-        if (is_array($options)) {
+        if ($options instanceof Indexish) {
             if (isset($options['index'])) {
                 $index = $options['index'];
                 unset($options['index']);
@@ -109,7 +110,7 @@ class Terms extends AbstractFilter
      *
      * @return $this
      */
-    public function addTerm($term)
+    public function addTerm(string $term) : this
     {
         $this->_terms[] = $term;
 
@@ -125,7 +126,7 @@ class Terms extends AbstractFilter
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : array
     {
         if (empty($this->_key)) {
             throw new InvalidException('Terms key has to be set');
@@ -142,7 +143,7 @@ class Terms extends AbstractFilter
      *
      * @return $this
      */
-    public function setExecution($execution)
+    public function setExecution(string $execution) : this
     {
         return $this->setParam('execution', (string) $execution);
     }

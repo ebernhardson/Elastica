@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Exception\NotImplementedException;
@@ -13,7 +13,7 @@ class SuggestTest extends BaseTest
      *
      * @group functional
      */
-    public function testCreateSelf()
+    public function testCreateSelf() : void
     {
         $suggest = new Suggest();
 
@@ -27,7 +27,7 @@ class SuggestTest extends BaseTest
      *
      * @group functional
      */
-    public function testCreateWithSuggest()
+    public function testCreateWithSuggest() : void
     {
         $suggest1 = new Suggest\Term('suggest1', '_all');
 
@@ -41,7 +41,7 @@ class SuggestTest extends BaseTest
      *
      * @group functional
      */
-    public function testCreateWithNonSuggest()
+    public function testCreateWithNonSuggest() : void
     {
         try {
             Suggest::create(new Bool());

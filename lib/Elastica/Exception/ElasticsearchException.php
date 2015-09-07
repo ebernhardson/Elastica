@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Exception;
 
 /**
@@ -13,12 +13,12 @@ class ElasticsearchException extends \Exception implements ExceptionInterface
     /**
      * @var string|null Elasticsearch exception name
      */
-    private $_exception;
+    private ?string $_exception;
 
     /**
      * @var bool Whether exception was local to server node or remote
      */
-    private $_isRemote = false;
+    private bool $_isRemote = false;
 
     /**
      * Constructs elasticsearch exception.
@@ -26,7 +26,7 @@ class ElasticsearchException extends \Exception implements ExceptionInterface
      * @param int    $code  Error code
      * @param string $error Error message from elasticsearch
      */
-    public function __construct($code, $error)
+    public function __construct(int $code, string $error)
     {
         $this->_parseError($error);
         parent::__construct($error, $code);
@@ -37,7 +37,7 @@ class ElasticsearchException extends \Exception implements ExceptionInterface
      *
      * @param string $error Error message
      */
-    protected function _parseError($error)
+    private function _parseError(string $error) : void
     {
         $errors = explode(']; nested: ', $error);
 
@@ -60,12 +60,13 @@ class ElasticsearchException extends \Exception implements ExceptionInterface
      *
      * @return null|string
      */
-    protected function _extractException($error)
+    private function _extractException(string $error) : ?string
     {
+        $matches = array();
         if (preg_match('/^(\w+)\[.*\]/', $error, $matches)) {
             return $matches[1];
         } else {
-            return;
+            return null;
         }
     }
 
@@ -74,7 +75,7 @@ class ElasticsearchException extends \Exception implements ExceptionInterface
      *
      * @return string|null
      */
-    public function getExceptionName()
+    public function getExceptionName() : ?string
     {
         return $this->_exception;
     }
@@ -84,7 +85,7 @@ class ElasticsearchException extends \Exception implements ExceptionInterface
      *
      * @return bool
      */
-    public function isRemoteTransportException()
+    public function isRemoteTransportException() : bool
     {
         return $this->_isRemote;
     }

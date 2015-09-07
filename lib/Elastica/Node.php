@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Node\Info;
@@ -16,33 +16,33 @@ class Node
      *
      * @var \Elastica\Client
      */
-    protected $_client = null;
+    protected Client $_client;
 
     /**
      * @var string Unique node id
      */
-    protected $_id = '';
+    protected string $_id;
 
     /**
      * Node name.
      *
      * @var string Node name
      */
-    protected $_name = '';
+    protected string $_name = '';
 
     /**
      * Node stats.
      *
      * @var \Elastica\Node\Stats Node Stats
      */
-    protected $_stats = null;
+    protected ?Stats $_stats = null;
 
     /**
      * Node info.
      *
      * @var \Elastica\Node\Info Node info
      */
-    protected $_info = null;
+    protected ?Info $_info = null;
 
     /**
      * Create a new node object.
@@ -50,16 +50,16 @@ class Node
      * @param string           $id     Node id or name
      * @param \Elastica\Client $client Node object
      */
-    public function __construct($id, Client $client)
+    public function __construct(string $id, Client $client)
     {
         $this->_client = $client;
-        $this->setId($id);
+        $this->_id = $id;
     }
 
     /**
      * @return string Unique node id. Can also be name if id not exists.
      */
-    public function getId()
+    public function getId() : string
     {
         return $this->_id;
     }
@@ -69,7 +69,7 @@ class Node
      *
      * @return $this Refreshed object
      */
-    public function setId($id)
+    public function setId(string $id) : Node
     {
         $this->_id = $id;
 
@@ -79,12 +79,13 @@ class Node
     /**
      * Get the name of the node.
      *
-     * @return string Node name
+     * @return Awaitable<string> Node name
      */
-    public function getName()
+    public async function getName() : Awaitable<string>
     {
         if (empty($this->_name)) {
-            $this->_name = $this->getInfo()->getName();
+            $info = await $this->getInfo();
+            $this->_name = $info->getName();
         }
 
         return $this->_name;
@@ -95,7 +96,7 @@ class Node
      *
      * @return \Elastica\Client Client
      */
-    public function getClient()
+    public function getClient() : Client
     {
         return $this->_client;
     }
@@ -105,12 +106,12 @@ class Node
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-stats.html
      *
-     * @return \Elastica\Node\Stats Node stats
+     * @return Awaitable<\Elastica\Node\Stats> Node stats
      */
-    public function getStats()
+    public async function getStats() : Awaitable<Stats>
     {
         if (!$this->_stats) {
-            $this->_stats = new Stats($this);
+            $this->_stats = await Stats::create($this);
         }
 
         return $this->_stats;
@@ -121,12 +122,12 @@ class Node
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-info.html
      *
-     * @return \Elastica\Node\Info Node info object
+     * @return Awaitable<\Elastica\Node\Info> Node info object
      */
-    public function getInfo()
+    public async function getInfo() : Awaitable<Info>
     {
         if (!$this->_info) {
-            $this->_info = new Info($this);
+            $this->_info = await Info::create($this);
         }
 
         return $this->_info;
@@ -136,11 +137,14 @@ class Node
      * Refreshes all node information.
      *
      * This should be called after updating a node to refresh all information
+     *
+     * @return Node
      */
-    public function refresh()
+    public function refresh() : Node
     {
         $this->_stats = null;
         $this->_info = null;
+        return $this;
     }
 
     /**
@@ -148,11 +152,11 @@ class Node
      *
      * @param string $delay OPTIONAL Delay after which node is shut down (default = 1s)
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-shutdown.html
      */
-    public function shutdown($delay = '1s')
+    public function shutdown(string $delay = '1s') : Awaitable<Response>
     {
         $path = '_cluster/nodes/'.$this->getId().'/_shutdown?delay='.$delay;
 

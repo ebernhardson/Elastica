@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Filter;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Geo distance filter.
@@ -25,7 +26,7 @@ class GeoDistanceRange extends AbstractGeoDistance
     /**
      * @var array
      */
-    protected $_ranges = array();
+    protected array $_ranges = array();
 
     /**
      * @param string       $key
@@ -34,7 +35,7 @@ class GeoDistanceRange extends AbstractGeoDistance
      *
      * @internal param string $distance
      */
-    public function __construct($key, $location, array $ranges = array())
+    public function __construct(string $key, mixed $location, array $ranges = array())
     {
         parent::__construct($key, $location);
 
@@ -48,7 +49,7 @@ class GeoDistanceRange extends AbstractGeoDistance
      *
      * @return $this
      */
-    public function setRanges(array $ranges)
+    public function setRanges(array $ranges) : this
     {
         $this->_ranges = array();
 
@@ -67,7 +68,7 @@ class GeoDistanceRange extends AbstractGeoDistance
      *
      * @return $this
      */
-    public function setRange($key, $value)
+    public function setRange(string $key, mixed $value) : this
     {
         switch ($key) {
             case self::RANGE_TO:
@@ -79,7 +80,7 @@ class GeoDistanceRange extends AbstractGeoDistance
                 break;
             case self::RANGE_INCLUDE_LOWER:
             case self::RANGE_INCLUDE_UPPER:
-                $value = (boolean) $value;
+                $value = (bool) $value;
                 break;
             default:
                 throw new InvalidException('Invalid range parameter given: '.$key);
@@ -92,7 +93,7 @@ class GeoDistanceRange extends AbstractGeoDistance
     /**
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         foreach ($this->_ranges as $key => $value) {
             $this->setParam($key, $value);

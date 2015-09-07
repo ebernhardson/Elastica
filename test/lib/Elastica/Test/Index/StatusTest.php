@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Index;
 
 use Elastica\Index\Status as IndexStatus;
@@ -9,26 +9,26 @@ class StatusTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGetAliases()
+    public function testGetAliases() : void
     {
         $indexName = 'test';
         $aliasName = 'test-alias';
 
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
-        $status = new IndexStatus($index);
+        $status = IndexStatus::create($index)->getWaitHandle()->join();
 
-        $aliases = $status->getAliases();
+        $aliases = $status->getAliases()->getWaitHandle()->join();
 
         $this->assertTrue(empty($aliases));
         $this->assertInternalType('array', $aliases);
 
-        $index->addAlias($aliasName);
-        $status->refresh();
+        $index->addAlias($aliasName)->getWaitHandle()->join();
+        $status->refresh()->getWaitHandle()->join();
 
-        $aliases = $status->getAliases();
+        $aliases = $status->getAliases()->getWaitHandle()->join();
 
         $this->assertTrue(in_array($aliasName, $aliases));
     }
@@ -36,38 +36,38 @@ class StatusTest extends BaseTest
     /**
      * @group functional
      */
-    public function testHasAlias()
+    public function testHasAlias() : void
     {
         $indexName = 'test';
         $aliasName = 'test-alias';
 
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
-        $status = new IndexStatus($index);
+        $status = IndexStatus::create($index)->getWaitHandle()->join();
 
-        $this->assertFalse($status->hasAlias($aliasName));
+        $this->assertFalse($status->hasAlias($aliasName)->getWaitHandle()->join());
 
-        $index->addAlias($aliasName);
-        $status->refresh();
+        $index->addAlias($aliasName)->getWaitHandle()->join();
+        $status->refresh()->getWaitHandle()->join();
 
-        $this->assertTrue($status->hasAlias($aliasName));
+        $this->assertTrue($status->hasAlias($aliasName)->getWaitHandle()->join());
     }
 
     /**
      * @group functional
      */
-    public function testGetSettings()
+    public function testGetSettings() : void
     {
         $indexName = 'test';
 
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
-        $status = $index->getStatus();
+        $index->create(array(), true)->getWaitHandle()->join();
+        $status = $index->getStatus()->getWaitHandle()->join();
 
-        $settings = $status->getSettings();
+        $settings = $status->getSettings()->getWaitHandle()->join();
         $this->assertInternalType('array', $settings);
         $this->assertTrue(isset($settings['index']['number_of_shards']));
     }

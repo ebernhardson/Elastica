@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Exception\InvalidException;
@@ -17,14 +17,14 @@ class IndexTemplate
      *
      * @var string Index pattern
      */
-    protected $_name = '';
+    protected string $_name;
 
     /**
      * Client object.
      *
      * @var \Elastica\Client Client object
      */
-    protected $_client = null;
+    protected Client $_client;
 
     /**
      * Creates a new index template object.
@@ -34,22 +34,18 @@ class IndexTemplate
      *
      * @throws \Elastica\Exception\InvalidException
      */
-    public function __construct(Client $client, $name)
+    public function __construct(Client $client, string $name)
     {
         $this->_client = $client;
-
-        if (!is_scalar($name)) {
-            throw new InvalidException('Index template should be a scalar type');
-        }
-        $this->_name = (string) $name;
+        $this->_name = $name;
     }
 
     /**
      * Deletes the index template.
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function delete()
+    public function delete() : Awaitable<Response>
     {
         $response = $this->request(Request::DELETE);
 
@@ -63,9 +59,9 @@ class IndexTemplate
      *
      * @param array $args OPTIONAL Arguments to use
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      */
-    public function create(array $args = array())
+    public function create(array $args = array()) : Awaitable<Response>
     {
         return $this->request(Request::PUT, $args);
     }
@@ -73,11 +69,11 @@ class IndexTemplate
     /**
      * Checks if the given index template is already created.
      *
-     * @return bool True if index exists
+     * @return Awaitable<bool> True if index exists
      */
-    public function exists()
+    public async function exists() : Awaitable<bool>
     {
-        $response = $this->request(Request::HEAD);
+        $response = await $this->request(Request::HEAD);
         $info = $response->getTransferInfo();
 
         return (bool) ($info['http_code'] == 200);
@@ -88,7 +84,7 @@ class IndexTemplate
      *
      * @return string Index name
      */
-    public function getName()
+    public function getName() : string
     {
         return $this->_name;
     }
@@ -98,7 +94,7 @@ class IndexTemplate
      *
      * @return \Elastica\Client Index client object
      */
-    public function getClient()
+    public function getClient() : Client
     {
         return $this->_client;
     }
@@ -109,9 +105,9 @@ class IndexTemplate
      * @param string $method Rest method to use (GET, POST, DELETE, PUT)
      * @param array  $data   OPTIONAL Arguments as array
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function request($method, $data = array())
+    public function request(string $method, array $data = array()) : Awaitable<Response>
     {
         $path = '/_template/'.$this->getName();
 

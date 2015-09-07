@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 /**
@@ -18,7 +18,7 @@ class Match extends AbstractQuery
      * @param string $field
      * @param mixed  $values
      */
-    public function __construct($field = null, $values = null)
+    public function __construct(?string $field = null, mixed $values = null)
     {
         if ($field !== null && $values !== null) {
             $this->setParam($field, $values);
@@ -33,7 +33,7 @@ class Match extends AbstractQuery
      *
      * @return $this
      */
-    public function setField($field, $values)
+    public function setField(string $field, mixed $values) : this
     {
         return $this->setParam($field, $values);
     }
@@ -47,12 +47,13 @@ class Match extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldParam($field, $key, $value)
+    public function setFieldParam(string $field, string $key, mixed $value) : this
     {
         if (!isset($this->_params[$field])) {
             $this->_params[$field] = array();
         }
 
+        /* UNSAFE_EXPR */
         $this->_params[$field][$key] = $value;
 
         return $this;
@@ -66,7 +67,7 @@ class Match extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldQuery($field, $query)
+    public function setFieldQuery(string $field, string $query) : this
     {
         return $this->setFieldParam($field, 'query', $query);
     }
@@ -79,7 +80,7 @@ class Match extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldType($field, $type)
+    public function setFieldType(string $field, string $type) : this
     {
         return $this->setFieldParam($field, 'type', $type);
     }
@@ -92,7 +93,7 @@ class Match extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldOperator($field, $operator)
+    public function setFieldOperator(string $field, string $operator) : this
     {
         return $this->setFieldParam($field, 'operator', $operator);
     }
@@ -105,7 +106,7 @@ class Match extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldAnalyzer($field, $analyzer)
+    public function setFieldAnalyzer(string $field, string $analyzer) : this
     {
         return $this->setFieldParam($field, 'analyzer', $analyzer);
     }
@@ -120,7 +121,7 @@ class Match extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldBoost($field, $boost = 1.0)
+    public function setFieldBoost(string $field, float $boost = 1.0) : this
     {
         return $this->setFieldParam($field, 'boost', (float) $boost);
     }
@@ -135,7 +136,7 @@ class Match extends AbstractQuery
      *
      * @link Possible values for minimum_should_match http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-minimum-should-match.html
      */
-    public function setFieldMinimumShouldMatch($field, $minimumShouldMatch)
+    public function setFieldMinimumShouldMatch(string $field, mixed $minimumShouldMatch) : this
     {
         return $this->setFieldParam($field, 'minimum_should_match', $minimumShouldMatch);
     }
@@ -148,7 +149,7 @@ class Match extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldFuzziness($field, $fuzziness)
+    public function setFieldFuzziness(string $field, mixed $fuzziness) : this
     {
         return $this->setFieldParam($field, 'fuzziness', $fuzziness);
     }
@@ -161,7 +162,7 @@ class Match extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldFuzzyRewrite($field, $fuzzyRewrite)
+    public function setFieldFuzzyRewrite(string $field, string $fuzzyRewrite) : this
     {
         return $this->setFieldParam($field, 'fuzzy_rewrite', $fuzzyRewrite);
     }
@@ -174,7 +175,7 @@ class Match extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldPrefixLength($field, $prefixLength)
+    public function setFieldPrefixLength(string $field, int $prefixLength) : this
     {
         return $this->setFieldParam($field, 'prefix_length', (int) $prefixLength);
     }
@@ -187,7 +188,7 @@ class Match extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldMaxExpansions($field, $maxExpansions)
+    public function setFieldMaxExpansions(string $field, int $maxExpansions) : this
     {
         return $this->setFieldParam($field, 'max_expansions', (int) $maxExpansions);
     }
@@ -202,7 +203,7 @@ class Match extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldZeroTermsQuery($field, $zeroTermQuery = 'none')
+    public function setFieldZeroTermsQuery(string $field, string $zeroTermQuery = 'none') : this
     {
         return $this->setFieldParam($field, 'zero_terms_query', $zeroTermQuery);
     }
@@ -215,7 +216,7 @@ class Match extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldCutoffFrequency($field, $cutoffFrequency)
+    public function setFieldCutoffFrequency(string $field, float $cutoffFrequency) : this
     {
         return $this->setFieldParam($field, 'cutoff_frequency', $cutoffFrequency);
     }

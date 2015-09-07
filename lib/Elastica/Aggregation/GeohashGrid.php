@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Aggregation;
 
 /**
@@ -12,7 +12,7 @@ class GeohashGrid extends AbstractAggregation
      * @param string $name  the name of this aggregation
      * @param string $field the field on which to perform this aggregation
      */
-    public function __construct($name, $field)
+    public function __construct(string $name, string $field)
     {
         parent::__construct($name);
         $this->setField($field);
@@ -25,7 +25,7 @@ class GeohashGrid extends AbstractAggregation
      *
      * @return $this
      */
-    public function setField($field)
+    public function setField(string $field) : this
     {
         return $this->setParam('field', $field);
     }
@@ -37,7 +37,7 @@ class GeohashGrid extends AbstractAggregation
      *
      * @return $this
      */
-    public function setPrecision($precision)
+    public function setPrecision(int $precision) : this
     {
         return $this->setParam('precision', $precision);
     }
@@ -49,7 +49,7 @@ class GeohashGrid extends AbstractAggregation
      *
      * @return $this
      */
-    public function setSize($size)
+    public function setSize(int $size) : this
     {
         return $this->setParam('size', $size);
     }
@@ -61,7 +61,7 @@ class GeohashGrid extends AbstractAggregation
      *
      * @return $this
      */
-    public function setShardSize($shardSize)
+    public function setShardSize(int $shardSize) : this
     {
         return $this->setParam('shard_size', $shardSize);
     }

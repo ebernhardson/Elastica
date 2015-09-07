@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Cluster;
 
 use Elastica\Test\Base as BaseTest;
@@ -10,7 +10,7 @@ class HealthTest extends BaseTest
      */
     protected $_health;
 
-    protected function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
 
@@ -33,27 +33,13 @@ class HealthTest extends BaseTest
             ),
         );
 
-        $health = $this
-            ->getMockBuilder('Elastica\Cluster\Health')
-            ->setConstructorArgs(array($this->_getClient()))
-            ->setMethods(array('_retrieveHealthData'))
-            ->getMock();
-
-        $health
-            ->expects($this->any())
-            ->method('_retrieveHealthData')
-            ->will($this->returnValue($data));
-
-        // need to explicitly refresh because the mocking won't refresh the data in the constructor
-        $health->refresh();
-
-        $this->_health = $health;
+        $this->_health = new \Elastica\Cluster\Health($this->_getClient(), $data);
     }
 
     /**
      * @group unit
      */
-    public function testGetClusterName()
+    public function testGetClusterName() : void
     {
         $this->assertEquals('test_cluster', $this->_health->getClusterName());
     }
@@ -61,7 +47,7 @@ class HealthTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetStatus()
+    public function testGetStatus() : void
     {
         $this->assertEquals('green', $this->_health->getStatus());
     }
@@ -69,7 +55,7 @@ class HealthTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetTimedOut()
+    public function testGetTimedOut() : void
     {
         $this->assertFalse($this->_health->getTimedOut());
     }
@@ -77,7 +63,7 @@ class HealthTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetNumberOfNodes()
+    public function testGetNumberOfNodes() : void
     {
         $this->assertEquals(10, $this->_health->getNumberOfNodes());
     }
@@ -85,7 +71,7 @@ class HealthTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetNumberOfDataNodes()
+    public function testGetNumberOfDataNodes() : void
     {
         $this->assertEquals(8, $this->_health->getNumberOfDataNodes());
     }
@@ -93,7 +79,7 @@ class HealthTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetActivePrimaryShards()
+    public function testGetActivePrimaryShards() : void
     {
         $this->assertEquals(3, $this->_health->getActivePrimaryShards());
     }
@@ -101,7 +87,7 @@ class HealthTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetActiveShards()
+    public function testGetActiveShards() : void
     {
         $this->assertEquals(4, $this->_health->getActiveShards());
     }
@@ -109,7 +95,7 @@ class HealthTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetRelocatingShards()
+    public function testGetRelocatingShards() : void
     {
         $this->assertEquals(2, $this->_health->getRelocatingShards());
     }
@@ -117,7 +103,7 @@ class HealthTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetInitializingShards()
+    public function testGetInitializingShards() : void
     {
         $this->assertEquals(7, $this->_health->getInitializingShards());
     }
@@ -125,7 +111,7 @@ class HealthTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetUnassignedShards()
+    public function testGetUnassignedShards() : void
     {
         $this->assertEquals(5, $this->_health->getUnassignedShards());
     }
@@ -133,11 +119,11 @@ class HealthTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetIndices()
+    public function testGetIndices() : void
     {
         $indices = $this->_health->getIndices();
 
-        $this->assertInternalType('array', $indices);
+        $this->assertInstanceOf('HH\Vector', $indices);
         $this->assertEquals(2, count($indices));
 
         foreach ($indices as $index) {

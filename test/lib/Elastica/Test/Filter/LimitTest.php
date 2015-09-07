@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Filter\Limit;
@@ -9,7 +9,7 @@ class LimitTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetType()
+    public function testSetType() : void
     {
         $filter = new Limit(10);
         $this->assertEquals(10, $filter->getParam('value'));
@@ -21,12 +21,12 @@ class LimitTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $filter = new Limit(15);
 
         $expectedArray = array(
-            'limit' => array('value' => 15),
+            'limit' => Map {'value' => 15},
         );
 
         $this->assertEquals($expectedArray, $filter->toArray());

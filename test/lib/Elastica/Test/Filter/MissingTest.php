@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Filter\Missing;
@@ -9,27 +9,27 @@ class MissingTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $filter = new Missing('field_name');
-        $expectedArray = array('missing' => array('field' => 'field_name'));
+        $expectedArray = array('missing' => Map {'field' => 'field_name'});
         $this->assertEquals($expectedArray, $filter->toArray());
 
         $filter = new Missing('field_name');
         $filter->setExistence(true);
-        $expectedArray = array('missing' => array('field' => 'field_name', 'existence' => true));
+        $expectedArray = array('missing' => Map {'field' => 'field_name', 'existence' => true});
         $this->assertEquals($expectedArray, $filter->toArray());
 
         $filter = new Missing('field_name');
         $filter->setNullValue(true);
-        $expectedArray = array('missing' => array('field' => 'field_name', 'null_value' => true));
+        $expectedArray = array('missing' => Map {'field' => 'field_name', 'null_value' => true});
         $this->assertEquals($expectedArray, $filter->toArray());
     }
 
     /**
      * @group unit
      */
-    public function testSetField()
+    public function testSetField() : void
     {
         $filter = new Missing('field_name');
 
@@ -45,7 +45,7 @@ class MissingTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetExistence()
+    public function testSetExistence() : void
     {
         $filter = new Missing('field_name');
 
@@ -62,7 +62,7 @@ class MissingTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetNullValue()
+    public function testSetNullValue() : void
     {
         $filter = new Missing('field_name');
 

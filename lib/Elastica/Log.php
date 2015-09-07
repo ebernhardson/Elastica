@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Psr\Log\AbstractLogger;
@@ -15,21 +15,21 @@ class Log extends AbstractLogger
      *
      * @var string|bool
      */
-    protected $_log = true;
+    protected mixed $_log = true;
 
     /**
      * Last logged message.
      *
      * @var string Last logged message
      */
-    protected $_lastMessage = '';
+    protected string $_lastMessage = '';
 
     /**
      * Inits log object.
      *
      * @param string|bool String to set a specific file for logging
      */
-    public function __construct($log = '')
+    public function __construct(mixed $log = '')
     {
         $this->setLog($log);
     }
@@ -43,8 +43,8 @@ class Log extends AbstractLogger
      *
      * @return null|void
      */
-    public function log($level, $message, array $context = array())
-    {
+    public function log($level, @string $message, array $context = array())
+   : @void {
         $context['error_message'] = $message;
         $this->_lastMessage = JSON::stringify($context);
 
@@ -62,7 +62,7 @@ class Log extends AbstractLogger
      *
      * @return $this
      */
-    public function setLog($log)
+    public function setLog(mixed $log) : this
     {
         $this->_log = $log;
 
@@ -74,7 +74,7 @@ class Log extends AbstractLogger
      *
      * @return string Last logged message
      */
-    public function getLastMessage()
+    public function getLastMessage() : string
     {
         return $this->_lastMessage;
     }

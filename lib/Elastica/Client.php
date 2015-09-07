@@ -1,11 +1,14 @@
-<?php
+<?hh
+
 namespace Elastica;
 
 use Elastica\Bulk\Action;
+use Elastica\Connection\ConnectionPoolCallback;
 use Elastica\Exception\ConnectionException;
 use Elastica\Exception\InvalidException;
 use Elastica\Exception\RuntimeException;
 use Psr\Log\LoggerInterface;
+use Indexish;
 
 /**
  * Client to connect the the elasticsearch server.
@@ -22,7 +25,7 @@ class Client
      *
      * @var array
      */
-    protected $_config = array(
+    protected array $_config = array(
         'host' => null,
         'port' => null,
         'path' => null,
@@ -40,26 +43,26 @@ class Client
     /**
      * @var callback
      */
-    protected $_callback = null;
+    protected ?ConnectionPoolCallback $_callback = null;
 
     /**
      * @var \Elastica\Request
      */
-    protected $_lastRequest;
+    protected ?Request $_lastRequest = null;
 
     /**
-     * @var \Elastica\Response
+     * @var Response \Elastica\Response
      */
-    protected $_lastResponse;
+    protected ?Response $_lastResponse = null;
 
     /**
      * @var LoggerInterface
      */
-    protected $_logger = null;
+    protected ?LoggerInterface $_logger = null;
     /**
      * @var Connection\ConnectionPool
      */
-    protected $_connectionPool = null;
+    protected Connection\ConnectionPool $_connectionPool;
 
     /**
      * Creates a new Elastica client.
@@ -67,9 +70,9 @@ class Client
      * @param array    $config   OPTIONAL Additional config options
      * @param callback $callback OPTIONAL Callback function which can be used to be notified about errors (for example connection down)
      */
-    public function __construct(array $config = array(), $callback = null)
+    public function __construct(array $config = array(), ?ConnectionPoolCallback $callback = null)
     {
-        $this->setConfig($config);
+        $this->_setConfig($config);
         $this->_callback = $callback;
         $this->_initConnections();
     }
@@ -77,34 +80,34 @@ class Client
     /**
      * Inits the client connections.
      */
-    protected function _initConnections()
+    private function _initConnections() : void
     {
         $connections = array();
 
-        foreach ($this->getConfig('connections') as $connection) {
+        foreach ($this->_config['connections'] as $connection) {
             $connections[] = Connection::create($this->_prepareConnectionParams($connection));
         }
 
         if (isset($this->_config['servers'])) {
-            foreach ($this->getConfig('servers') as $server) {
+            foreach ($this->_config['servers'] as $server) {
                 $connections[] = Connection::create($this->_prepareConnectionParams($server));
             }
         }
 
         // If no connections set, create default connection
         if (empty($connections)) {
-            $connections[] = Connection::create($this->_prepareConnectionParams($this->getConfig()));
+            $connections[] = Connection::create($this->_prepareConnectionParams($this->_config));
         }
 
         if (!isset($this->_config['connectionStrategy'])) {
-            if ($this->getConfig('roundRobin') === true) {
-                $this->setConfigValue('connectionStrategy', 'RoundRobin');
+            if ($this->_config['roundRobin'] === true) {
+                $this->_config['connectionStrategy'] = 'RoundRobin';
             } else {
-                $this->setConfigValue('connectionStrategy', 'Simple');
+                $this->_config['connectionStrategy'] = 'Simple';
             }
         }
 
-        $strategy = Connection\Strategy\StrategyFactory::create($this->getConfig('connectionStrategy'));
+        $strategy = Connection\Strategy\StrategyFactory::create($this->_config['connectionStrategy']);
 
         $this->_connectionPool = new Connection\ConnectionPool($connections, $strategy, $this->_callback);
     }
@@ -116,10 +119,9 @@ class Client
      *
      * @return array
      */
-    protected function _prepareConnectionParams(array $config)
+    private function _prepareConnectionParams(array $config) : Map<string, mixed>
     {
-        $params = array();
-        $params['config'] = array();
+        $params = Map {'config' => Map {}};
         foreach ($config as $key => $value) {
             if (in_array($key, array('curl', 'headers', 'url'))) {
                 $params['config'][$key] = $value;
@@ -138,13 +140,18 @@ class Client
      *
      * @return $this
      */
-    public function setConfig(array $config)
+    public function setConfig(array $config) : Client
+    {
+        $this->_setConfig($config);
+
+        return $this;
+    }
+
+    private function _setConfig(array $config) : void
     {
         foreach ($config as $key => $value) {
             $this->_config[$key] = $value;
         }
-
-        return $this;
     }
 
     /**
@@ -157,7 +164,7 @@ class Client
      *
      * @return array|string Config value
      */
-    public function getConfig($key = '')
+    public function getConfig(string $key = '') : mixed
     {
         if (empty($key)) {
             return $this->_config;
@@ -178,7 +185,7 @@ class Client
      *
      * @return $this
      */
-    public function setConfigValue($key, $value)
+    public function setConfigValue(string $key, mixed $value) : Client
     {
         return $this->setConfig(array($key => $value));
     }
@@ -189,7 +196,7 @@ class Client
      *
      * @return mixed
      */
-    public function getConfigValue($keys, $default = null)
+    public function getConfigValue(mixed $keys, mixed $default = null) : mixed
     {
         $value = $this->_config;
         foreach ((array) $keys as $key) {
@@ -210,7 +217,7 @@ class Client
      *
      * @return \Elastica\Index Index for the given name
      */
-    public function getIndex($name)
+    public function getIndex(string $name) : Index
     {
         return new Index($this, $name);
     }
@@ -225,7 +232,7 @@ class Client
      *
      * @return $this
      */
-    public function addHeader($header, $headerValue)
+    public function addHeader(string $header, string $headerValue) : Client
     {
         if (is_string($header) && is_string($headerValue)) {
             $this->_config['headers'][$header] = $headerValue;
@@ -245,7 +252,7 @@ class Client
      *
      * @return $this
      */
-    public function removeHeader($header)
+    public function removeHeader(string $header) : Client
     {
         if (is_string($header)) {
             if (array_key_exists($header, $this->_config['headers'])) {
@@ -271,9 +278,9 @@ class Client
      *
      * @throws \Elastica\Exception\InvalidException If docs is empty
      *
-     * @return \Elastica\Bulk\ResponseSet Response object
+     * @return Awaitable<\Elastica\Bulk\ResponseSet> Response object
      */
-    public function updateDocuments(array $docs)
+    public function updateDocuments(array $docs) : Awaitable<Bulk\ResponseSet>
     {
         if (empty($docs)) {
             throw new InvalidException('Array has to consist of at least one element');
@@ -301,7 +308,7 @@ class Client
      *
      * @return \Elastica\Bulk\ResponseSet Response object
      */
-    public function addDocuments(array $docs)
+    public function addDocuments(array $docs) : Awaitable<Bulk\ResponseSet>
     {
         if (empty($docs)) {
             throw new InvalidException('Array has to consist of at least one element');
@@ -323,11 +330,11 @@ class Client
      * @param string                                    $type    type of index to update
      * @param array                                     $options array of query params to use for query. For possible options check es api
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
      */
-    public function updateDocument($id, $data, $index, $type, array $options = array())
+    public async function updateDocument(string $id, mixed $data, string $index, string $type, array $options = array()) : Awaitable<Response>
     {
         $path = $index.'/'.$type.'/'.$id.'/_update';
 
@@ -355,7 +362,11 @@ class Client
                     'timeout',
                 )
             );
-            $options += $docOptions;
+		
+			foreach ($options as $k => $v) {
+				$docOptions[$k] = $v;
+			}
+			$options = $docOptions;	
             // set fields param to source only if options was not set before
             if ($data instanceof Document && ($data->isAutoPopulate()
                 || $this->getConfigValue(array('document', 'autoPopulate'), false))
@@ -364,13 +375,13 @@ class Client
                 $options['fields'] = '_source';
             }
         } else {
-            $requestData = $data;
+            $requestData = (array) $data;
         }
 
         //If an upsert document exists
-        if ($data instanceof Script || $data instanceof Document) {
+        if ($data instanceof AbstractUpdateAction) {
             if ($data->hasUpsert()) {
-                $requestData['upsert'] = $data->getUpsert()->getData();
+                $requestData['upsert'] = $data->getUpsert()?->getData();
             }
         }
 
@@ -379,18 +390,18 @@ class Client
             $options['retry_on_conflict'] = $retryOnConflict;
         }
 
-        $response = $this->request($path, Request::POST, $requestData, $options);
+        $response = await $this->request($path, Request::POST, $requestData, $options);
 
         if ($response->isOk()
             && $data instanceof Document
             && ($data->isAutoPopulate() || $this->getConfigValue(array('document', 'autoPopulate'), false))
         ) {
             $responseData = $response->getData();
-            if (isset($responseData['_version'])) {
-                $data->setVersion($responseData['_version']);
+            if (isset(/* UNSAFE_EXPR */ $responseData['_version'])) {
+                $data->setVersion(/* UNSAFE_EXPR */ $responseData['_version']);
             }
             if (isset($options['fields'])) {
-                $this->_populateDocumentFieldsFromResponse($response, $data, $options['fields']);
+                $this->_populateDocumentFieldsFromResponse($response, $data, (string) $options['fields']);
             }
         }
 
@@ -402,19 +413,22 @@ class Client
      * @param \Elastica\Document $document
      * @param string             $fields   Array of field names to be populated or '_source' if whole document data should be updated
      */
-    protected function _populateDocumentFieldsFromResponse(Response $response, Document $document, $fields)
+    protected function _populateDocumentFieldsFromResponse(Response $response, Document $document, string $fields) : void
     {
         $responseData = $response->getData();
         if ('_source' == $fields) {
-            if (isset($responseData['get']['_source']) && is_array($responseData['get']['_source'])) {
-                $document->setData($responseData['get']['_source']);
+            if (isset(/* UNSAFE_EXPR */ $responseData['get']['_source']) && /* UNSAFE_EXPR */ $responseData['get']['_source'] instanceof Indexish) {
+                $document->setData(/* UNSAFE_EXPR */ $responseData['get']['_source']);
             }
         } else {
             $keys = explode(',', $fields);
             $data = $document->getData();
+            if (!$data instanceof Indexish) {
+                throw new \InvalidArgumentException('expected array');
+            }
             foreach ($keys as $key) {
-                if (isset($responseData['get']['fields'][$key])) {
-                    $data[$key] = $responseData['get']['fields'][$key];
+                if (isset(/* UNSAFE_EXPR */ $responseData['get']['fields'][$key])) {
+                    $data[$key] = /* UNSAFE_EXPR */ $responseData['get']['fields'][$key];
                 } elseif (isset($data[$key])) {
                     unset($data[$key]);
                 }
@@ -430,9 +444,9 @@ class Client
      *
      * @throws \Elastica\Exception\InvalidException
      *
-     * @return \Elastica\Bulk\ResponseSet
+     * @return Awaitable<\Elastica\Bulk\ResponseSet>
      */
-    public function deleteDocuments(array $docs)
+    public function deleteDocuments(array $docs) : Awaitable<Bulk\ResponseSet>
     {
         if (empty($docs)) {
             throw new InvalidException('Array has to consist of at least one element');
@@ -447,21 +461,21 @@ class Client
     /**
      * Returns the status object for all indices.
      *
-     * @return \Elastica\Status Status object
+     * @return Awaitable<\Elastica\Status> Status object
      */
-    public function getStatus()
+    public function getStatus() : Awaitable<Status>
     {
-        return new Status($this);
+        return Status::create($this);
     }
 
     /**
      * Returns the current cluster.
      *
-     * @return \Elastica\Cluster Cluster object
+     * @return Awaitable<\Elastica\Cluster> Cluster object
      */
-    public function getCluster()
+    public function getCluster() : Awaitable<Cluster>
     {
-        return new Cluster($this);
+        return Cluster::create($this);
     }
 
     /**
@@ -469,7 +483,7 @@ class Client
      *
      * @return $this
      */
-    public function addConnection(Connection $connection)
+    public function addConnection(Connection $connection) : Client
     {
         $this->_connectionPool->addConnection($connection);
 
@@ -481,7 +495,7 @@ class Client
      *
      * @return bool
      */
-    public function hasConnection()
+    public function hasConnection() : bool
     {
         return $this->_connectionPool->hasConnection();
     }
@@ -491,7 +505,7 @@ class Client
      *
      * @return \Elastica\Connection
      */
-    public function getConnection()
+    public function getConnection() : Connection
     {
         return $this->_connectionPool->getConnection();
     }
@@ -499,7 +513,7 @@ class Client
     /**
      * @return \Elastica\Connection[]
      */
-    public function getConnections()
+    public function getConnections() : array<Connection>
     {
         return $this->_connectionPool->getConnections();
     }
@@ -507,7 +521,7 @@ class Client
     /**
      * @return \Elastica\Connection\Strategy\StrategyInterface
      */
-    public function getConnectionStrategy()
+    public function getConnectionStrategy() : Connection\Strategy\StrategyInterface
     {
         return $this->_connectionPool->getStrategy();
     }
@@ -517,7 +531,7 @@ class Client
      *
      * @return $this
      */
-    public function setConnections(array $connections)
+    public function setConnections(array<Connection> $connections) : Client
     {
         $this->_connectionPool->setConnections($connections);
 
@@ -536,9 +550,9 @@ class Client
      *
      * @throws \Elastica\Exception\InvalidException
      *
-     * @return \Elastica\Bulk\ResponseSet Response  object
+     * @return Awaitable<\Elastica\Bulk\ResponseSet> Response  object
      */
-    public function deleteIds(array $ids, $index, $type, $routing = false)
+    public function deleteIds(array $ids, mixed $index, mixed $type, mixed $routing = '') : Awaitable<Bulk\ResponseSet>
     {
         if (empty($ids)) {
             throw new InvalidException('Array has to consist of at least one id');
@@ -552,7 +566,7 @@ class Client
             $action = new Action(Action::OP_TYPE_DELETE);
             $action->setId($id);
 
-            if (!empty($routing)) {
+            if ($routing !== '') {
                 $action->setRouting($routing);
             }
 
@@ -581,9 +595,9 @@ class Client
      * @throws \Elastica\Exception\ResponseException
      * @throws \Elastica\Exception\InvalidException
      *
-     * @return \Elastica\Bulk\ResponseSet Response object
+     * @return Awaitable<\Elastica\Bulk\ResponseSet> Response object
      */
-    public function bulk(array $params)
+    public function bulk(array $params) : Awaitable<Bulk\ResponseSet>
     {
         if (empty($params)) {
             throw new InvalidException('Array has to consist of at least one param');
@@ -608,17 +622,22 @@ class Client
      *
      * @throws Exception\ConnectionException|\Exception
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function request($path, $method = Request::GET, $data = array(), array $query = array())
+    public async function request(string $path, string $method = Request::GET, mixed $data = array(), ?Indexish<string, mixed> $query = null) : Awaitable<Response>
     {
+		if ($query === null) {
+			// this has to be here, rather than in the signature, or phpunit
+			// will blow up when mocking.
+			$query = array();
+		}
         $connection = $this->getConnection();
         try {
             $request = new Request($path, $method, $data, $query, $connection);
 
             $this->_log($request);
 
-            $response = $request->send();
+            $response = await $request->send();
 
             $this->_lastRequest = $request;
             $this->_lastResponse = $response;
@@ -632,7 +651,7 @@ class Client
                 throw $e;
             }
 
-            return $this->request($path, $method, $data, $query);
+            return await $this->request($path, $method, $data, $query);
         }
     }
 
@@ -641,11 +660,11 @@ class Client
      *
      * @param array $args OPTIONAL Optional arguments
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-optimize.html
      */
-    public function optimizeAll($args = array())
+    public function optimizeAll(array $args = array()) : Awaitable<Response>
     {
         return $this->request('_optimize', Request::POST, array(), $args);
     }
@@ -653,11 +672,11 @@ class Client
     /**
      * Refreshes all search indices.
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-refresh.html
      */
-    public function refreshAll()
+    public function refreshAll() : Awaitable<Response>
     {
         return $this->request('_refresh', Request::POST);
     }
@@ -669,7 +688,7 @@ class Client
      *
      * @throws Exception\RuntimeException
      */
-    protected function _log($context)
+    protected function _log(mixed $context) : void
     {
         $log = $this->getConfig('log');
         if ($log && !class_exists('Psr\Log\AbstractLogger')) {
@@ -677,28 +696,31 @@ class Client
         } elseif (!$this->_logger && $log) {
             $this->setLogger(new Log($this->getConfig('log')));
         }
-        if ($this->_logger) {
+        $logger = $this->_logger;
+        if ($logger !== null) {
             if ($context instanceof Request) {
                 $data = $context->toArray();
             } else {
                 $data = array('message' => $context);
             }
-            $this->_logger->debug('logging Request', $data);
+            $logger->debug('logging Request', $data);
         }
     }
 
     /**
+     * This may not be what you expect with async requests.
      * @return \Elastica\Request
      */
-    public function getLastRequest()
+    public function getLastRequest() : ?Request
     {
         return $this->_lastRequest;
     }
 
     /**
+     * This may not be what you expect with async requests.
      * @return \Elastica\Response
      */
-    public function getLastResponse()
+    public function getLastResponse() : ?Response
     {
         return $this->_lastResponse;
     }
@@ -710,7 +732,7 @@ class Client
      *
      * @return $this
      */
-    public function setLogger(LoggerInterface $logger)
+    public function setLogger(LoggerInterface $logger) : Client
     {
         $this->_logger = $logger;
 

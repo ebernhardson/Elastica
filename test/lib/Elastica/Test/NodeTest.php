@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Node;
@@ -9,10 +9,10 @@ class NodeTest extends BaseTest
     /**
      * @group functional
      */
-    public function testCreateNode()
+    public function testCreateNode() : void
     {
         $client = $this->_getClient();
-        $names = $client->getCluster()->getNodeNames();
+        $names = $client->getCluster()->getWaitHandle()->join()->getNodeNames();
         $name = reset($names);
 
         $node = new Node($name, $client);
@@ -22,15 +22,15 @@ class NodeTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGetInfo()
+    public function testGetInfo() : void
     {
         $client = $this->_getClient();
-        $names = $client->getCluster()->getNodeNames();
+        $names = $client->getCluster()->getWaitHandle()->join()->getNodeNames();
         $name = reset($names);
 
         $node = new Node($name, $client);
 
-        $info = $node->getInfo();
+        $info = $node->getInfo()->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Node\Info', $info);
     }
@@ -38,15 +38,15 @@ class NodeTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGetStats()
+    public function testGetStats() : void
     {
         $client = $this->_getClient();
-        $names = $client->getCluster()->getNodeNames();
+        $names = $client->getCluster()->getWaitHandle()->join()->getNodeNames();
         $name = reset($names);
 
         $node = new Node($name, $client);
 
-        $stats = $node->getStats();
+        $stats = $node->getStats()->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Node\Stats', $stats);
     }
@@ -54,21 +54,21 @@ class NodeTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGetName()
+    public function testGetName() : void
     {
-        $nodes = $this->_getClient()->getCluster()->getNodes();
+        $nodes = $this->_getClient()->getCluster()->getWaitHandle()->join()->getNodes();
         // At least 1 instance must exist
         $this->assertGreaterThan(0, $nodes);
 
         foreach ($nodes as $node) {
-            $this->assertEquals($node->getName(), 'Elastica');
+            $this->assertEquals($node->getName()->getWaitHandle()->join(), 'Elastica');
         }
     }
 
     /**
      * @group functional
      */
-    public function testGetId()
+    public function testGetId() : void
     {
         $node = new Node('Elastica', $this->_getClient());
     }

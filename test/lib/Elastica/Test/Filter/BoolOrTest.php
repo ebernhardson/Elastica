@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Document;
@@ -11,7 +11,7 @@ class BoolOrTest extends BaseTest
     /**
      * @group unit
      */
-    public function testAddFilter()
+    public function testAddFilter() : void
     {
         $filter = $this->getMockForAbstractClass('Elastica\Filter\AbstractFilter');
         $orFilter = new BoolOr();
@@ -22,7 +22,7 @@ class BoolOrTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $orFilter = new BoolOr();
 
@@ -48,7 +48,7 @@ class BoolOrTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConstruct()
+    public function testConstruct() : void
     {
         $ids1 = new Ids('foo', array(1, 2));
         $ids2 = new Ids('bar', array(3, 4));
@@ -65,7 +65,7 @@ class BoolOrTest extends BaseTest
     /**
      * @group functional
      */
-    public function testOrFilter()
+    public function testOrFilter() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
@@ -74,17 +74,17 @@ class BoolOrTest extends BaseTest
         $doc2 = new Document('', array('categoryId' => 2));
         $doc3 = new Document('', array('categoryId' => 3));
 
-        $type->addDocument($doc1);
-        $type->addDocument($doc2);
-        $type->addDocument($doc3);
+        $type->addDocument($doc1)->getWaitHandle()->join();
+        $type->addDocument($doc2)->getWaitHandle()->join();
+        $type->addDocument($doc3)->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $boolOr = new \Elastica\Filter\BoolOr();
-        $boolOr->addFilter(new \Elastica\Filter\Term(array('categoryId' => '1')));
-        $boolOr->addFilter(new \Elastica\Filter\Term(array('categoryId' => '2')));
+        $boolOr->addFilter(new \Elastica\Filter\Term(Map {'categoryId' => '1'}));
+        $boolOr->addFilter(new \Elastica\Filter\Term(Map {'categoryId' => '2'}));
 
-        $resultSet = $type->search($boolOr);
+        $resultSet = $type->search($boolOr)->getWaitHandle()->join();
         $this->assertEquals(2, $resultSet->count());
     }
 }

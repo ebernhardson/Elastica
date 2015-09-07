@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Filter;
 
 /**
@@ -13,7 +13,7 @@ class BoolOr extends AbstractMulti
     /**
      * @return string
      */
-    protected function _getBaseName()
+    protected function _getBaseName() : string
     {
         return 'or';
     }

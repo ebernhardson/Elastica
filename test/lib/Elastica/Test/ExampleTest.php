@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Document;
@@ -12,50 +12,50 @@ class ExampleTest extends BaseTest
     /**
      * @group functional
      */
-    public function testBasicGettingStarted()
+    public function testBasicGettingStarted() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('ruflin');
         $type = $index->getType('users');
 
-        $id = 2;
+        $id = '2';
         $data = array('firstname' => 'Nicolas', 'lastname' => 'Ruflin');
         $doc = new Document($id, $data);
 
-        $type->addDocument($doc);
+        $type->addDocument($doc)->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testExample()
+    public function testExample() : void
     {
         // Creates a new index 'xodoa' and a type 'user' inside this index
         $client = $this->_getClient();
         $index = $client->getIndex('elastica_test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
         $type = $index->getType('user');
 
         // Adds 1 document to the index
-        $doc1 = new Document(1,
+        $doc1 = new Document('1',
             array('username' => 'hans', 'test' => array('2', '3', '5'))
         );
-        $type->addDocument($doc1);
+        $type->addDocument($doc1)->getWaitHandle()->join();
 
         // Adds a list of documents with _bulk upload to the index
         $docs = array();
-        $docs[] = new Document(2,
+        $docs[] = new Document('2',
             array('username' => 'john', 'test' => array('1', '3', '6'))
         );
-        $docs[] = new Document(3,
+        $docs[] = new Document('3',
             array('username' => 'rolf', 'test' => array('2', '3', '7'))
         );
-        $type->addDocuments($docs);
+        $type->addDocuments($docs)->getWaitHandle()->join();
 
         // Refresh index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search('rolf');
+        $resultSet = $type->search('rolf')->getWaitHandle()->join();
     }
 }

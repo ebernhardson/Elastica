@@ -1,5 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Filter;
+
+use Indexish;
 
 /**
  * Multi Abstract filter object. Should be extended by filter types composed of an array of sub filters.
@@ -13,12 +15,12 @@ abstract class AbstractMulti extends AbstractFilter
      *
      * @var array
      */
-    protected $_filters = array();
+    protected array<AbstractFilter> $_filters = array();
 
     /**
-     * @param \Elastica\Filter\AbstractFilter $filters
+     * @param array<\Elastica\Filter\AbstractFilter> $filters
      */
-    public function __construct(array $filters = array())
+    public function __construct(array<AbstractFilter> $filters = array())
     {
         if (!empty($filters)) {
             $this->setFilters($filters);
@@ -32,7 +34,7 @@ abstract class AbstractMulti extends AbstractFilter
      *
      * @return $this
      */
-    public function addFilter(AbstractFilter $filter)
+    public function addFilter(AbstractFilter $filter) : this
     {
         $this->_filters[] = $filter;
 
@@ -46,7 +48,7 @@ abstract class AbstractMulti extends AbstractFilter
      *
      * @return $this
      */
-    public function setFilters(array $filters)
+    public function setFilters(array<AbstractFilter> $filters) : this
     {
         $this->_filters = array();
 
@@ -60,7 +62,7 @@ abstract class AbstractMulti extends AbstractFilter
     /**
      * @return array Filters
      */
-    public function getFilters()
+    public function getFilters() : array<AbstractFilter>
     {
         return $this->_filters;
     }
@@ -70,7 +72,7 @@ abstract class AbstractMulti extends AbstractFilter
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $data = parent::toArray();
         $name = $this->_getBaseName();
@@ -79,6 +81,7 @@ abstract class AbstractMulti extends AbstractFilter
         if (empty($filterData)) {
             $filterData = $this->_filters;
         } else {
+            /* UNSAFE_EXPR */
             $filterData['filters'] = $this->_filters;
         }
 

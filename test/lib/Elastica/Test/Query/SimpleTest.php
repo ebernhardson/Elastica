@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Query\Simple;
@@ -9,7 +9,7 @@ class SimpleTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $testQuery = array('hello' => array('world'), 'name' => 'ruflin');
         $query = new Simple($testQuery);

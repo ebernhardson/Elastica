@@ -1,5 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Query;
+
+use Indexish;
 
 /**
  * Fuzzy Like This query.
@@ -15,56 +17,56 @@ class FuzzyLikeThis extends AbstractQuery
      *
      * @var array Field names
      */
-    protected $_fields = array();
+    protected array<string> $_fields = array();
 
     /**
      * Like text.
      *
      * @var string Like text
      */
-    protected $_likeText = '';
+    protected string $_likeText = '';
 
     /**
      * Ignore term frequency.
      *
      * @var bool ignore term frequency
      */
-    protected $_ignoreTF = false;
+    protected bool $_ignoreTF = false;
 
     /**
      * Max query terms value.
      *
      * @var int Max query terms value
      */
-    protected $_maxQueryTerms = 25;
+    protected int $_maxQueryTerms = 25;
 
     /**
      * minimum similarity.
      *
-     * @var int minimum similarity
+     * @var float minimum similarity
      */
-    protected $_minSimilarity = 0.5;
+    protected float $_minSimilarity = 0.5;
 
     /**
      * Prefix Length.
      *
      * @var int Prefix Length
      */
-    protected $_prefixLength = 0;
+    protected int $_prefixLength = 0;
 
     /**
      * Boost.
      *
      * @var float Boost
      */
-    protected $_boost = 1.0;
+    protected float $_boost = 1.0;
 
     /**
      * Analyzer.
      *
-     * @var sting Analyzer
+     * @var string Analyzer
      */
-    protected $_analyzer;
+    protected string $_analyzer = '';
 
     /**
      * Adds field to flt query.
@@ -73,7 +75,7 @@ class FuzzyLikeThis extends AbstractQuery
      *
      * @return $this
      */
-    public function addFields(array $fields)
+    public function addFields(array<string> $fields) : this
     {
         $this->_fields = $fields;
 
@@ -87,7 +89,7 @@ class FuzzyLikeThis extends AbstractQuery
      *
      * @return $this
      */
-    public function setLikeText($text)
+    public function setLikeText(string $text) : this
     {
         $text = trim($text);
         $this->_likeText = $text;
@@ -102,7 +104,7 @@ class FuzzyLikeThis extends AbstractQuery
      *
      * @return $this
      */
-    public function setIgnoreTF($ignoreTF)
+    public function setIgnoreTF(bool $ignoreTF) : this
     {
         $this->_ignoreTF = (bool) $ignoreTF;
 
@@ -112,13 +114,12 @@ class FuzzyLikeThis extends AbstractQuery
     /**
      * Set the minimum similarity.
      *
-     * @param int $value
+     * @param float $value
      *
      * @return $this
      */
-    public function setMinSimilarity($value)
+    public function setMinSimilarity(float $value) : this
     {
-        $value = (float) $value;
         $this->_minSimilarity = $value;
 
         return $this;
@@ -131,7 +132,7 @@ class FuzzyLikeThis extends AbstractQuery
      *
      * @return $this
      */
-    public function setBoost($value)
+    public function setBoost(float $value) : this
     {
         $this->_boost = (float) $value;
 
@@ -145,7 +146,7 @@ class FuzzyLikeThis extends AbstractQuery
      *
      * @return $this
      */
-    public function setPrefixLength($value)
+    public function setPrefixLength(int $value) : this
     {
         $this->_prefixLength = (int) $value;
 
@@ -159,7 +160,7 @@ class FuzzyLikeThis extends AbstractQuery
      *
      * @return $this
      */
-    public function setMaxQueryTerms($value)
+    public function setMaxQueryTerms(int $value) : this
     {
         $this->_maxQueryTerms = (int) $value;
 
@@ -173,7 +174,7 @@ class FuzzyLikeThis extends AbstractQuery
      *
      * @return $this
      */
-    public function setAnalyzer($text)
+    public function setAnalyzer(string $text) : this
     {
         $text = trim($text);
         $this->_analyzer = $text;
@@ -188,8 +189,9 @@ class FuzzyLikeThis extends AbstractQuery
      *
      * @see \Elastica\Query\AbstractQuery::toArray()
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
+        $args = array();
         if (!empty($this->_fields)) {
             $args['fields'] = $this->_fields;
         }
@@ -210,7 +212,10 @@ class FuzzyLikeThis extends AbstractQuery
         $args['max_query_terms'] = $this->_maxQueryTerms;
 
         $data = parent::toArray();
-        $args = array_merge($args, $data['fuzzy_like_this']);
+
+		foreach (/* UNSAFE_EXPR */ $data['fuzzy_like_this'] as $k => $v) {
+			$args[$k] = $v;
+		}
 
         return array('fuzzy_like_this' => $args);
     }

@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Document;
@@ -12,7 +12,7 @@ class ScriptFieldsTest extends BaseTest
     /**
      * @group unit
      */
-    public function testNewScriptFields()
+    public function testNewScriptFields() : void
     {
         $script = new Script('1 + 2');
 
@@ -38,7 +38,7 @@ class ScriptFieldsTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetScriptFields()
+    public function testSetScriptFields() : void
     {
         $query = new Query();
         $script = new Script('1 + 2');
@@ -52,30 +52,20 @@ class ScriptFieldsTest extends BaseTest
         $query->setScriptFields(array(
             'test' => $script,
         ));
-        $this->assertSame($query->getParam('script_fields')->getParam('test'), $script);
-    }
-
-    /**
-     * @group unit
-     * @expectedException \Elastica\Exception\InvalidException
-     */
-    public function testNameException()
-    {
-        $script = new Script('1 + 2');
-        $scriptFields = new ScriptFields(array($script));
+        $this->assertSame(/* UNSAFE_EXPR */ $query->getParam('script_fields')->getParam('test'), $script);
     }
 
     /**
      * @group functional
      */
-    public function testQuery()
+    public function testQuery() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
 
-        $doc = new Document(1, array('firstname' => 'guschti', 'lastname' => 'ruflin'));
-        $type->addDocument($doc);
-        $index->refresh();
+        $doc = new Document('1', array('firstname' => 'guschti', 'lastname' => 'ruflin'));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         $query = new Query();
         $script = new Script('1 + 2');
@@ -84,7 +74,7 @@ class ScriptFieldsTest extends BaseTest
         ));
         $query->setScriptFields($scriptFields);
 
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
         $first = $resultSet->current()->getData();
 
         // 1 + 2

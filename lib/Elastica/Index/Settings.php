@@ -1,10 +1,11 @@
-<?php
+<?hh
 namespace Elastica\Index;
 
 use Elastica\Exception\NotFoundException;
 use Elastica\Exception\ResponseException;
 use Elastica\Index as BaseIndex;
 use Elastica\Request;
+use Elastica\Response;
 
 /**
  * Elastica index settings object.
@@ -25,21 +26,21 @@ class Settings
      *
      * @var \Elastica\Response Response object
      */
-    protected $_response = null;
+    protected ?Response $_response;
 
     /**
      * Stats info.
      *
      * @var array Stats info
      */
-    protected $_data = array();
+    protected array $_data = array();
 
     /**
      * Index.
      *
      * @var \Elastica\Index Index object
      */
-    protected $_index = null;
+    protected BaseIndex $_index;
 
     const DEFAULT_REFRESH_INTERVAL = '1s';
 
@@ -61,13 +62,14 @@ class Settings
      *
      * @param string $setting OPTIONAL Setting name to return
      *
-     * @return array|string|null Settings data
+     * @return Awaitable<array|string|null> Settings data
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-update-settings.html
      */
-    public function get($setting = '')
+    public async function get(string $setting) : Awaitable<mixed>
     {
-        $requestData = $this->request()->getData();
+        $request = await $this->request();
+        $requestData = $request->getData();
         $data = reset($requestData);
 
         if (empty($data['settings']) || empty($data['settings']['index'])) {
@@ -75,11 +77,6 @@ class Settings
             throw new NotFoundException('Index '.$this->getIndex()->getName().' not found');
         }
         $settings = $data['settings']['index'];
-
-        if (!$setting) {
-            // return all array
-            return $settings;
-        }
 
         if (isset($settings[$setting])) {
             return $settings[$setting];
@@ -102,17 +99,28 @@ class Settings
         }
     }
 
+    public async function getAll() : Awaitable<array>
+    {
+        $request = await $this->request();
+        $requestData = $request->getData();
+        $data = reset($requestData);
+
+        if (empty($data['settings']) || empty($data['settings']['index'])) {
+            // should not append, the request should throw a ResponseException
+            throw new NotFoundException('Index '.$this->getIndex()->getName().' not found');
+        }
+        return $data['settings']['index'];
+    }
+
     /**
      * Sets the number of replicas.
      *
      * @param int $replicas Number of replicas
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function setNumberOfReplicas($replicas)
+    public function setNumberOfReplicas(int $replicas) : Awaitable<Response>
     {
-        $replicas = (int) $replicas;
-
         $data = array('number_of_replicas' => $replicas);
 
         return $this->set($data);
@@ -123,9 +131,9 @@ class Settings
      *
      * @param bool $readOnly (default = true)
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      */
-    public function setReadOnly($readOnly = true)
+    public function setReadOnly(bool $readOnly = true) : Awaitable<Response>
     {
         return $this->set(array('blocks.write' => $readOnly));
     }
@@ -133,27 +141,29 @@ class Settings
     /**
      * getReadOnly.
      *
-     * @return bool
+     * @return Awaitable<bool>
      */
-    public function getReadOnly()
+    public async function getReadOnly() : Awaitable<bool>
     {
-        return $this->get('blocks.write') === 'true'; // ES returns a string for this setting
+        $write = await $this->get('blocks.write');
+        return $write === 'true'; // ES returns a string for this setting
     }
 
     /**
-     * @return bool
+     * @return Awaitable<bool>
      */
-    public function getBlocksRead()
+    public async function getBlocksRead() : Awaitable<bool>
     {
-        return (bool) $this->get('blocks.read');
+        $res = await $this->get('blocks.read');
+        return (bool) $res;
     }
 
     /**
      * @param bool $state OPTIONAL (default = true)
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      */
-    public function setBlocksRead($state = true)
+    public function setBlocksRead(bool $state = true) : Awaitable<Response>
     {
         $state = $state ? 1 : 0;
 
@@ -161,19 +171,20 @@ class Settings
     }
 
     /**
-     * @return bool
+     * @return Awaitable<bool>
      */
-    public function getBlocksWrite()
+    public async function getBlocksWrite() : Awaitable<bool>
     {
-        return (bool) $this->get('blocks.write');
+        $res = await $this->get('blocks.write');
+        return (bool) $res;
     }
 
     /**
      * @param bool $state OPTIONAL (default = true)
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      */
-    public function setBlocksWrite($state = true)
+    public function setBlocksWrite(bool $state = true) : Awaitable<Response>
     {
         $state = $state ? 1 : 0;
 
@@ -181,14 +192,15 @@ class Settings
     }
 
     /**
-     * @return bool
+     * @return Awaitable<bool>
      */
-    public function getBlocksMetadata()
+    public async function getBlocksMetadata() : Awaitable<bool>
     {
         // TODO will have to be replace by block.metadata.write once https://github.com/elasticsearch/elasticsearch/pull/9203 has been fixed
         // the try/catch will have to be remove too
         try {
-            return (bool) $this->get('blocks.metadata');
+            $res = await $this->get('blocks.metadata');
+            return (bool) $res;
         } catch (ResponseException $e) {
             if (strpos($e->getMessage(), 'ClusterBlockException') !== false) {
                 // hacky way to test if the metadata is blocked since bug 9203 is not fixed
@@ -202,9 +214,9 @@ class Settings
     /**
      * @param bool $state OPTIONAL (default = true)
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      */
-    public function setBlocksMetadata($state = true)
+    public function setBlocksMetadata(bool $state = true) : Awaitable<Response>
     {
         // TODO will have to be replace by block.metadata.write once https://github.com/elasticsearch/elasticsearch/pull/9203 has been fixed
         $state = $state ? 1 : 0;
@@ -218,11 +230,11 @@ class Settings
      * Value can be for example 3s for 3 seconds or
      * 5m for 5 minutes. -1 refreshing is disabled.
      *
-     * @param int $interval Number of milliseconds
+     * @param string $interval Time interval in elasticsearch format.
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function setRefreshInterval($interval)
+    public function setRefreshInterval(string $interval) : Awaitable<Response>
     {
         return $this->set(array('refresh_interval' => $interval));
     }
@@ -232,13 +244,13 @@ class Settings
      *
      * If no interval is set, the default interval is returned
      *
-     * @return string Refresh interval
+     * @return Awaitable<string> Refresh interval
      */
-    public function getRefreshInterval()
+    public async function getRefreshInterval() : Awaitable<string>
     {
-        $interval = $this->get('refresh_interval');
+        $interval = await $this->get('refresh_interval');
 
-        if (empty($interval)) {
+        if (!is_string($interval) || $interval === '') {
             $interval = self::DEFAULT_REFRESH_INTERVAL;
         }
 
@@ -248,11 +260,12 @@ class Settings
     /**
      * Return merge policy.
      *
-     * @return string Merge policy type
+     * @return Awaitable<string> Merge policy type
      */
-    public function getMergePolicyType()
+    public async function getMergePolicyType() : Awaitable<string>
     {
-        return $this->get('merge.policy.type');
+        $result = await $this->get('merge.policy.type');
+        return (string) $result;
     }
 
     /**
@@ -260,15 +273,15 @@ class Settings
      *
      * @param string $type Merge policy type
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-merge.html
      */
-    public function setMergePolicyType($type)
+    public async function setMergePolicyType(string $type) : Awaitable<Response>
     {
-        $this->getIndex()->close();
-        $response = $this->set(array('merge.policy.type' => $type));
-        $this->getIndex()->open();
+        await $this->getIndex()->close();
+        $response = await $this->set(array('merge.policy.type' => $type));
+        await $this->getIndex()->open();
 
         return $response;
     }
@@ -281,15 +294,15 @@ class Settings
      * @param string $key   Merge policy key (for ex. expunge_deletes_allowed)
      * @param string $value
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-merge.html
      */
-    public function setMergePolicy($key, $value)
+    public async function setMergePolicy(string $key, string $value) : Awaitable<Response>
     {
-        $this->getIndex()->close();
-        $response = $this->set(array('merge.policy.'.$key => $value));
-        $this->getIndex()->open();
+        await $this->getIndex()->close();
+        $response = await $this->set(array('merge.policy.'.$key => $value));
+        await $this->getIndex()->open();
 
         return $response;
     }
@@ -299,18 +312,18 @@ class Settings
      *
      * @param string $key Merge policy key (for ex. expunge_deletes_allowed)
      *
-     * @return string Refresh interval
+     * @return Awaitable<?string> Refresh interval
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-merge.html
      */
-    public function getMergePolicy($key)
+    public async function getMergePolicy(string $key) : Awaitable<?string>
     {
-        $settings = $this->get();
+        $settings = await $this->getAll();
         if (isset($settings['merge']['policy'][$key])) {
             return $settings['merge']['policy'][$key];
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -318,9 +331,9 @@ class Settings
      *
      * @param array $data Arguments
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function set(array $data)
+    public function set(array $data) : Awaitable<Response>
     {
         return $this->request($data, Request::PUT);
     }
@@ -330,7 +343,7 @@ class Settings
      *
      * @return \Elastica\Index Index object
      */
-    public function getIndex()
+    public function getIndex() : BaseIndex
     {
         return $this->_index;
     }
@@ -351,9 +364,9 @@ class Settings
      * @param array  $data   OPTIONAL Data array
      * @param string $method OPTIONAL Transfer method (default = \Elastica\Request::GET)
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function request(array $data = array(), $method = Request::GET)
+    public function request(array $data = array(), string $method = Request::GET) : Awaitable<Response>
     {
         $path = '_settings';
 

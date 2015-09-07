@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Transport;
 
 use Elastica\Connection;
@@ -17,16 +17,16 @@ class NullTransportTest extends BaseTest
     /**
      * @group functional
      */
-    public function testEmptyResult()
+    public function testEmptyResult() : void
     {
         // Creates a client with any destination, and verify it returns a response object when executed
         $client = $this->_getClient();
-        $connection = new Connection(array('transport' => 'NullTransport'));
+        $connection = new Connection(Map {'transport' => 'NullTransport'});
         $client->setConnections(array($connection));
 
         $index = $client->getIndex('elasticaNullTransportTest1');
 
-        $resultSet = $index->search(new Query());
+        $resultSet = $index->search(new Query())->getWaitHandle()->join();
         $this->assertNotNull($resultSet);
 
         $response = $resultSet->getResponse();
@@ -36,11 +36,11 @@ class NullTransportTest extends BaseTest
          // object have a reasonable expectation of finding "hits", "took", etc
          $responseData = $response->getData();
         $this->assertContains('took', $responseData);
-        $this->assertEquals(0, $responseData['took']);
+        $this->assertEquals(0, /* UNSAFE_EXPR */ $responseData['took']);
         $this->assertContains('_shards', $responseData);
         $this->assertContains('hits', $responseData);
-        $this->assertContains('total', $responseData['hits']);
-        $this->assertEquals(0, $responseData['hits']['total']);
+        $this->assertContains('total', /* UNSAFE_EXPR */ $responseData['hits']);
+        $this->assertEquals(0, /* UNSAFE_EXPR */ $responseData['hits']['total']);
         $this->assertContains('params', $responseData);
 
         $took = $response->getEngineTime();
@@ -61,23 +61,23 @@ class NullTransportTest extends BaseTest
     /**
      * @group functional
      */
-    public function testExec()
+    public function testExec() : void
     {
         $request = new Request('/test');
         $params = array('name' => 'ruflin');
         $transport = new NullTransport();
-        $response = $transport->exec($request, $params);
+        $response = $transport->exec($request, $params)->getWaitHandle()->join();
 
         $this->assertInstanceOf('\Elastica\Response', $response);
 
         $data = $response->getData();
-        $this->assertEquals($params, $data['params']);
+        $this->assertEquals($params, /* UNSAFE_EXPR */ $data['params']);
     }
 
     /**
      * @group functional
      */
-    public function testOldObject()
+    public function testOldObject() : void
     {
         if (version_compare(phpversion(), 7, '>=')) {
             self::markTestSkipped('These objects are not supported in PHP 7');
@@ -86,11 +86,11 @@ class NullTransportTest extends BaseTest
         $request = new Request('/test');
         $params = array('name' => 'ruflin');
         $transport = new \Elastica\Transport\Null();
-        $response = $transport->exec($request, $params);
+        $response = $transport->exec($request, $params)->getWaitHandle()->join();
 
         $this->assertInstanceOf('\Elastica\Response', $response);
 
         $data = $response->getData();
-        $this->assertEquals($params, $data['params']);
+        $this->assertEquals($params, /* UNSAFE_EXPR */ $data['params']);
     }
 }

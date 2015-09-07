@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -11,7 +11,7 @@ class HighlightTest extends BaseTest
     /**
      * @group functional
      */
-    public function testHightlightSearch()
+    public function testHightlightSearch() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('helloworld');
@@ -19,9 +19,9 @@ class HighlightTest extends BaseTest
         $phrase = 'My name is ruflin';
 
         $type->addDocuments(array(
-            new Document(1, array('id' => 1, 'phrase' => $phrase, 'username' => 'hanswurst', 'test' => array('2', '3', '5'))),
-            new Document(2, array('id' => 2, 'phrase' => $phrase, 'username' => 'peter', 'test' => array('2', '3', '5'))),
-        ));
+            new Document('1', array('id' => 1, 'phrase' => $phrase, 'username' => 'hanswurst', 'test' => array('2', '3', '5'))),
+            new Document('2', array('id' => 2, 'phrase' => $phrase, 'username' => 'peter', 'test' => array('2', '3', '5'))),
+        ))->getWaitHandle()->join();
 
         $queryString = new QueryString('rufl*');
         $query = new Query($queryString);
@@ -36,9 +36,9 @@ class HighlightTest extends BaseTest
             ),
         ));
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
         foreach ($resultSet as $result) {
             $highlight = $result->getHighlights();
             $this->assertEquals(array('phrase' => array(0 => 'My name is <em class="highlight">ruflin</em>')), $highlight);

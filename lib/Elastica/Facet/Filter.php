@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Facet;
 
 use Elastica\Filter\AbstractFilter;
@@ -20,7 +20,7 @@ class Filter extends AbstractFacet
      *
      * @return $this
      */
-    public function setFilter(AbstractFilter $filter)
+    public function setFilter(AbstractFilter $filter) : this
     {
         return $this->_setFacetParam('filter', $filter);
     }

@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Transport;
 
 use Elastica\Connection;
@@ -18,6 +18,7 @@ use Thrift\Protocol\TBinaryProtocolAccelerated;
 use Thrift\Transport\TBufferedTransport;
 use Thrift\Transport\TFramedTransport;
 use Thrift\Transport\TSocket;
+use Indexish;
 
 /**
  * Elastica Thrift Transport object.
@@ -31,7 +32,7 @@ class Thrift extends AbstractTransport
     /**
      * @var RestClient[]
      */
-    protected $_clients = array();
+    protected Map<string, RestClient> $_clients = Map {};
 
     /**
      * Construct transport.
@@ -40,7 +41,7 @@ class Thrift extends AbstractTransport
      *
      * @throws \Elastica\Exception\RuntimeException
      */
-    public function __construct(Connection $connection = null)
+    public function __construct(?Connection $connection = null)
     {
         parent::__construct($connection);
         if (!class_exists('Elasticsearch\\RestClient')) {
@@ -57,7 +58,7 @@ class Thrift extends AbstractTransport
      *
      * @return \Elasticsearch\RestClient
      */
-    protected function _createClient($host, $port, $sendTimeout = null, $recvTimeout = null, $framedTransport = false)
+    protected function _createClient(string $host, int $port, ?int $sendTimeout = null, ?int $recvTimeout = null, bool $framedTransport = false) : RestClient
     {
         $socket = new TSocket($host, $port, true);
 
@@ -92,14 +93,14 @@ class Thrift extends AbstractTransport
      *
      * @return \Elasticsearch\RestClient
      */
-    protected function _getClient($host, $port, $sendTimeout = null, $recvTimeout = null, $framedTransport = false)
+    protected function _getClient(string $host, int $port, ?int $sendTimeout = null, ?int $recvTimeout = null, bool $framedTransport = false) : RestClient
     {
         $key = $host.':'.$port;
-        if (!isset($this->_clients[$key])) {
-            $this->_clients[$key] = $this->_createClient($host, $port, $sendTimeout, $recvTimeout, $framedTransport);
+        if (!$this->_clients->contains($key)) {
+            $this->_clients->set($key, $this->_createClient($host, $port, $sendTimeout, $recvTimeout, $framedTransport));
         }
 
-        return $this->_clients[$key];
+        return $this->_clients->at($key);
     }
 
     /**
@@ -111,14 +112,14 @@ class Thrift extends AbstractTransport
      * @throws \Elastica\Exception\Connection\ThriftException
      * @throws \Elastica\Exception\ResponseException
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function exec(Request $request, array $params)
+    public async function exec(Request $request, Indexish $params) : Awaitable<Response>
     {
         $connection = $this->getConnection();
 
-        $sendTimeout = $connection->hasConfig('sendTimeout') ? $connection->getConfig('sendTimeout') : null;
-        $recvTimeout = $connection->hasConfig('recvTimeout') ? $connection->getConfig('recvTimeout') : null;
+        $sendTimeout = $connection->hasConfig('sendTimeout') ? (int) $connection->getConfig('sendTimeout') : null;
+        $recvTimeout = $connection->hasConfig('recvTimeout') ? (int) $connection->getConfig('recvTimeout') : null;
         $framedTransport = $connection->hasConfig('framedTransport') ? (bool) $connection->getConfig('framedTransport') : false;
 
         try {
@@ -141,7 +142,7 @@ class Thrift extends AbstractTransport
 
             $data = $request->getData();
             if (!empty($data) || '0' === $data) {
-                if (is_array($data)) {
+                if ($data instanceof Indexish) {
                     $content = JSON::stringify($data);
                 } else {
                     $content = $data;

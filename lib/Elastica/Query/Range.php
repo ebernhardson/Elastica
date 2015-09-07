@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 /**
@@ -16,7 +16,7 @@ class Range extends AbstractQuery
      * @param string $fieldName Field name
      * @param array  $args      Field arguments
      */
-    public function __construct($fieldName = null, array $args = array())
+    public function __construct(?string $fieldName = null, array $args = array())
     {
         if ($fieldName) {
             $this->addField($fieldName, $args);
@@ -31,7 +31,7 @@ class Range extends AbstractQuery
      *
      * @return $this
      */
-    public function addField($fieldName, array $args)
+    public function addField(string $fieldName, array $args) : this
     {
         return $this->setParam($fieldName, $args);
     }

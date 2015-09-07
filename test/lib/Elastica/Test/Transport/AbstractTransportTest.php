@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Transport;
 
 use Elastica\Connection;
@@ -12,7 +12,7 @@ class AbstractTransportTest extends \PHPUnit_Framework_TestCase
      *
      * @return array[]
      */
-    public function getValidDefinitions()
+    public function getValidDefinitions() : array<array>
     {
         $connection = new Connection();
 
@@ -28,7 +28,7 @@ class AbstractTransportTest extends \PHPUnit_Framework_TestCase
      * @group unit
      * @dataProvider getValidDefinitions
      */
-    public function testCanCreateTransportInstances($transport)
+    public function testCanCreateTransportInstances($transport) : void
     {
         $connection = new Connection();
         $params = array();
@@ -37,7 +37,7 @@ class AbstractTransportTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($connection, $transport->getConnection());
     }
 
-    public function getInvalidDefinitions()
+    public function getInvalidDefinitions() : array<array>
     {
         return array(
             array(array('transport' => 'Http')),
@@ -51,7 +51,7 @@ class AbstractTransportTest extends \PHPUnit_Framework_TestCase
      * @expectedException Elastica\Exception\InvalidException
      * @expectedExceptionMessage Invalid transport
      */
-    public function testThrowsExecptionOnInvalidTransportDefinition($transport)
+    public function testThrowsExecptionOnInvalidTransportDefinition($transport) : void
     {
         AbstractTransport::create($transport, new Connection());
     }
@@ -59,7 +59,7 @@ class AbstractTransportTest extends \PHPUnit_Framework_TestCase
     /**
      * @group unit
      */
-    public function testCanInjectParamsWhenUsingArray()
+    public function testCanInjectParamsWhenUsingArray() : void
     {
         $connection = new Connection();
         $params = array(

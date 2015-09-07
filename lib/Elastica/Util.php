@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica;
 
 /**
@@ -23,7 +23,7 @@ class Util
      *
      * @return string Replaced and escaped query term
      */
-    public static function replaceBooleanWordsAndEscapeTerm($term)
+    public static function replaceBooleanWordsAndEscapeTerm(string $term) : string
     {
         $result = $term;
         $result = self::replaceBooleanWords($result);
@@ -42,7 +42,7 @@ class Util
      *
      * @return string Escaped query term
      */
-    public static function escapeTerm($term)
+    public static function escapeTerm(string $term) : string
     {
         $result = $term;
         // \ escaping has to be first, otherwise escaped later once again
@@ -65,7 +65,7 @@ class Util
      *
      * @return string Replaced query term
      */
-    public static function replaceBooleanWords($term)
+    public static function replaceBooleanWords(string $term) : string
     {
         $replacementMap = array(' AND ' => ' && ', ' OR ' => ' || ', ' NOT ' => ' !');
         $result = strtr($term, $replacementMap);
@@ -82,7 +82,7 @@ class Util
      *
      * @return string CamelCase string
      */
-    public static function toCamelCase($string)
+    public static function toCamelCase(string $string) : string
     {
         return str_replace(' ', '', ucwords(str_replace('_', ' ', $string)));
     }
@@ -96,7 +96,7 @@ class Util
      *
      * @return string SnakeCase string
      */
-    public static function toSnakeCase($string)
+    public static function toSnakeCase(string $string) : string
     {
         $string = preg_replace('/([A-Z])/', '_$1', $string);
 
@@ -112,7 +112,7 @@ class Util
      *
      * @return string Converted date string
      */
-    public static function convertDate($date)
+    public static function convertDate(int $date) : string
     {
         if (is_int($date)) {
             $timestamp = $date;
@@ -134,7 +134,7 @@ class Util
      *
      * @return string
      */
-    public static function convertDateTimeObject(\DateTime $dateTime, $includeTimezone = true)
+    public static function convertDateTimeObject(\DateTime $dateTime, bool $includeTimezone = true) : string
     {
         $formatString = 'Y-m-d\TH:i:s'.($includeTimezone === true ? 'P' : '\Z');
         $string = $dateTime->format($formatString);
@@ -150,13 +150,13 @@ class Util
      *
      * @return string parameter name
      */
-    public static function getParamName($class)
+    public static function getParamName(mixed $class) : string
     {
         if (is_object($class)) {
             $class = get_class($class);
         }
 
-        $parts = explode('\\', $class);
+        $parts = explode('\\', (string)$class);
         $last = array_pop($parts);
         $last = preg_replace('/(Facet|Query|Filter)$/', '', $last);
         $name = self::toSnakeCase($last);
@@ -171,7 +171,7 @@ class Util
      *
      * @return string
      */
-    public static function convertRequestToCurlCommand(Request $request)
+    public static function convertRequestToCurlCommand(Request $request) : string
     {
         $message = 'curl -X'.strtoupper($request->getMethod()).' ';
         $message .= '\'http://'.$request->getConnection()->getHost().':'.$request->getConnection()->getPort().'/';

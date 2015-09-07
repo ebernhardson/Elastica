@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Facet;
 
 use Elastica\Query\AbstractQuery;
@@ -20,7 +20,7 @@ class Query extends AbstractFacet
      *
      * @return $this
      */
-    public function setQuery(AbstractQuery $query)
+    public function setQuery(AbstractQuery $query) : this
     {
         return $this->_setFacetParam('query', $query);
     }

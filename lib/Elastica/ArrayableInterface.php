@@ -1,5 +1,7 @@
-<?php
+<?hh // strict
 namespace Elastica;
+
+use Indexish;
 
 /**
  * Interface for params.
@@ -14,5 +16,5 @@ interface ArrayableInterface
      *
      * @return array Object as array
      */
-    public function toArray();
+    public function toArray() : Indexish<string, mixed>;
 }

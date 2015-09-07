@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Rescore;
 
 use Elastica\Query as BaseQuery;
+use Indexish;
 
 /**
  * Query Rescore.
@@ -18,7 +19,7 @@ class Query extends AbstractRescore
      * @param string|\Elastica\Query\AbstractQuery $rescoreQuery
      * @param string|\Elastica\Query\AbstractQuery $query
      */
-    public function __construct($query = null)
+    public function __construct(mixed $query = null)
     {
         $this->setParam('query', array());
         $this->setRescoreQuery($query);
@@ -30,7 +31,7 @@ class Query extends AbstractRescore
      *
      * @return array Rescore array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $data = $this->getParams();
 
@@ -40,7 +41,8 @@ class Query extends AbstractRescore
 
         $array = $this->_convertArrayable($data);
 
-        if (isset($array['query']['rescore_query']['query'])) {
+        if (/* UNSAFE_EXPR */ isset($array['query']['rescore_query']['query'])) {
+            /* UNSAFE_EXPR */
             $array['query']['rescore_query'] = $array['query']['rescore_query']['query'];
         }
 
@@ -54,11 +56,14 @@ class Query extends AbstractRescore
      *
      * @return $this
      */
-    public function setRescoreQuery($rescoreQuery)
+    public function setRescoreQuery(mixed $rescoreQuery) : this
     {
         $rescoreQuery = BaseQuery::create($rescoreQuery);
 
         $query = $this->getParam('query');
+        if (!$query instanceof Indexish) {
+            throw new \InvalidArgumentException('expected query array');
+        }
         $query['rescore_query'] = $rescoreQuery;
 
         return $this->setParam('query', $query);
@@ -71,9 +76,12 @@ class Query extends AbstractRescore
      *
      * @return $this
      */
-    public function setQueryWeight($weight)
+    public function setQueryWeight(float $weight) : this
     {
         $query = $this->getParam('query');
+        if (!$query instanceof Indexish) {
+            throw new \InvalidArgumentException('expected query array');
+        }
         $query['query_weight'] = $weight;
 
         return $this->setParam('query', $query);
@@ -86,9 +94,12 @@ class Query extends AbstractRescore
      *
      * @return $this
      */
-    public function setRescoreQueryWeight($weight)
+    public function setRescoreQueryWeight(float $weight) : this
     {
         $query = $this->getParam('query');
+        if (!$query instanceof Indexish) {
+            throw new \InvalidArgumentException('expected query array');
+        }
         $query['rescore_query_weight'] = $weight;
 
         return $this->setParam('query', $query);

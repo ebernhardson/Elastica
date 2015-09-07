@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Aggregation;
 
 use Elastica\Aggregation\Min;
@@ -9,7 +9,7 @@ use Elastica\Type\Mapping;
 
 class NestedTest extends BaseAggregationTest
 {
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : \Elastica\Index
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
@@ -22,24 +22,24 @@ class NestedTest extends BaseAggregationTest
                     'price' => array('type' => 'double'),
                 ),
             ),
-        )));
+        )))->getWaitHandle()->join();
 
         $type->addDocuments(array(
-            new Document(1, array(
+            new Document('1', array(
                 'resellers' => array(
                     'name' => 'spacely sprockets',
                     'price' => 5.55,
                 ),
             )),
-            new Document(2, array(
+            new Document('2', array(
                 'resellers' => array(
                     'name' => 'cogswell cogs',
                     'price' => 4.98,
                 ),
             )),
-        ));
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -47,7 +47,7 @@ class NestedTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testNestedAggregation()
+    public function testNestedAggregation() : void
     {
         $agg = new Nested('resellers', 'resellers');
         $min = new Min('min_price');
@@ -56,7 +56,8 @@ class NestedTest extends BaseAggregationTest
 
         $query = new Query();
         $query->addAggregation($agg);
-        $results = $this->_getIndexForTest()->search($query)->getAggregation('resellers');
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
+        $results = $response->getAggregation('resellers');
 
         $this->assertEquals(4.98, $results['min_price']['value']);
     }

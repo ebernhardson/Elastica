@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Aggregation;
 
 use Elastica\Aggregation\Percentiles;
@@ -10,7 +10,7 @@ class PercentilesTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testConstruct()
+    public function testConstruct() : void
     {
         $aggr = new Percentiles('price_percentile');
         $this->assertEquals('price_percentile', $aggr->getName());
@@ -22,7 +22,7 @@ class PercentilesTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testSetField()
+    public function testSetField() : void
     {
         $aggr = new Percentiles('price_percentile');
         $aggr->setField('price');
@@ -34,20 +34,20 @@ class PercentilesTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testSetCompression()
+    public function testSetCompression() : void
     {
         $aggr = new Percentiles('price_percentile');
-        $aggr->setCompression(200);
-        $this->assertEquals(200, $aggr->getParam('compression'));
-        $this->assertInstanceOf('Elastica\Aggregation\Percentiles', $aggr->setCompression(200));
+        $aggr->setCompression(200.0);
+        $this->assertEquals(200.0, $aggr->getParam('compression'));
+        $this->assertInstanceOf('Elastica\Aggregation\Percentiles', $aggr->setCompression(200.0));
     }
 
     /**
      * @group functional
      */
-    public function testSetPercents()
+    public function testSetPercents() : void
     {
-        $percents = array(1, 2, 3);
+        $percents = array(1.0, 2.0, 3.0);
         $aggr = new Percentiles('price_percentile');
         $aggr->setPercents($percents);
         $this->assertEquals($percents, $aggr->getParam('percents'));
@@ -57,22 +57,22 @@ class PercentilesTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testAddPercent()
+    public function testAddPercent() : void
     {
-        $percents = array(1, 2, 3);
+        $percents = array(1.0, 2.0, 3.0);
         $aggr = new Percentiles('price_percentile');
         $aggr->setPercents($percents);
         $this->assertEquals($percents, $aggr->getParam('percents'));
-        $aggr->addPercent(4);
-        $percents[] = 4;
+        $aggr->addPercent(4.0);
+        $percents[] = 4.0;
         $this->assertEquals($percents, $aggr->getParam('percents'));
-        $this->assertInstanceOf('Elastica\Aggregation\Percentiles', $aggr->addPercent(4));
+        $this->assertInstanceOf('Elastica\Aggregation\Percentiles', $aggr->addPercent(4.0));
     }
 
     /**
      * @group functional
      */
-    public function testSetScript()
+    public function testSetScript() : void
     {
         $script = 'doc["load_time"].value / 20';
         $aggr = new Percentiles('price_percentile');
@@ -84,24 +84,24 @@ class PercentilesTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testActualWork()
+    public function testActualWork() : void
     {
         // prepare
         $index = $this->_createIndex();
         $type = $index->getType('offer');
         $type->addDocuments(array(
-            new Document(1, array('price' => 100)),
-            new Document(2, array('price' => 200)),
-            new Document(3, array('price' => 300)),
-            new Document(4, array('price' => 400)),
-            new Document(5, array('price' => 500)),
-            new Document(6, array('price' => 600)),
-            new Document(7, array('price' => 700)),
-            new Document(8, array('price' => 800)),
-            new Document(9, array('price' => 900)),
-            new Document(10, array('price' => 1000)),
-        ));
-        $index->refresh();
+            new Document('1', array('price' => 100)),
+            new Document('2', array('price' => 200)),
+            new Document('3', array('price' => 300)),
+            new Document('4', array('price' => 400)),
+            new Document('5', array('price' => 500)),
+            new Document('6', array('price' => 600)),
+            new Document('7', array('price' => 700)),
+            new Document('8', array('price' => 800)),
+            new Document('9', array('price' => 900)),
+            new Document('10', array('price' => 1000)),
+        ))->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         // execute
         $aggr = new Percentiles('price_percentile');
@@ -110,7 +110,7 @@ class PercentilesTest extends BaseAggregationTest
         $query = new Query();
         $query->addAggregation($aggr);
 
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
         $aggrResult = $resultSet->getAggregation('price_percentile');
 
         // hope it's ok to hardcode results...

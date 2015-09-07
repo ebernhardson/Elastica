@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 use Elastica\Type;
+use Indexish;
 
 /**
  * Ids Query.
@@ -19,7 +20,7 @@ class Ids extends AbstractQuery
      *
      * @var array Params
      */
-    protected $_params = array();
+    protected Map<string, mixed> $_params = Map {};
 
     /**
      * Creates filter object.
@@ -27,7 +28,7 @@ class Ids extends AbstractQuery
      * @param string|\Elastica\Type $type Type to filter on
      * @param array                 $ids  List of ids
      */
-    public function __construct($type = null, array $ids = array())
+    public function __construct(mixed $type = null, array $ids = array())
     {
         $this->setType($type);
         $this->setIds($ids);
@@ -40,8 +41,9 @@ class Ids extends AbstractQuery
      *
      * @return $this
      */
-    public function addId($id)
+    public function addId(string $id) : this
     {
+        /* UNSAFE_EXPR */
         $this->_params['values'][] = $id;
 
         return $this;
@@ -54,7 +56,7 @@ class Ids extends AbstractQuery
      *
      * @return $this
      */
-    public function addType($type)
+    public function addType(mixed $type) : this
     {
         if ($type instanceof Type) {
             $type = $type->getName();
@@ -63,7 +65,12 @@ class Ids extends AbstractQuery
             return $this;
         }
 
-        $this->_params['type'][] = $type;
+        if (isset($this->_params['type'])) {
+            /* UNSAFE_EXPR */
+            $this->_params['type'][] = $type;
+        } else {
+            $this->_params['type'] = Vector {$type};
+        }
 
         return $this;
     }
@@ -75,7 +82,7 @@ class Ids extends AbstractQuery
      *
      * @return $this
      */
-    public function setType($type)
+    public function setType(mixed $type) : this
     {
         if ($type instanceof Type) {
             $type = $type->getName();
@@ -96,9 +103,9 @@ class Ids extends AbstractQuery
      *
      * @return $this
      */
-    public function setIds($ids)
+    public function setIds(mixed $ids) : this
     {
-        if (is_array($ids)) {
+        if ($ids instanceof Indexish) {
             $this->_params['values'] = $ids;
         } else {
             $this->_params['values'] = array($ids);
@@ -114,7 +121,7 @@ class Ids extends AbstractQuery
      *
      * @return array Query array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         return array('ids' => $this->_params);
     }

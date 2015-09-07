@@ -1,6 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
+use Elastica\ArrayableInterface;
 use Elastica\Exception\InvalidException;
 use Elastica\Filter\AbstractFilter;
 
@@ -19,7 +20,7 @@ class Filtered extends AbstractQuery
      * @param \Elastica\Query\AbstractQuery   $query  OPTIONAL Query object
      * @param \Elastica\Filter\AbstractFilter $filter OPTIONAL Filter object
      */
-    public function __construct(AbstractQuery $query = null, AbstractFilter $filter = null)
+    public function __construct(?AbstractQuery $query = null, ?AbstractFilter $filter = null)
     {
         $this->setQuery($query);
         $this->setFilter($filter);
@@ -32,7 +33,7 @@ class Filtered extends AbstractQuery
      *
      * @return $this
      */
-    public function setQuery(AbstractQuery $query = null)
+    public function setQuery(?AbstractQuery $query = null) : this
     {
         return $this->setParam('query', $query);
     }
@@ -44,7 +45,7 @@ class Filtered extends AbstractQuery
      *
      * @return $this
      */
-    public function setFilter(AbstractFilter $filter = null)
+    public function setFilter(?AbstractFilter $filter = null) : this
     {
         return $this->setParam('filter', $filter);
     }
@@ -54,9 +55,16 @@ class Filtered extends AbstractQuery
      *
      * @return \Elastica\Filter\AbstractFilter
      */
-    public function getFilter()
+    public function getFilter() : ?AbstractFilter
     {
-        return $this->getParam('filter');
+        $filter = $this->getParam('filter');
+        if ($filter === null) {
+            return null;
+        }
+        if ($filter instanceof AbstractFilter) {
+            return $filter;
+        }
+        throw new \RuntimeException('Expected null or AbstractFilter');
     }
 
     /**
@@ -64,9 +72,16 @@ class Filtered extends AbstractQuery
      *
      * @return \Elastica\Query\AbstractQuery
      */
-    public function getQuery()
+    public function getQuery() : ?AbstractQuery
     {
-        return $this->getParam('query');
+        $query = $this->getParam('query');
+        if ($query === null) {
+            return null;
+        }
+        if ($query instanceof AbstractQuery) {
+            return $query;
+        }
+        throw new \RuntimeException('Expected null or AbstractQuery');
     }
 
     /**
@@ -76,16 +91,24 @@ class Filtered extends AbstractQuery
      *
      * @see \Elastica\Query\AbstractQuery::toArray()
      */
-    public function toArray()
+    public function toArray() : array
     {
         $filtered = array();
 
         if ($this->hasParam('query') && $this->getParam('query') instanceof AbstractQuery) {
-            $filtered['query'] = $this->getParam('query')->toArray();
+            $query = $this->getParam('query');
+            if (!$query instanceof ArrayableInterface) {
+                throw new \InvalidArgumentException('expected query to have ArrayableInterface');
+            }
+            $filtered['query'] = $query->toArray();
         }
 
         if ($this->hasParam('filter') && $this->getParam('filter') instanceof AbstractFilter) {
-            $filtered['filter'] = $this->getParam('filter')->toArray();
+            $filter = $this->getParam('filter');
+            if (!$filter instanceof ArrayableInterface) {
+                throw new \InvalidArgumentException('expected filter to have ArrayableInterface');
+            }
+            $filtered['filter'] = $filter->toArray();
         }
 
         if (empty($filtered)) {

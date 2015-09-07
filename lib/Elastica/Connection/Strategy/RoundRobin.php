@@ -1,5 +1,7 @@
-<?php
+<?hh // strict
 namespace Elastica\Connection\Strategy;
+
+use Elastica\Connection;
 
 /**
  * Description of RoundRobin.
@@ -15,7 +17,7 @@ class RoundRobin extends Simple
      *
      * @return \Elastica\Connection
      */
-    public function getConnection($connections)
+    public function getConnection(array<Connection> $connections) : Connection
     {
         shuffle($connections);
 

@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -14,7 +14,7 @@ class BoolQueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $query = new BoolQuery();
 
@@ -37,13 +37,13 @@ class BoolQueryTest extends BaseTest
         $query->addShould($idsQuery3->toArray());
 
         $expectedArray = array(
-            'bool' => array(
+            'bool' => Map {
                 'must' => array($idsQuery1->toArray()),
                 'should' => array($idsQuery3->toArray()),
                 'minimum_number_should_match' => $minMatch,
                 'must_not' => array($idsQuery2->toArray()),
                 'boost' => $boost,
-            ),
+            },
         );
 
         $this->assertEquals($expectedArray, $query->toArray());
@@ -56,7 +56,7 @@ class BoolQueryTest extends BaseTest
      *
      * @group unit
      */
-    public function testToArrayStructure()
+    public function testToArrayStructure() : void
     {
         $boolQuery = new BoolQuery();
 
@@ -75,46 +75,46 @@ class BoolQueryTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSearch()
+    public function testSearch() : void
     {
         $client = $this->_getClient();
         $index = new Index($client, 'test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
         $type = new Type($index, 'helloworld');
 
-        $doc = new Document(1, array('id' => 1, 'email' => 'hans@test.com', 'username' => 'hans', 'test' => array('2', '3', '5')));
-        $type->addDocument($doc);
-        $doc = new Document(2, array('id' => 2, 'email' => 'emil@test.com', 'username' => 'emil', 'test' => array('1', '3', '6')));
-        $type->addDocument($doc);
-        $doc = new Document(3, array('id' => 3, 'email' => 'ruth@test.com', 'username' => 'ruth', 'test' => array('2', '3', '7')));
-        $type->addDocument($doc);
+        $doc = new Document('1', array('id' => 1, 'email' => 'hans@test.com', 'username' => 'hans', 'test' => array('2', '3', '5')));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('2', array('id' => 2, 'email' => 'emil@test.com', 'username' => 'emil', 'test' => array('1', '3', '6')));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('3', array('id' => 3, 'email' => 'ruth@test.com', 'username' => 'ruth', 'test' => array('2', '3', '7')));
+        $type->addDocument($doc)->getWaitHandle()->join();
 
         // Refresh index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $boolQuery = new BoolQuery();
-        $termQuery1 = new Term(array('test' => '2'));
+        $termQuery1 = new Term(Map {'test' => '2'});
         $boolQuery->addMust($termQuery1);
-        $resultSet = $type->search($boolQuery);
+        $resultSet = $type->search($boolQuery)->getWaitHandle()->join();
 
         $this->assertEquals(2, $resultSet->count());
 
-        $termQuery2 = new Term(array('test' => '5'));
+        $termQuery2 = new Term(Map {'test' => '5'});
         $boolQuery->addMust($termQuery2);
-        $resultSet = $type->search($boolQuery);
+        $resultSet = $type->search($boolQuery)->getWaitHandle()->join();
 
         $this->assertEquals(1, $resultSet->count());
 
-        $termQuery3 = new Term(array('username' => 'hans'));
+        $termQuery3 = new Term(Map {'username' => 'hans'});
         $boolQuery->addMust($termQuery3);
-        $resultSet = $type->search($boolQuery);
+        $resultSet = $type->search($boolQuery)->getWaitHandle()->join();
 
         $this->assertEquals(1, $resultSet->count());
 
-        $termQuery4 = new Term(array('username' => 'emil'));
+        $termQuery4 = new Term(Map {'username' => 'emil'});
         $boolQuery->addMust($termQuery4);
-        $resultSet = $type->search($boolQuery);
+        $resultSet = $type->search($boolQuery)->getWaitHandle()->join();
 
         $this->assertEquals(0, $resultSet->count());
     }
@@ -122,22 +122,22 @@ class BoolQueryTest extends BaseTest
     /**
      * @group functional
      */
-    public function testEmptyBoolQuery()
+    public function testEmptyBoolQuery() : void
     {
         $index = $this->_createIndex();
         $type = new Type($index, 'test');
 
         $docNumber = 3;
         for ($i = 0; $i < $docNumber; ++$i) {
-            $doc = new Document($i, array('email' => 'test@test.com'));
-            $type->addDocument($doc);
+            $doc = new Document((string) $i, array('email' => 'test@test.com'));
+            $type->addDocument($doc)->getWaitHandle()->join();
         }
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $boolQuery = new BoolQuery();
 
-        $resultSet = $type->search($boolQuery);
+        $resultSet = $type->search($boolQuery)->getWaitHandle()->join();
 
         $this->assertEquals($resultSet->count(), $docNumber);
     }
@@ -145,7 +145,7 @@ class BoolQueryTest extends BaseTest
     /**
      * @group functional
      */
-    public function testOldObject()
+    public function testOldObject() : void
     {
         if (version_compare(phpversion(), 7, '>=')) {
             self::markTestSkipped('These objects are not supported in PHP 7');
@@ -156,15 +156,15 @@ class BoolQueryTest extends BaseTest
 
         $docNumber = 3;
         for ($i = 0; $i < $docNumber; ++$i) {
-            $doc = new Document($i, array('email' => 'test@test.com'));
-            $type->addDocument($doc);
+            $doc = new Document((string) $i, array('email' => 'test@test.com'));
+            $type->addDocument($doc)->getWaitHandle()->join();
         }
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $boolQuery = new \Elastica\Query\Bool();
 
-        $resultSet = $type->search($boolQuery);
+        $resultSet = $type->search($boolQuery)->getWaitHandle()->join();
 
         $this->assertEquals($resultSet->count(), $docNumber);
     }

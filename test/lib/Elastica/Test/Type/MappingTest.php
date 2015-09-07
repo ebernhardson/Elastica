@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Type;
 
 use Elastica\Document;
@@ -13,12 +13,12 @@ class MappingTest extends BaseTest
     /**
      * @group functional
      */
-    public function testMappingStoreFields()
+    public function testMappingStoreFields() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('test');
 
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('test');
 
         $mapping = new Mapping($type,
@@ -30,24 +30,24 @@ class MappingTest extends BaseTest
         );
         $mapping->disableSource();
 
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
         $firstname = 'Nicolas';
-        $doc = new Document(1,
+        $doc = new Document('1',
             array(
                 'firstname' => $firstname,
                 'lastname' => 'Ruflin',
             )
         );
 
-        $type->addDocument($doc);
+        $type->addDocument($doc)->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
         $queryString = new QueryString('ruflin');
         $query = Query::create($queryString);
         $query->setFields(array('*'));
 
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
         $result = $resultSet->current();
         $fields = $result->getFields();
 
@@ -55,18 +55,18 @@ class MappingTest extends BaseTest
         $this->assertArrayNotHasKey('lastname', $fields);
         $this->assertEquals(1, count($fields));
 
-        $index->flush();
-        $document = $type->getDocument(1);
+        $index->flush()->getWaitHandle()->join();
+        $document = $type->getDocument('1')->getWaitHandle()->join();
 
         $this->assertEmpty($document->getData());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testEnableAllField()
+    public function testEnableAllField() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
@@ -78,21 +78,21 @@ class MappingTest extends BaseTest
         $data = $mapping->toArray();
         $this->assertTrue($data[$type->getName()]['_all']['enabled']);
 
-        $response = $mapping->send();
+        $response = $mapping->send()->getWaitHandle()->join();
         $this->assertTrue($response->isOk());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testEnableTtl()
+    public function testEnableTtl() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('test');
 
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('test');
 
         $mapping = new Mapping($type, array());
@@ -102,18 +102,18 @@ class MappingTest extends BaseTest
         $data = $mapping->toArray();
         $this->assertTrue($data[$type->getName()]['_ttl']['enabled']);
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testNestedMapping()
+    public function testNestedMapping() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('test');
 
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('test');
 
         //$this->markTestIncomplete('nested mapping is not set right yet');
@@ -133,10 +133,10 @@ class MappingTest extends BaseTest
             )
         );
 
-        $response = $type->setMapping($mapping);
+        $response = $type->setMapping($mapping)->getWaitHandle()->join();
         $this->assertFalse($response->hasError());
 
-        $doc = new Document(1, array(
+        $doc = new Document('1', array(
             'user' => array(
                 'firstname' => 'Nicolas',
                 'lastname' => 'Ruflin',
@@ -144,19 +144,19 @@ class MappingTest extends BaseTest
             ),
         ));
 
-        $type->addDocument($doc);
+        $type->addDocument($doc)->getWaitHandle()->join();
 
-        $index->refresh();
-        $resultSet = $type->search('ruflin');
+        $index->refresh()->getWaitHandle()->join();
+        $resultSet = $type->search('ruflin')->getWaitHandle()->join();
         $this->assertEquals($resultSet->count(), 1);
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testParentMapping()
+    public function testParentMapping() : void
     {
         $index = $this->_createIndex();
         $parenttype = new Type($index, 'parenttype');
@@ -166,7 +166,7 @@ class MappingTest extends BaseTest
             )
         );
 
-        $parenttype->setMapping($parentmapping);
+        $parenttype->setMapping($parentmapping)->getWaitHandle()->join();
 
         $childtype = new Type($index, 'childtype');
         $childmapping = new Mapping($childtype,
@@ -176,18 +176,18 @@ class MappingTest extends BaseTest
         );
         $childmapping->setParent('parenttype');
 
-        $childtype->setMapping($childmapping);
+        $childtype->setMapping($childmapping)->getWaitHandle()->join();
 
         $data = $childmapping->toArray();
         $this->assertEquals('parenttype', $data[$childtype->getName()]['_parent']['type']);
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testMappingExample()
+    public function testMappingExample() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('notes');
@@ -203,9 +203,9 @@ class MappingTest extends BaseTest
             )
         );
 
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
-        $doc = new Document(1, array(
+        $doc = new Document('1', array(
                 'note' => array(
                     array(
                         'titulo' => 'nota1',
@@ -219,9 +219,9 @@ class MappingTest extends BaseTest
             )
         );
 
-        $type->addDocument($doc);
+        $type->addDocument($doc)->getWaitHandle()->join();
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
@@ -232,7 +232,7 @@ class MappingTest extends BaseTest
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-root-object-type.html
      */
-    public function testDynamicTemplate()
+    public function testDynamicTemplate() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('person');
@@ -252,18 +252,18 @@ class MappingTest extends BaseTest
             )),
         ));
 
-        $mapping->send();
+        $mapping->send()->getWaitHandle()->join();
 
         // when running the tests, the mapping sometimes isn't available yet. Optimize index to enforce reload mapping.
-        $index->optimize();
+        $index->optimize()->getWaitHandle()->join();
 
         // create a document which should create a mapping for the field: multiname.
         $testDoc = new Document('person1', array('multiname' => 'Jasper van Wanrooy'), $type);
-        $index->addDocuments(array($testDoc));
+        $index->addDocuments(array($testDoc))->getWaitHandle()->join();
         sleep(1);   //sleep 1 to ensure that the test passes every time
 
         // read the mapping from Elasticsearch and assert that the multiname.org field is "not_analyzed"
-        $newMapping = $type->getMapping();
+        $newMapping = $type->getMapping()->getWaitHandle()->join();
         $this->assertArrayHasKey('person', $newMapping,
             'Person type not available in mapping from ES. Mapping set at all?');
         $this->assertArrayHasKey('properties', $newMapping['person'],
@@ -278,13 +278,13 @@ class MappingTest extends BaseTest
             'Indexing status of the multiname.org not available. Dynamic mapping not fully applied!');
         $this->assertEquals('not_analyzed', $newMapping['person']['properties']['multiname']['fields']['org']['index']);
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testSetMeta()
+    public function testSetMeta() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
@@ -293,18 +293,18 @@ class MappingTest extends BaseTest
             'lastname' => array('type' => 'string'),
         ));
         $mapping->setMeta(array('class' => 'test'));
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
-        $mappingData = $type->getMapping();
+        $mappingData = $type->getMapping()->getWaitHandle()->join();
         $this->assertEquals('test', $mappingData['test']['_meta']['class']);
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testGetters()
+    public function testGetters() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
@@ -322,10 +322,10 @@ class MappingTest extends BaseTest
 
         $this->assertEquals($get_all, $all);
 
-        $this->assertNull($mapping->getParam('_boost', $all));
+        $this->assertNull($mapping->getParam('_boost'));
 
         $this->assertEquals($properties, $mapping->getProperties());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 }

@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Transport;
 
 /**
@@ -13,14 +13,14 @@ class Https extends Http
      *
      * @var string https scheme
      */
-    protected $_scheme = 'https';
+    protected string $_scheme = 'https';
 
     /**
      * Overloads setupCurl to set SSL params.
      *
      * @param resource $connection Curl connection resource
      */
-    protected function _setupCurl($connection)
+    protected function _setupCurl(resource $connection) : void
     {
         parent::_setupCurl($connection);
     }

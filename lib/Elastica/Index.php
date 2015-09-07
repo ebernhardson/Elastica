@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Exception\InvalidException;
@@ -6,6 +6,7 @@ use Elastica\Exception\ResponseException;
 use Elastica\Index\Settings as IndexSettings;
 use Elastica\Index\Stats as IndexStats;
 use Elastica\Index\Status as IndexStatus;
+use Indexish;
 
 /**
  * Elastica index object.
@@ -21,14 +22,14 @@ class Index implements SearchableInterface
      *
      * @var string Index name
      */
-    protected $_name = '';
+    protected string $_name = '';
 
     /**
      * Client object.
      *
      * @var \Elastica\Client Client object
      */
-    protected $_client = null;
+    protected Client $_client;
 
     /**
      * Creates a new index object.
@@ -40,7 +41,7 @@ class Index implements SearchableInterface
      *
      * @throws \Elastica\Exception\InvalidException
      */
-    public function __construct(Client $client, $name)
+    public function __construct(Client $client, mixed $name)
     {
         $this->_client = $client;
 
@@ -57,7 +58,7 @@ class Index implements SearchableInterface
      *
      * @return \Elastica\Type Type object
      */
-    public function getType($type)
+    public function getType(@string $type) : Type
     {
         return new Type($this, $type);
     }
@@ -65,33 +66,33 @@ class Index implements SearchableInterface
     /**
      * Returns the current status of the index.
      *
-     * @return \Elastica\Index\Status Index status
+     * @return Awaitable<\Elastica\Index\Status> Index status
      */
-    public function getStatus()
+    public function getStatus() : Awaitable<IndexStatus>
     {
-        return new IndexStatus($this);
+        return IndexStatus::create($this);
     }
 
     /**
      * Return Index Stats.
      *
-     * @return \Elastica\Index\Stats
+     * @return Awaitable<\Elastica\Index\Stats>
      */
-    public function getStats()
+    public function getStats() : Awaitable<IndexStats>
     {
-        return new IndexStats($this);
+        return IndexStats::create($this);
     }
 
     /**
      * Gets all the type mappings for an index.
      *
-     * @return array
+     * @return Awaitable<array>
      */
-    public function getMapping()
+    public async function getMapping() : Awaitable<array>
     {
         $path = '_mapping';
 
-        $response = $this->request($path, Request::GET);
+        $response = await $this->request($path, Request::GET);
         $data = $response->getData();
 
         // Get first entry as if index is an Alias, the name of the mapping is the real name and not alias name
@@ -109,7 +110,7 @@ class Index implements SearchableInterface
      *
      * @return \Elastica\Index\Settings Settings object
      */
-    public function getSettings()
+    public function getSettings() : IndexSettings
     {
         return new IndexSettings($this);
     }
@@ -119,11 +120,11 @@ class Index implements SearchableInterface
      *
      * @param array|\Elastica\Document[] $docs Array of Elastica\Document
      *
-     * @return \Elastica\Bulk\ResponseSet
+     * @return Awaitable<\Elastica\Bulk\ResponseSet>
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html
      */
-    public function updateDocuments(array $docs)
+    public function updateDocuments(array $docs) : Awaitable<Bulk\ResponseSet>
     {
         foreach ($docs as $doc) {
             $doc->setIndex($this->getName());
@@ -137,11 +138,11 @@ class Index implements SearchableInterface
      *
      * @param array|\Elastica\Document[] $docs Array of Elastica\Document
      *
-     * @return \Elastica\Bulk\ResponseSet
+     * @return Awaitable<\Elastica\Bulk\ResponseSet>
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html
      */
-    public function addDocuments(array $docs)
+    public function addDocuments(array $docs) : Awaitable<Bulk\ResponseSet>
     {
         foreach ($docs as $doc) {
             $doc->setIndex($this->getName());
@@ -156,11 +157,11 @@ class Index implements SearchableInterface
      * @param \Elastica\Query|string $query   Query object
      * @param array                  $options Optional params
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html
      */
-    public function deleteByQuery($query, array $options = array())
+    public function deleteByQuery(mixed $query, Indexish<string, mixed> $options = array()) : Awaitable<Response>
     {
         if (is_string($query)) {
             // query_string queries are not supported for delete by query operations
@@ -176,9 +177,9 @@ class Index implements SearchableInterface
     /**
      * Deletes the index.
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function delete()
+    public function delete() : Awaitable<Response>
     {
         $response = $this->request('', Request::DELETE);
 
@@ -190,11 +191,11 @@ class Index implements SearchableInterface
      *
      * @param array|\Elastica\Document[] $docs Array of Elastica\Document
      *
-     * @return \Elastica\Bulk\ResponseSet
+     * @return Awaitable<\Elastica\Bulk\ResponseSet>
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html
      */
-    public function deleteDocuments(array $docs)
+    public function deleteDocuments(array $docs) : Awaitable<Bulk\ResponseSet>
     {
         foreach ($docs as $doc) {
             $doc->setIndex($this->getName());
@@ -210,11 +211,11 @@ class Index implements SearchableInterface
      *
      * @param array $args OPTIONAL Additional arguments
      *
-     * @return array Server response
+     * @return Awaitable<array> Server response
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-optimize.html
      */
-    public function optimize($args = array())
+    public function optimize(array $args = array()) : Awaitable<Response>
     {
         return $this->request('_optimize', Request::POST, array(), $args);
     }
@@ -222,11 +223,11 @@ class Index implements SearchableInterface
     /**
      * Refreshes the index.
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-refresh.html
      */
-    public function refresh()
+    public function refresh() : Awaitable<Response>
     {
         return $this->request('_refresh', Request::POST, array());
     }
@@ -244,9 +245,9 @@ class Index implements SearchableInterface
      * @throws \Elastica\Exception\InvalidException
      * @throws \Elastica\Exception\ResponseException
      *
-     * @return array Server response
+     * @return Awaitable<array> Server response
      */
-    public function create(array $args = array(), $options = null)
+    public async function create(array $args = array(), mixed $options = null) : Awaitable<Response>
     {
         $path = '';
         $query = array();
@@ -254,18 +255,18 @@ class Index implements SearchableInterface
         if (is_bool($options)) {
             if ($options) {
                 try {
-                    $this->delete();
+                    await $this->delete();
                 } catch (ResponseException $e) {
                     // Table can't be deleted, because doesn't exist
                 }
             }
         } else {
-            if (is_array($options)) {
+            if ($options instanceof Indexish) {
                 foreach ($options as $key => $value) {
                     switch ($key) {
                         case 'recreate' :
                             try {
-                                $this->delete();
+                                await $this->delete();
                             } catch (ResponseException $e) {
                                 // Table can't be deleted, because doesn't exist
                             }
@@ -281,17 +282,17 @@ class Index implements SearchableInterface
             }
         }
 
-        return $this->request($path, Request::PUT, $args, $query);
+        return await $this->request($path, Request::PUT, $args, $query);
     }
 
     /**
      * Checks if the given index is already created.
      *
-     * @return bool True if index exists
+     * @return Awaitable<bool> True if index exists
      */
-    public function exists()
+    public async function exists() : Awaitable<bool>
     {
-        $response = $this->getClient()->request($this->getName(), Request::HEAD);
+        $response = await $this->getClient()->request($this->getName(), Request::HEAD);
         $info = $response->getTransferInfo();
 
         return (bool) ($info['http_code'] == 200);
@@ -303,7 +304,7 @@ class Index implements SearchableInterface
      *
      * @return \Elastica\Search
      */
-    public function createSearch($query = '', $options = null)
+    public function createSearch(mixed $query = '', mixed $options = null) : Search
     {
         $search = new Search($this->getClient());
         $search->addIndex($this);
@@ -318,11 +319,11 @@ class Index implements SearchableInterface
      * @param string|array|\Elastica\Query $query   Array with all query data inside or a Elastica\Query object
      * @param int|array                    $options OPTIONAL Limit or associative array of options (option=>value)
      *
-     * @return \Elastica\ResultSet ResultSet with all results inside
+     * @return Awaitable<\Elastica\ResultSet> ResultSet with all results inside
      *
      * @see \Elastica\SearchableInterface::search
      */
-    public function search($query = '', $options = null)
+    public function search(mixed $query = '', mixed $options = null) : Awaitable<ResultSet>
     {
         $search = $this->createSearch($query, $options);
 
@@ -334,25 +335,27 @@ class Index implements SearchableInterface
      *
      * @param string|array|\Elastica\Query $query Array with all query data inside or a Elastica\Query object
      *
-     * @return int number of documents matching the query
+     * @return Awaitable<int> number of documents matching the query
      *
      * @see \Elastica\SearchableInterface::count
      */
-    public function count($query = '')
+    public async function count(mixed $query = '') : Awaitable<int>
     {
         $search = $this->createSearch($query);
 
-        return $search->count();
+        $res = await $search->count();
+
+        return (int) $res;
     }
 
     /**
      * Opens an index.
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-open-close.html
      */
-    public function open()
+    public function open() : Awaitable<Response>
     {
         return $this->request('_open', Request::POST);
     }
@@ -360,11 +363,11 @@ class Index implements SearchableInterface
     /**
      * Closes the index.
      *
-     * @return \Elastica\Response Response object
+       @return Awaitable<\Elastica\Response> Response object
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-open-close.html
      */
-    public function close()
+    public function close() : Awaitable<Response>
     {
         return $this->request('_close', Request::POST);
     }
@@ -374,7 +377,7 @@ class Index implements SearchableInterface
      *
      * @return string Index name
      */
-    public function getName()
+    public function getName() : string
     {
         return $this->_name;
     }
@@ -384,7 +387,7 @@ class Index implements SearchableInterface
      *
      * @return \Elastica\Client Index client object
      */
-    public function getClient()
+    public function getClient() : Client
     {
         return $this->_client;
     }
@@ -395,26 +398,27 @@ class Index implements SearchableInterface
      * @param string $name    Alias name
      * @param bool   $replace OPTIONAL If set, an existing alias will be replaced
      *
-     * @return \Elastica\Response Response
+     * @return Awaitable<\Elastica\Response> Response
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html
      */
-    public function addAlias($name, $replace = false)
+    public async function addAlias(string $name, bool $replace = false) : Awaitable<Response>
     {
         $path = '_aliases';
 
         $data = array('actions' => array());
 
         if ($replace) {
-            $status = new Status($this->getClient());
-            foreach ($status->getIndicesWithAlias($name) as $index) {
+            $status = await Status::create($this->getClient());
+            $indices = await $status->getIndicesWithAlias($name);
+            foreach ($indices as $index) {
                 $data['actions'][] = array('remove' => array('index' => $index->getName(), 'alias' => $name));
             }
         }
 
         $data['actions'][] = array('add' => array('index' => $this->getName(), 'alias' => $name));
 
-        return $this->getClient()->request($path, Request::POST, $data);
+        return await $this->getClient()->request($path, Request::POST, $data);
     }
 
     /**
@@ -422,11 +426,11 @@ class Index implements SearchableInterface
      *
      * @param string $name Alias name
      *
-     * @return \Elastica\Response Response
+     * @return Awaitable<\Elastica\Response> Response
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html
      */
-    public function removeAlias($name)
+    public function removeAlias(string $name) : Awaitable<Response>
     {
         $path = '_aliases';
 
@@ -438,11 +442,11 @@ class Index implements SearchableInterface
     /**
      * Clears the cache of an index.
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-clearcache.html
      */
-    public function clearCache()
+    public function clearCache() : Awaitable<Response>
     {
         $path = '_cache/clear';
         // TODO: add additional cache clean arguments
@@ -452,11 +456,12 @@ class Index implements SearchableInterface
     /**
      * Flushes the index to storage.
      *
-     * @return \Elastica\Response Response object
+     * @param bool $refresh
+     * @return Awaitable<\Elastica\Response> Response object
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-flush.html
      */
-    public function flush($refresh = false)
+    public function flush(bool $refresh = false) : Awaitable<Response>
     {
         $path = '_flush';
 
@@ -468,11 +473,11 @@ class Index implements SearchableInterface
      *
      * @param array $data Data array
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-update-settings.html
      */
-    public function setSettings(array $data)
+    public function setSettings(array $data) : Awaitable<Response>
     {
         return $this->request('_settings', Request::PUT, $data);
     }
@@ -485,9 +490,9 @@ class Index implements SearchableInterface
      * @param array  $data   OPTIONAL Arguments as array
      * @param array  $query  OPTIONAL Query params
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function request($path, $method, $data = array(), array $query = array())
+    public function request(string $path, string $method, mixed $data = array(), Indexish<string, mixed> $query = array()) : Awaitable<Response>
     {
         $path = $this->getName().'/'.$path;
 
@@ -502,14 +507,14 @@ class Index implements SearchableInterface
      * @param string $text String to be analyzed
      * @param array  $args OPTIONAL Additional arguments
      *
-     * @return array Server response
+     * @return Awaitable<array> Server response
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-analyze.html
      */
-    public function analyze($text, $args = array())
+    public async function analyze(string $text, array $args = array()) : Awaitable<array>
     {
-        $data = $this->request('_analyze', Request::POST, $text, $args)->getData();
-
-        return $data['tokens'];
+        $response = await $this->request('_analyze', Request::POST, $text, $args);
+        $data = $response->getData();
+        return (array) /* UNSAFE_EXPR */ $data['tokens'];
     }
 }

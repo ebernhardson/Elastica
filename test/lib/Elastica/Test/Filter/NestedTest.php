@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Document;
@@ -10,7 +10,7 @@ use Elastica\Type\Mapping;
 
 class NestedTest extends BaseTest
 {
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : \Elastica\Index
     {
         $index = $this->_createIndex('elastica_test_filter_nested');
         $type = $index->getType('user');
@@ -27,10 +27,10 @@ class NestedTest extends BaseTest
                 ),
             )
         );
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
         $response = $type->addDocuments(array(
-            new Document(1,
+            new Document('1',
                 array(
                     'firstname' => 'Nicolas',
                     'lastname' => 'Ruflin',
@@ -39,7 +39,7 @@ class NestedTest extends BaseTest
                     ),
                 )
             ),
-            new Document(2,
+            new Document('2',
                 array(
                     'firstname' => 'Nicolas',
                     'lastname' => 'Ippolito',
@@ -51,7 +51,7 @@ class NestedTest extends BaseTest
             ),
         ));
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -59,22 +59,22 @@ class NestedTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $filter = new Nested();
-        $this->assertEquals(array('nested' => array()), $filter->toArray());
+        $this->assertEquals(array('nested' => Map {}), $filter->toArray());
         $query = new Terms();
         $query->setTerms('hobby', array('guitar'));
         $filter->setPath('hobbies');
         $filter->setQuery($query);
 
         $expectedArray = array(
-            'nested' => array(
+            'nested' => Map {
                 'path' => 'hobbies',
-                'query' => array('terms' => array(
+                'query' => array('terms' => Map {
                     'hobby' => array('guitar'),
-                )),
-            ),
+                }),
+            },
         );
 
         $this->assertEquals($expectedArray, $filter->toArray());
@@ -83,10 +83,10 @@ class NestedTest extends BaseTest
     /**
      * @group functional
      */
-    public function testShouldReturnTheRightNumberOfResult()
+    public function testShouldReturnTheRightNumberOfResult() : void
     {
         $filter = new Nested();
-        $this->assertEquals(array('nested' => array()), $filter->toArray());
+        $this->assertEquals(array('nested' => Map {}), $filter->toArray());
         $query = new Terms();
         $query->setTerms('hobby', array('guitar'));
         $filter->setPath('hobbies');
@@ -94,11 +94,11 @@ class NestedTest extends BaseTest
 
         $search = new Search($this->_getClient());
         $search->addIndex($this->_getIndexForTest());
-        $resultSet = $search->search($filter);
+        $resultSet = $search->search($filter)->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->getTotalHits());
 
         $filter = new Nested();
-        $this->assertEquals(array('nested' => array()), $filter->toArray());
+        $this->assertEquals(array('nested' => Map {}), $filter->toArray());
         $query = new Terms();
         $query->setTerms('hobby', array('opensource'));
         $filter->setPath('hobbies');
@@ -106,14 +106,14 @@ class NestedTest extends BaseTest
 
         $search = new Search($this->_getClient());
         $search->addIndex($this->_getIndexForTest());
-        $resultSet = $search->search($filter);
+        $resultSet = $search->search($filter)->getWaitHandle()->join();
         $this->assertEquals(2, $resultSet->getTotalHits());
     }
 
     /**
      * @group unit
      */
-    public function testSetJoin()
+    public function testSetJoin() : void
     {
         $filter = new Nested();
 

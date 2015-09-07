@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 /**
@@ -31,7 +31,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setQuery($query = '')
+    public function setQuery(string $query = '') : this
     {
         return $this->setParam('query', $query);
     }
@@ -43,7 +43,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setFields($fields = array())
+    public function setFields(array $fields = array()) : this
     {
         return $this->setParam('fields', $fields);
     }
@@ -57,7 +57,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setUseDisMax($useDisMax = true)
+    public function setUseDisMax(bool $useDisMax = true) : this
     {
         return $this->setParam('use_dis_max', $useDisMax);
     }
@@ -71,7 +71,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setTieBreaker($tieBreaker = 0.0)
+    public function setTieBreaker(float $tieBreaker = 0.0) : this
     {
         return $this->setParam('tie_breaker', $tieBreaker);
     }
@@ -85,7 +85,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setOperator($operator = 'or')
+    public function setOperator(string $operator = 'or') : this
     {
         return $this->setParam('operator', $operator);
     }
@@ -97,7 +97,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setMinimumShouldMatch($minimumShouldMatch)
+    public function setMinimumShouldMatch(mixed $minimumShouldMatch) : this
     {
         return $this->setParam('minimum_should_match', $minimumShouldMatch);
     }
@@ -111,7 +111,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setZeroTermsQuery($zeroTermQuery = 'none')
+    public function setZeroTermsQuery(string $zeroTermQuery = 'none') : this
     {
         return $this->setParam('zero_terms_query', $zeroTermQuery);
     }
@@ -123,7 +123,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setCutoffFrequency($cutoffFrequency)
+    public function setCutoffFrequency(float $cutoffFrequency) : this
     {
         return $this->setParam('cutoff_frequency', $cutoffFrequency);
     }
@@ -131,12 +131,11 @@ class MultiMatch extends AbstractQuery
     /**
      * Set type.
      *
-     * @param string $field
      * @param string $type
      *
      * @return $this
      */
-    public function setType($type)
+    public function setType(string $type) : this
     {
         return $this->setParam('type', $type);
     }
@@ -148,7 +147,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setFuzziness($fuzziness)
+    public function setFuzziness(float $fuzziness) : this
     {
         return $this->setParam('fuzziness', (float) $fuzziness);
     }
@@ -160,7 +159,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setPrefixLength($prefixLength)
+    public function setPrefixLength(int $prefixLength) : this
     {
         return $this->setParam('prefix_length', (int) $prefixLength);
     }
@@ -172,7 +171,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setMaxExpansions($maxExpansions)
+    public function setMaxExpansions(int $maxExpansions) : this
     {
         return $this->setParam('max_expansions', (int) $maxExpansions);
     }
@@ -184,7 +183,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setAnalyzer($analyzer)
+    public function setAnalyzer(string $analyzer) : this
     {
         return $this->setParam('analyzer', $analyzer);
     }

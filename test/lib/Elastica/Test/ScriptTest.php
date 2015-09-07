@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Script;
@@ -9,7 +9,7 @@ class ScriptTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConstructor()
+    public function testConstructor() : void
     {
         $value = "_score * doc['my_numeric_field'].value";
         $script = new Script($value);
@@ -20,10 +20,10 @@ class ScriptTest extends BaseTest
         $this->assertEquals($value, $script->getScript());
         $this->assertEquals($expected, $script->toArray());
 
-        $params = array(
+        $params = Map {
             'param1' => 'one',
             'param2' => 10,
-        );
+        };
 
         $script = new Script($value, $params);
 
@@ -55,7 +55,7 @@ class ScriptTest extends BaseTest
     /**
      * @group unit
      */
-    public function testCreateString()
+    public function testCreateString() : void
     {
         $string = '_score * 2.0';
         $script = Script::create($string);
@@ -73,7 +73,7 @@ class ScriptTest extends BaseTest
     /**
      * @group unit
      */
-    public function testCreateScript()
+    public function testCreateScript() : void
     {
         $data = new Script('_score * 2.0');
 
@@ -86,14 +86,14 @@ class ScriptTest extends BaseTest
     /**
      * @group unit
      */
-    public function testCreateArray()
+    public function testCreateArray() : void
     {
         $string = '_score * 2.0';
         $lang = 'mvel';
-        $params = array(
+        $params = Map {
             'param1' => 'one',
             'param2' => 1,
-        );
+        };
         $array = array(
             'script' => $string,
             'lang' => $lang,
@@ -116,7 +116,7 @@ class ScriptTest extends BaseTest
      * @dataProvider dataProviderCreateInvalid
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testCreateInvalid($data)
+    public function testCreateInvalid($data) : void
     {
         Script::create($data);
     }
@@ -124,7 +124,7 @@ class ScriptTest extends BaseTest
     /**
      * @return array
      */
-    public function dataProviderCreateInvalid()
+    public function dataProviderCreateInvalid() : array<array>
     {
         return array(
             array(
@@ -142,9 +142,9 @@ class ScriptTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetLang()
+    public function testSetLang() : void
     {
-        $script = new Script('foo', array(), Script::LANG_GROOVY);
+        $script = new Script('foo', Map {}, Script::LANG_GROOVY);
         $this->assertEquals(Script::LANG_GROOVY, $script->getLang());
 
         $script->setLang(Script::LANG_PYTHON);
@@ -156,7 +156,7 @@ class ScriptTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetScript()
+    public function testSetScript() : void
     {
         $script = new Script('foo');
         $this->assertEquals('foo', $script->getScript());

@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Terms query.
@@ -17,21 +18,21 @@ class Terms extends AbstractQuery
      *
      * @var array Terms
      */
-    protected $_terms = array();
+    protected array $_terms = array();
 
     /**
      * Params.
      *
      * @var array Params
      */
-    protected $_params = array();
+    protected Map<string, mixed> $_params = Map {};
 
     /**
      * Terms key.
      *
      * @var string Terms key
      */
-    protected $_key = '';
+    protected string $_key = '';
 
     /**
      * Construct terms query.
@@ -39,7 +40,7 @@ class Terms extends AbstractQuery
      * @param string $key   OPTIONAL Terms key
      * @param array  $terms OPTIONAL Terms list
      */
-    public function __construct($key = '', array $terms = array())
+    public function __construct(string $key = '', array $terms = array())
     {
         $this->setTerms($key, $terms);
     }
@@ -52,7 +53,7 @@ class Terms extends AbstractQuery
      *
      * @return $this
      */
-    public function setTerms($key, array $terms)
+    public function setTerms(string $key, array $terms) : this
     {
         $this->_key = $key;
         $this->_terms = array_values($terms);
@@ -67,7 +68,7 @@ class Terms extends AbstractQuery
      *
      * @return $this
      */
-    public function addTerm($term)
+    public function addTerm(string $term) : this
     {
         $this->_terms[] = $term;
 
@@ -81,7 +82,7 @@ class Terms extends AbstractQuery
      *
      * @return $this
      */
-    public function setMinimumMatch($minimum)
+    public function setMinimumMatch(int $minimum) : this
     {
         return $this->setParam('minimum_match', (int) $minimum);
     }
@@ -95,7 +96,7 @@ class Terms extends AbstractQuery
      *
      * @return array Query array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         if (empty($this->_key)) {
             throw new InvalidException('Terms key has to be set');

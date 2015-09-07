@@ -1,8 +1,9 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 use Elastica\Filter\AbstractFilter;
 use Elastica\Script;
+use Indexish;
 
 /**
  * Class FunctionScore.
@@ -29,7 +30,7 @@ class FunctionScore extends AbstractQuery
     const DECAY_EXPONENTIAL = 'exp';
     const DECAY_LINEAR = 'linear';
 
-    protected $_functions = array();
+    protected array $_functions = array();
 
     /**
      * Set the child query for this function_score query.
@@ -38,7 +39,7 @@ class FunctionScore extends AbstractQuery
      *
      * @return $this
      */
-    public function setQuery(AbstractQuery $query)
+    public function setQuery(AbstractQuery $query) : this
     {
         return $this->setParam('query', $query);
     }
@@ -48,7 +49,7 @@ class FunctionScore extends AbstractQuery
      *
      * @return $this
      */
-    public function setFilter(AbstractFilter $filter)
+    public function setFilter(AbstractFilter $filter) : this
     {
         return $this->setParam('filter', $filter);
     }
@@ -63,7 +64,7 @@ class FunctionScore extends AbstractQuery
      *
      * @return $this
      */
-    public function addFunction($functionType, $functionParams, AbstractFilter $filter = null, $weight = null)
+    public function addFunction(string $functionType, mixed $functionParams, ?AbstractFilter $filter = null, ?float $weight = null) : this
     {
         $function = array(
             $functionType => $functionParams,
@@ -89,7 +90,7 @@ class FunctionScore extends AbstractQuery
      *
      * @return $this
      */
-    public function addScriptScoreFunction(Script $script, AbstractFilter $filter = null, $weight = null)
+    public function addScriptScoreFunction(Script $script, ?AbstractFilter $filter = null, ?float $weight = null): this
     {
         return $this->addFunction('script_score', $script, $filter, $weight);
     }
@@ -110,15 +111,15 @@ class FunctionScore extends AbstractQuery
      * @return $this
      */
     public function addDecayFunction(
-        $function,
-        $field,
-        $origin,
-        $scale,
-        $offset = null,
-        $decay = null,
-        $weight = null,
-        AbstractFilter $filter = null
-    ) {
+        string $function,
+        string $field,
+        string $origin,
+        string $scale,
+        ?string $offset = null,
+        ?float $decay = null,
+        ?float $weight = null,
+        ?AbstractFilter $filter = null
+    ) : this {
         $functionParams = array(
             $field => array(
                 'origin' => $origin,
@@ -143,7 +144,7 @@ class FunctionScore extends AbstractQuery
      *
      * @deprecated
      */
-    public function addBoostFactorFunction($boostFactor, AbstractFilter $filter = null)
+    public function addBoostFactorFunction(float $boostFactor, ?AbstractFilter $filter = null) : void
     {
         $this->addWeightFunction($boostFactor, $filter);
     }
@@ -152,7 +153,7 @@ class FunctionScore extends AbstractQuery
      * @param float          $weight the weight of the function
      * @param AbstractFilter $filter a filter associated with this function
      */
-    public function addWeightFunction($weight, AbstractFilter $filter = null)
+    public function addWeightFunction(float $weight, ?AbstractFilter $filter = null) : void
     {
         $this->addFunction('weight', $weight, $filter);
     }
@@ -164,7 +165,7 @@ class FunctionScore extends AbstractQuery
      * @param AbstractFilter $filter a filter associated with this function
      * @param float          $weight an optional boost value associated with this function
      */
-    public function addRandomScoreFunction($seed, AbstractFilter $filter = null, $weight = null)
+    public function addRandomScoreFunction(int $seed, ?AbstractFilter $filter = null, ?float $weight = null) : void
     {
         $this->addFunction('random_score', array('seed' => $seed), $filter, $weight);
     }
@@ -176,7 +177,7 @@ class FunctionScore extends AbstractQuery
      *
      * @return $this
      */
-    public function setBoost($boost)
+    public function setBoost(float $boost) : this
     {
         return $this->setParam('boost', (float) $boost);
     }
@@ -188,7 +189,7 @@ class FunctionScore extends AbstractQuery
      *
      * @return $this
      */
-    public function setMaxBoost($maxBoost)
+    public function setMaxBoost(float $maxBoost) : this
     {
         return $this->setParam('max_boost', (float) $maxBoost);
     }
@@ -200,7 +201,7 @@ class FunctionScore extends AbstractQuery
      *
      * @return $this
      */
-    public function setBoostMode($mode)
+    public function setBoostMode(string $mode) : this
     {
         return $this->setParam('boost_mode', $mode);
     }
@@ -212,7 +213,7 @@ class FunctionScore extends AbstractQuery
      *
      * @return $this
      */
-    public function setRandomScore($seed = null)
+    public function setRandomScore(?int $seed = null) : this
     {
         $seedParam = new \stdClass();
         if (!is_null($seed)) {
@@ -229,7 +230,7 @@ class FunctionScore extends AbstractQuery
      *
      * @return $this
      */
-    public function setScoreMode($mode)
+    public function setScoreMode(string $mode) : this
     {
         return $this->setParam('score_mode', $mode);
     }
@@ -241,7 +242,7 @@ class FunctionScore extends AbstractQuery
      *
      * @return $this
      */
-    public function setMinScore($minScore)
+    public function setMinScore(?float $minScore) : this
     {
         return $this->setParam('min_score', (float) $minScore);
     }
@@ -249,9 +250,9 @@ class FunctionScore extends AbstractQuery
     /**
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
-        if (sizeof($this->_functions)) {
+        if (count($this->_functions)) {
             $this->setParam('functions', $this->_functions);
         }
 

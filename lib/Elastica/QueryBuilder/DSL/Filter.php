@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\QueryBuilder\DSL;
 
 use Elastica\Filter\AbstractFilter;
@@ -48,7 +48,7 @@ class Filter implements DSL
      *
      * @return string
      */
-    public function getType()
+    public function getType() : string
     {
         return self::TYPE_FILTER;
     }
@@ -62,7 +62,7 @@ class Filter implements DSL
      *
      * @return BoolAnd
      */
-    public function bool_and(array $filters = array())
+    public function bool_and(array $filters = array()) : BoolAnd
     {
         return new BoolAnd($filters);
     }
@@ -74,7 +74,7 @@ class Filter implements DSL
      *
      * @return \Elastica\Filter\Bool
      */
-    public function bool()
+    public function bool() : BoolFilter
     {
         return new BoolFilter();
     }
@@ -88,7 +88,7 @@ class Filter implements DSL
      *
      * @return Exists
      */
-    public function exists($field)
+    public function exists(string $field) : Exists
     {
         return new Exists($field);
     }
@@ -103,7 +103,7 @@ class Filter implements DSL
      *
      * @return GeoBoundingBox
      */
-    public function geo_bounding_box($key, array $coordinates)
+    public function geo_bounding_box(string $key, array $coordinates) : GeoBoundingBox
     {
         return new GeoBoundingBox($key, $coordinates);
     }
@@ -119,7 +119,7 @@ class Filter implements DSL
      *
      * @return GeoDistance
      */
-    public function geo_distance($key, $location, $distance)
+    public function geo_distance(string $key, mixed $location, string $distance) : GeoDistance
     {
         return new GeoDistance($key, $location, $distance);
     }
@@ -135,7 +135,7 @@ class Filter implements DSL
      *
      * @return GeoDistanceRange
      */
-    public function geo_distance_range($key, $location, array $ranges = array())
+    public function geo_distance_range(string $key, mixed $location, array $ranges = array()) : GeoDistanceRange
     {
         return new GeoDistanceRange($key, $location, $ranges);
     }
@@ -150,7 +150,7 @@ class Filter implements DSL
      *
      * @return GeoPolygon
      */
-    public function geo_polygon($key, array $points)
+    public function geo_polygon(string $key, array $points) : GeoPolygon
     {
         return new GeoPolygon($key, $points);
     }
@@ -166,7 +166,7 @@ class Filter implements DSL
      *
      * @return GeoShapeProvided
      */
-    public function geo_shape_provided($path, array $coordinates, $shapeType = GeoShapeProvided::TYPE_ENVELOPE)
+    public function geo_shape_provided(string $path, array $coordinates, string $shapeType = GeoShapeProvided::TYPE_ENVELOPE) : GeoShapeProvided
     {
         return new GeoShapeProvided($path, $coordinates, $shapeType);
     }
@@ -184,7 +184,7 @@ class Filter implements DSL
      *
      * @return GeoShapePreIndexed
      */
-    public function geo_shape_pre_indexed($path, $indexedId, $indexedType, $indexedIndex, $indexedPath)
+    public function geo_shape_pre_indexed(string $path, string $indexedId, string $indexedType, string $indexedIndex, string $indexedPath) : GeoShapePreIndexed
     {
         return new GeoShapePreIndexed($path, $indexedId, $indexedType, $indexedIndex, $indexedPath);
     }
@@ -201,7 +201,7 @@ class Filter implements DSL
      *
      * @return GeohashCell
      */
-    public function geohash_cell($key, $location, $precision = -1, $neighbors = false)
+    public function geohash_cell(string $key, mixed $location, mixed $precision = -1, bool $neighbors = false) : GeohashCell
     {
         return new GeohashCell($key, $location, $precision, $neighbors);
     }
@@ -216,7 +216,7 @@ class Filter implements DSL
      *
      * @return HasChild
      */
-    public function has_child($query, $type = null)
+    public function has_child(mixed $query, ?string $type = null) : HasChild
     {
         return new HasChild($query, $type);
     }
@@ -231,7 +231,7 @@ class Filter implements DSL
      *
      * @return HasParent
      */
-    public function has_parent($query, $type)
+    public function has_parent(mixed $query, string $type) : HasParent
     {
         return new HasParent($query, $type);
     }
@@ -246,7 +246,7 @@ class Filter implements DSL
      *
      * @return Ids
      */
-    public function ids($type = null, array $ids = array())
+    public function ids(mixed $type = null, array $ids = array()) : Ids
     {
         return new Ids($type, $ids);
     }
@@ -261,7 +261,7 @@ class Filter implements DSL
      *
      * @return Indices
      */
-    public function indices(AbstractFilter $filter, array $indices)
+    public function indices(AbstractFilter $filter, array $indices) : Indices
     {
         return new Indices($filter, $indices);
     }
@@ -275,7 +275,7 @@ class Filter implements DSL
      *
      * @return Limit
      */
-    public function limit($limit)
+    public function limit(int $limit) : Limit
     {
         return new Limit($limit);
     }
@@ -287,7 +287,7 @@ class Filter implements DSL
      *
      * @return MatchAll
      */
-    public function match_all()
+    public function match_all() : MatchAll
     {
         return new MatchAll();
     }
@@ -301,7 +301,7 @@ class Filter implements DSL
      *
      * @return Missing
      */
-    public function missing($field = '')
+    public function missing(string $field = '') : Missing
     {
         return new Missing($field);
     }
@@ -313,7 +313,7 @@ class Filter implements DSL
      *
      * @return Nested
      */
-    public function nested()
+    public function nested() : Nested
     {
         return new Nested();
     }
@@ -327,7 +327,7 @@ class Filter implements DSL
      *
      * @return BoolNot
      */
-    public function bool_not(AbstractFilter $filter)
+    public function bool_not(AbstractFilter $filter) : BoolNot
     {
         return new BoolNot($filter);
     }
@@ -342,7 +342,7 @@ class Filter implements DSL
      *
      * @return NumericRange
      */
-    public function numeric_range($fieldName = '', array $args = array())
+    public function numeric_range(string $fieldName = '', array $args = array()) : NumericRange
     {
         return new NumericRange($fieldName, $args);
     }
@@ -356,7 +356,7 @@ class Filter implements DSL
      *
      * @return BoolOr
      */
-    public function bool_or(array $filters = array())
+    public function bool_or(array $filters = array()) : BoolOr
     {
         return new BoolOr($filters);
     }
@@ -371,7 +371,7 @@ class Filter implements DSL
      *
      * @return Prefix
      */
-    public function prefix($field = '', $prefix = '')
+    public function prefix(string $field = '', string $prefix = '') : Prefix
     {
         return new Prefix($field, $prefix);
     }
@@ -385,7 +385,7 @@ class Filter implements DSL
      *
      * @return QueryFilter
      */
-    public function query($query = null)
+    public function query(mixed $query = null) : QueryFilter
     {
         return new QueryFilter($query);
     }
@@ -400,7 +400,7 @@ class Filter implements DSL
      *
      * @return Range
      */
-    public function range($fieldName = '', array $args = array())
+    public function range(string $fieldName = '', array $args = array()) : Range
     {
         return new Range($fieldName, $args);
     }
@@ -416,7 +416,7 @@ class Filter implements DSL
      *
      * @return Regexp
      */
-    public function regexp($field = '', $regexp = '', $options = array())
+    public function regexp(string $field = '', string $regexp = '', array $options = array()) : Regexp
     {
         return new Regexp($field, $regexp, $options);
     }
@@ -430,7 +430,7 @@ class Filter implements DSL
      *
      * @return Script
      */
-    public function script($script = null)
+    public function script(mixed $script = null) : Script
     {
         return new Script($script);
     }
@@ -444,7 +444,7 @@ class Filter implements DSL
      *
      * @return Term
      */
-    public function term(array $term = array())
+    public function term(Map<string, mixed> $term = Map {}) : Term
     {
         return new Term($term);
     }
@@ -459,7 +459,7 @@ class Filter implements DSL
      *
      * @return Terms
      */
-    public function terms($key = '', array $terms = array())
+    public function terms(string $key = '', array $terms = array()) : Terms
     {
         return new Terms($key, $terms);
     }
@@ -473,7 +473,7 @@ class Filter implements DSL
      *
      * @return Type
      */
-    public function type($type = null)
+    public function type(?string $type = null) : Type
     {
         return new Type($type);
     }

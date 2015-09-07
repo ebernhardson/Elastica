@@ -1,5 +1,7 @@
-<?php
+<?hh
 namespace Elastica;
+
+use Indexish;
 
 /**
  * Base class for Script object.
@@ -14,9 +16,9 @@ abstract class AbstractScript extends AbstractUpdateAction
      * @param array|null $params
      * @param string     $id
      */
-    public function __construct(array $params = null, $id = null)
+    public function __construct(?Map<string, mixed> $params = null, ?string $id = null)
     {
-        if ($params) {
+        if ($params !== null) {
             $this->setParams($params);
         }
 

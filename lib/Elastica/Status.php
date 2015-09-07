@@ -1,8 +1,9 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Exception\ResponseException;
 use Elastica\Index\Status as IndexStatus;
+use Indexish;
 
 /**
  * Elastica general status.
@@ -18,31 +19,44 @@ class Status
      *
      * @var \Elastica\Response Response object
      */
-    protected $_response = null;
+    protected Response $_response;
 
     /**
      * Data.
      *
      * @var array Data
      */
-    protected $_data = array();
+    protected Indexish<string, mixed> $_data = array();
 
     /**
      * Client object.
      *
      * @var \Elastica\Client Client object
      */
-    protected $_client = null;
+    protected Client $_client;
+
+    /**
+     * Constructs Status object.
+     *
+     * @param \Elastica\Client $client Client object
+     *
+     * @return Awaitable<\Elastica\Status>
+     */
+    public static async function create(Client $client) : Awaitable<Status>
+    {
+        $response = await self::_refreshRequest($client);
+        return new self($client, $response);
+    }
 
     /**
      * Constructs Status object.
      *
      * @param \Elastica\Client $client Client object
      */
-    public function __construct(Client $client)
+    protected function __construct(Client $client, Response $response)
     {
         $this->_client = $client;
-        $this->refresh();
+        $this->onResponse($response);
     }
 
     /**
@@ -50,7 +64,7 @@ class Status
      *
      * @return array Status data
      */
-    public function getData()
+    public function getData() : Indexish<string, mixed>
     {
         return $this->_data;
     }
@@ -58,14 +72,14 @@ class Status
     /**
      * Returns status objects of all indices.
      *
-     * @return array|\Elastica\Index\Status[] List of Elastica\Client\Index objects
+     * @return Awaitable<array|\Elastica\Index\Status[]> List of Elastica\Client\Index objects
      */
-    public function getIndexStatuses()
+    public async function getIndexStatuses() : Awaitable<array>
     {
         $statuses = array();
         foreach ($this->getIndexNames() as $name) {
             $index = new Index($this->_client, $name);
-            $statuses[] = new IndexStatus($index);
+            $statuses[] = await IndexStatus::create($index);
         }
 
         return $statuses;
@@ -76,9 +90,9 @@ class Status
      *
      * @return array Index names list
      */
-    public function getIndexNames()
+    public function getIndexNames() : array
     {
-        return array_keys($this->_data['indices']);
+        return /* UNSAFE_EXPR */ array_keys($this->_data['indices']);
     }
 
     /**
@@ -88,7 +102,7 @@ class Status
      *
      * @return bool True if index exists
      */
-    public function indexExists($name)
+    public function indexExists(string $name) : bool
     {
         return in_array($name, $this->getIndexNames());
     }
@@ -98,11 +112,12 @@ class Status
      *
      * @param string $name Alias name
      *
-     * @return bool True if alias exists
+     * @return Awaitable<bool> True if alias exists
      */
-    public function aliasExists($name)
+    public async function aliasExists(string $name) : Awaitable<bool>
     {
-        return count($this->getIndicesWithAlias($name)) > 0;
+        $indices = await $this->getIndicesWithAlias($name);
+        return count($indices) > 0;
     }
 
     /**
@@ -110,13 +125,13 @@ class Status
      *
      * @param string $alias Alias name
      *
-     * @return array|\Elastica\Index[] List of Elastica\Index
+     * @return Awaitable<array|\Elastica\Index[]> List of Elastica\Index
      */
-    public function getIndicesWithAlias($alias)
+    public async function getIndicesWithAlias(string $alias) : Awaitable<array>
     {
         $response = null;
         try {
-            $response = $this->_client->request('/_alias/'.$alias);
+            $response = await $this->_client->request('/_alias/'.$alias);
         } catch (ResponseException $e) {
             $transferInfo = $e->getResponse()->getTransferInfo();
             // 404 means the index alias doesn't exist which means no indexes have it.
@@ -127,7 +142,7 @@ class Status
             throw $e;
         }
         $indices = array();
-        foreach ($response->getData() as $name => $unused) {
+        foreach (/* UNSAFE_EXPR */ $response->getData() as $name => $unused) {
             $indices[] = new Index($this->_client, $name);
         }
 
@@ -139,7 +154,7 @@ class Status
      *
      * @return \Elastica\Response Response object
      */
-    public function getResponse()
+    public function getResponse() : Response
     {
         return $this->_response;
     }
@@ -149,29 +164,48 @@ class Status
      *
      * @return array Shards info
      */
-    public function getShards()
+    public function getShards() : array
     {
-        return $this->_data['shards'];
+        return /* UNSAFE_EXPR */ $this->_data['shards'];
     }
 
     /**
      * Refresh status object.
+     *
+     * @return Awaitable<void>
      */
-    public function refresh()
+    public async function refresh() : Awaitable<void>
+    {
+        $response = await self::_refreshRequest($this->_client);
+        $this->onResponse($response);
+    }
+
+    public static function _refreshRequest(Client $client) : Awaitable<Response>
     {
         $path = '_status';
-        $this->_response = $this->_client->request($path, Request::GET);
-        $this->_data = $this->getResponse()->getData();
+        return $client->request($path, Request::GET);
+    }
+
+    private function onResponse(Response $response) : void
+    {
+        $this->_response = $response;
+        $data = $this->getResponse()->getData();
+        if (!$data instanceof Indexish) {
+            throw new \RuntimeException('expected array');
+        }
+        $this->_data = $data;
     }
 
     /**
      * Refresh serverStatus object.
+     *
+     * @return Awaitable<mixed>
      */
-    public function getServerStatus()
+    public async function getServerStatus() : Awaitable<mixed>
     {
         $path = '';
-        $response = $this->_client->request($path, Request::GET);
+        $response = await $this->_client->request($path, Request::GET);
 
-        return  $response->getData();
+        return $response->getData();
     }
 }

@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Filter;
 
 /**
@@ -17,28 +17,28 @@ class GeoShapePreIndexed extends AbstractGeoShape
      *
      * @var string
      */
-    protected $_indexedId;
+    protected string $_indexedId;
 
     /**
      * elasticsearch type of the pre-indexed shape.
      *
      * @var string
      */
-    protected $_indexedType;
+    protected string $_indexedType;
 
     /**
      *  elasticsearch index of the pre-indexed shape.
      *
      * @var string
      */
-    protected $_indexedIndex;
+    protected string $_indexedIndex;
 
     /**
      *  elasticsearch path/field name of the pre-indexed shape.
      *
      * @var string
      */
-    protected $_indexedPath;
+    protected string $_indexedPath;
 
     /**
      * Construct geo_shape filter with a pre-indexed shape.
@@ -49,7 +49,7 @@ class GeoShapePreIndexed extends AbstractGeoShape
      * @param string $indexedIndex Index of the pre-indexed shape
      * @param string $indexedPath  Path of the pre-indexed shape
      */
-    public function __construct($path, $indexedId, $indexedType, $indexedIndex, $indexedPath)
+    public function __construct(string $path, string $indexedId, string $indexedType, string $indexedIndex, string $indexedPath)
     {
         $this->_path = $path;
         $this->_indexedId = $indexedId;
@@ -65,7 +65,7 @@ class GeoShapePreIndexed extends AbstractGeoShape
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : array
     {
         return array(
             'geo_shape' => array(

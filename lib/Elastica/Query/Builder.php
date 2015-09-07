@@ -1,9 +1,10 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 use Elastica\Exception\InvalidException;
 use Elastica\Exception\JSONParseException;
 use Elastica\JSON;
+use Indexish;
 
 /**
  * Query Builder.
@@ -20,7 +21,7 @@ class Builder extends AbstractQuery
      *
      * @var string
      */
-    private $_string = '{';
+    private string $_string = '{';
 
     /**
      * Factory method.
@@ -29,7 +30,7 @@ class Builder extends AbstractQuery
      *
      * @return self
      */
-    public static function factory($string = null)
+    public static function factory(?string $string = null) : Builder
     {
         return new self($string);
     }
@@ -39,9 +40,9 @@ class Builder extends AbstractQuery
      *
      * @param string $string JSON encoded string to use as query.
      */
-    public function __construct($string = null)
+    public function __construct(?string $string = null)
     {
-        if (!$string == null) {
+        if ($string !== null) {
             $this->_string .= substr($string, 1, -1);
         }
     }
@@ -51,7 +52,7 @@ class Builder extends AbstractQuery
      *
      * @return string
      */
-    public function __toString()
+    public function __toString() : string
     {
         return rtrim($this->_string, ',').'}';
     }
@@ -59,16 +60,24 @@ class Builder extends AbstractQuery
     /**
      * {@inheritdoc}
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
+        $input = '';
         try {
-            return JSON::parse($input = $this->__toString());
+            $result = JSON::parse($input = $this->__toString());
         } catch (JSONParseException $e) {
             throw new InvalidException(sprintf(
                 'The produced query is not a valid json string : "%s"',
                 $input
             ));
         }
+        if (!$result instanceof Indexish) {
+            throw new InvalidException(sprintf(
+                'The produced query is not a valid json array: "%s"',
+                $input
+            ));
+        }
+        return $result;
     }
 
     /**
@@ -78,7 +87,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function allowLeadingWildcard($bool = true)
+    public function allowLeadingWildcard(bool $bool = true) : this
     {
         return $this->field('allow_leading_wildcard', (bool) $bool);
     }
@@ -90,7 +99,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function analyzeWildcard($bool = true)
+    public function analyzeWildcard(bool $bool = true) : this
     {
         return $this->field('analyze_wildcard', (bool) $bool);
     }
@@ -102,7 +111,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function analyzer($analyzer)
+    public function analyzer(string $analyzer) : this
     {
         return $this->field('analyzer', $analyzer);
     }
@@ -114,7 +123,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function autoGeneratePhraseQueries($bool = true)
+    public function autoGeneratePhraseQueries(bool $bool = true) : this
     {
         return $this->field('auto_generate_phrase_queries', (bool) $bool);
     }
@@ -133,7 +142,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function bool()
+    public function bool() : this
     {
         return $this->fieldOpen('bool');
     }
@@ -145,7 +154,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function boolClose()
+    public function boolClose() : this
     {
         return $this->fieldClose();
     }
@@ -157,7 +166,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function boost($boost = 1.0)
+    public function boost(float $boost = 1.0) : this
     {
         return $this->field('boost', (float) $boost);
     }
@@ -167,7 +176,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function close()
+    public function close() : this
     {
         $this->_string = rtrim($this->_string, ' ,').'},';
 
@@ -184,7 +193,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function constantScore()
+    public function constantScore() : this
     {
         return $this->fieldOpen('constant_score');
     }
@@ -196,7 +205,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function constantScoreClose()
+    public function constantScoreClose() : this
     {
         return $this->fieldClose();
     }
@@ -208,7 +217,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function defaultField($field = '_all')
+    public function defaultField(string $field = '_all') : this
     {
         return $this->field('default_field', $field);
     }
@@ -224,7 +233,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function defaultOperator($operator = 'OR')
+    public function defaultOperator(string $operator = 'OR') : this
     {
         return $this->field('default_operator', $operator);
     }
@@ -239,7 +248,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function disMax()
+    public function disMax() : this
     {
         return $this->fieldOpen('dis_max');
     }
@@ -251,7 +260,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function disMaxClose()
+    public function disMaxClose() : this
     {
         return $this->fieldClose();
     }
@@ -263,7 +272,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function enablePositionIncrements($bool = true)
+    public function enablePositionIncrements(bool $bool = true) : this
     {
         return $this->field('enable_position_increments', (bool) $bool);
     }
@@ -275,7 +284,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function explain($value = true)
+    public function explain(bool $value = true) : this
     {
         return $this->field('explain', $value);
     }
@@ -293,7 +302,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function facets()
+    public function facets() : this
     {
         return $this->fieldOpen('facets');
     }
@@ -305,7 +314,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function facetsClose()
+    public function facetsClose() : this
     {
         return $this->close();
     }
@@ -318,14 +327,14 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function field($name, $value)
+    public function field(string $name, mixed $value) : this
     {
         if (is_bool($value)) {
             $value = '"'.var_export($value, true).'"';
-        } elseif (is_array($value)) {
+        } elseif ($value instanceof Indexish) {
             $value = '["'.implode('","', $value).'"]';
         } else {
-            $value = '"'.$value.'"';
+            $value = '"'.((string) $value).'"';
         }
 
         $this->_string .= '"'.$name.'":'.$value.',';
@@ -352,7 +361,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function fieldClose()
+    public function fieldClose() : this
     {
         return $this->close();
     }
@@ -364,7 +373,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function fieldOpen($name)
+    public function fieldOpen(string $name) : this
     {
         $this->_string .= '"'.$name.'":';
         $this->open();
@@ -379,7 +388,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function fields(array $fields)
+    public function fields(array $fields) : this
     {
         $this->_string .= '"fields":[';
 
@@ -397,7 +406,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function filter()
+    public function filter() : this
     {
         return $this->fieldOpen('filter');
     }
@@ -407,7 +416,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function filterClose()
+    public function filterClose() : this
     {
         return $this->close();
     }
@@ -417,7 +426,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function filteredQuery()
+    public function filteredQuery() : this
     {
         return $this->fieldOpen('filtered');
     }
@@ -429,7 +438,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function filteredQueryClose()
+    public function filteredQueryClose() : this
     {
         return $this->fieldClose();
     }
@@ -441,7 +450,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function from($value = 0)
+    public function from(int $value = 0) : this
     {
         return $this->field('from', $value);
     }
@@ -453,7 +462,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function fuzzyMinSim($value = 0.5)
+    public function fuzzyMinSim(float $value = 0.5) : this
     {
         return $this->field('fuzzy_min_sim', (float) $value);
     }
@@ -465,7 +474,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function fuzzyPrefixLength($value = 0)
+    public function fuzzyPrefixLength(int $value = 0) : this
     {
         return $this->field('fuzzy_prefix_length', (int) $value);
     }
@@ -479,7 +488,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function gt($value)
+    public function gt(mixed $value) : this
     {
         return $this->field('gt', $value);
     }
@@ -493,7 +502,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function gte($value)
+    public function gte(mixed $value) : this
     {
         return $this->field('gte', $value);
     }
@@ -505,7 +514,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function lowercaseExpandedTerms($bool = true)
+    public function lowercaseExpandedTerms(bool $bool = true) : this
     {
         return $this->field('lowercase_expanded_terms', (bool) $bool);
     }
@@ -519,7 +528,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function lt($value)
+    public function lt(mixed $value) : this
     {
         return $this->field('lt', $value);
     }
@@ -533,7 +542,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function lte($value)
+    public function lte(mixed $value) : this
     {
         return $this->field('lte', $value);
     }
@@ -549,7 +558,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function matchAll($boost = null)
+    public function matchAll(?float $boost = null) : this
     {
         $this->fieldOpen('match_all');
 
@@ -567,7 +576,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function minimumNumberShouldMatch($minimum)
+    public function minimumNumberShouldMatch(int $minimum) : this
     {
         return $this->field('minimum_number_should_match', (int) $minimum);
     }
@@ -577,7 +586,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function must()
+    public function must() : this
     {
         return $this->fieldOpen('must');
     }
@@ -589,7 +598,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function mustClose()
+    public function mustClose() : this
     {
         return $this->fieldClose();
     }
@@ -602,7 +611,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function mustNot()
+    public function mustNot() : this
     {
         return $this->fieldOpen('must_not');
     }
@@ -614,7 +623,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function mustNotClose()
+    public function mustNotClose() : this
     {
         return $this->fieldClose();
     }
@@ -624,7 +633,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function open()
+    public function open() : this
     {
         $this->_string .= '{';
 
@@ -640,7 +649,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function phraseSlop($value = 0)
+    public function phraseSlop(int $value = 0) : this
     {
         return $this->field('phrase_slop', (int) $value);
     }
@@ -650,7 +659,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function prefix()
+    public function prefix() : this
     {
         return $this->fieldOpen('prefix');
     }
@@ -662,7 +671,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function prefixClose()
+    public function prefixClose() : this
     {
         return $this->fieldClose();
     }
@@ -674,7 +683,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function queries(array $queries)
+    public function queries(array $queries) : this
     {
         $this->_string .= '"queries":[';
 
@@ -692,7 +701,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function query()
+    public function query() : this
     {
         return $this->fieldOpen('query');
     }
@@ -704,7 +713,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function queryClose()
+    public function queryClose() : this
     {
         return $this->close();
     }
@@ -716,7 +725,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function queryString()
+    public function queryString() : this
     {
         return $this->fieldOpen('query_string');
     }
@@ -728,7 +737,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function queryStringClose()
+    public function queryStringClose() : this
     {
         return $this->fieldClose();
     }
@@ -738,7 +747,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function range()
+    public function range() : this
     {
         return $this->fieldOpen('range');
     }
@@ -750,7 +759,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function rangeClose()
+    public function rangeClose() : this
     {
         return $this->close();
     }
@@ -763,7 +772,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function should()
+    public function should() : this
     {
         return $this->fieldOpen('should');
     }
@@ -775,7 +784,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function shouldClose()
+    public function shouldClose() : this
     {
         return $this->fieldClose();
     }
@@ -787,7 +796,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function size($value = 10)
+    public function size(int $value = 10) : this
     {
         return $this->field('size', $value);
     }
@@ -797,7 +806,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function sort()
+    public function sort() : this
     {
         return $this->fieldOpen('sort');
     }
@@ -809,7 +818,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function sortClose()
+    public function sortClose() : this
     {
         return $this->close();
     }
@@ -822,7 +831,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function sortField($name, $reverse = false)
+    public function sortField(string $name, bool $reverse = false) : this
     {
         return $this
             ->fieldOpen('sort')
@@ -840,7 +849,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function sortFields(array $fields)
+    public function sortFields(array $fields) : this
     {
         $this->_string .= '"sort":[';
 
@@ -862,7 +871,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function term()
+    public function term() : this
     {
         return $this->fieldOpen('term');
     }
@@ -874,7 +883,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function termClose()
+    public function termClose() : this
     {
         return $this->fieldClose();
     }
@@ -884,7 +893,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function textPhrase()
+    public function textPhrase() : this
     {
         return $this->fieldOpen('text_phrase');
     }
@@ -894,7 +903,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function textPhraseClose()
+    public function textPhraseClose() : this
     {
         return $this->close();
     }
@@ -906,9 +915,9 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function tieBreakerMultiplier($multiplier)
+    public function tieBreakerMultiplier(float $multiplier) : this
     {
-        return $this->field('tie_breaker_multiplier', (float) $multiplier);
+        return $this->field('tie_breaker_multiplier', $multiplier);
     }
 
     /**
@@ -916,7 +925,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function wildcard()
+    public function wildcard() : this
     {
         return $this->fieldOpen('wildcard');
     }
@@ -928,7 +937,7 @@ class Builder extends AbstractQuery
      *
      * @return $this
      */
-    public function wildcardClose()
+    public function wildcardClose() : this
     {
         return $this->fieldClose();
     }

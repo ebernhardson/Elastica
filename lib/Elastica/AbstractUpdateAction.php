@@ -1,5 +1,7 @@
-<?php
+<?hh
 namespace Elastica;
+
+use Indexish;
 
 /**
  * Base class for things that can be sent to the update api (Document and
@@ -12,7 +14,7 @@ class AbstractUpdateAction extends Param
     /**
      * @var \Elastica\Document
      */
-    protected $_upsert;
+    protected ?Document $_upsert;
 
     /**
      * Sets the id of the document.
@@ -21,7 +23,7 @@ class AbstractUpdateAction extends Param
      *
      * @return $this
      */
-    public function setId($id)
+    public function setId(?string $id) : this
     {
         return $this->setParam('_id', $id);
     }
@@ -29,17 +31,17 @@ class AbstractUpdateAction extends Param
     /**
      * Returns document id.
      *
-     * @return string|int Document id
+     * @return string|null Document id
      */
-    public function getId()
+    public function getId() : ?string
     {
-        return ($this->hasParam('_id')) ? $this->getParam('_id') : null;
+        return ($this->hasParam('_id')) ? (string)$this->getParam('_id') : null;
     }
 
     /**
      * @return bool
      */
-    public function hasId()
+    public function hasId() : bool
     {
         return '' !== (string) $this->getId();
     }
@@ -51,7 +53,7 @@ class AbstractUpdateAction extends Param
      *
      * @return $this
      */
-    public function setTtl($ttl)
+    public function setTtl(string $ttl) : this
     {
         return $this->setParam('_ttl', $ttl);
     }
@@ -59,15 +61,15 @@ class AbstractUpdateAction extends Param
     /**
      * @return string
      */
-    public function getTtl()
+    public function getTtl() : string
     {
-        return $this->getParam('_ttl');
+        return (string)$this->getParam('_ttl');
     }
 
     /**
      * @return bool
      */
-    public function hasTtl()
+    public function hasTtl() : bool
     {
         return $this->hasParam('_ttl');
     }
@@ -75,11 +77,11 @@ class AbstractUpdateAction extends Param
     /**
      * Sets the document type name.
      *
-     * @param string $type Type name
+     * @param \Elastica\Type|string $type Type name
      *
      * @return $this
      */
-    public function setType($type)
+    public function setType(mixed $type) : this
     {
         if ($type instanceof Type) {
             $this->setIndex($type->getIndex());
@@ -96,25 +98,25 @@ class AbstractUpdateAction extends Param
      *
      * @return string Document type name
      */
-    public function getType()
+    public function getType() : string
     {
-        return $this->getParam('_type');
+        return (string)$this->getParam('_type');
     }
 
     /**
      * Sets the document index name.
      *
-     * @param string $index Index name
+     * @param Index|string $index Index name
      *
      * @return $this
      */
-    public function setIndex($index)
+    public function setIndex(mixed $index) : this
     {
         if ($index instanceof Index) {
             $index = $index->getName();
         }
 
-        return $this->setParam('_index', $index);
+        return $this->setParam('_index', (string)$index);
     }
 
     /**
@@ -124,9 +126,9 @@ class AbstractUpdateAction extends Param
      *
      * @return string Index name
      */
-    public function getIndex()
+    public function getIndex() : string
     {
-        return $this->getParam('_index');
+        return (string)$this->getParam('_index');
     }
 
     /**
@@ -138,7 +140,7 @@ class AbstractUpdateAction extends Param
      *
      * @link https://www.elastic.co/blog/versioning
      */
-    public function setVersion($version)
+    public function setVersion(int $version) : this
     {
         return $this->setParam('_version', (int) $version);
     }
@@ -146,17 +148,17 @@ class AbstractUpdateAction extends Param
     /**
      * Returns document version.
      *
-     * @return string|int Document version
+     * @return string Document version
      */
-    public function getVersion()
+    public function getVersion() : mixed
     {
-        return $this->getParam('_version');
+        return (string)$this->getParam('_version');
     }
 
     /**
      * @return bool
      */
-    public function hasVersion()
+    public function hasVersion() : bool
     {
         return $this->hasParam('_version');
     }
@@ -169,7 +171,7 @@ class AbstractUpdateAction extends Param
      *
      * @return $this
      */
-    public function setVersionType($versionType)
+    public function setVersionType(int $versionType) : this
     {
         return $this->setParam('_version_type', $versionType);
     }
@@ -177,17 +179,17 @@ class AbstractUpdateAction extends Param
     /**
      * Returns document version type.
      *
-     * @return string|int Document version type
+     * @return string Document version type
      */
-    public function getVersionType()
+    public function getVersionType() : mixed
     {
-        return $this->getParam('_version_type');
+        return (string)$this->getParam('_version_type');
     }
 
     /**
      * @return bool
      */
-    public function hasVersionType()
+    public function hasVersionType() : bool
     {
         return $this->hasParam('_version_type');
     }
@@ -195,31 +197,31 @@ class AbstractUpdateAction extends Param
     /**
      * Sets parent document id.
      *
-     * @param string|int $parent Parent document id
+     * @param string $parent Parent document id
      *
      * @return $this
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-parent-field.html
      */
-    public function setParent($parent)
+    public function setParent(mixed $parent) : this
     {
-        return $this->setParam('_parent', $parent);
+        return $this->setParam('_parent', (string)$parent);
     }
 
     /**
      * Returns the parent document id.
      *
-     * @return string|int Parent document id
+     * @return string Parent document id
      */
-    public function getParent()
+    public function getParent() : string
     {
-        return $this->getParam('_parent');
+        return (string)$this->getParam('_parent');
     }
 
     /**
      * @return bool
      */
-    public function hasParent()
+    public function hasParent() : bool
     {
         return $this->hasParam('_parent');
     }
@@ -231,7 +233,7 @@ class AbstractUpdateAction extends Param
      *
      * @return $this
      */
-    public function setOpType($opType)
+    public function setOpType(string $opType) : this
     {
         return $this->setParam('_op_type', $opType);
     }
@@ -241,15 +243,15 @@ class AbstractUpdateAction extends Param
      *
      * @return string
      */
-    public function getOpType()
+    public function getOpType() : string
     {
-        return $this->getParam('_op_type');
+        return (string)$this->getParam('_op_type');
     }
 
     /**
      * @return bool
      */
-    public function hasOpType()
+    public function hasOpType() : bool
     {
         return $this->hasParam('_op_type');
     }
@@ -261,7 +263,7 @@ class AbstractUpdateAction extends Param
      *
      * @return $this
      */
-    public function setPercolate($value = '*')
+    public function setPercolate(string $value = '*') : this
     {
         return $this->setParam('_percolate', $value);
     }
@@ -271,15 +273,15 @@ class AbstractUpdateAction extends Param
      *
      * @return string
      */
-    public function getPercolate()
+    public function getPercolate() : string
     {
-        return $this->getParam('_percolate');
+        return (string)$this->getParam('_percolate');
     }
 
     /**
      * @return bool
      */
-    public function hasPercolate()
+    public function hasPercolate() : bool
     {
         return $this->hasParam('_percolate');
     }
@@ -291,7 +293,7 @@ class AbstractUpdateAction extends Param
      *
      * @return $this
      */
-    public function setRouting($value)
+    public function setRouting(string $value) : this
     {
         return $this->setParam('_routing', $value);
     }
@@ -301,15 +303,15 @@ class AbstractUpdateAction extends Param
      *
      * @return string
      */
-    public function getRouting()
+    public function getRouting() : string
     {
-        return $this->getParam('_routing');
+        return (string)$this->getParam('_routing');
     }
 
     /**
      * @return bool
      */
-    public function hasRouting()
+    public function hasRouting() : bool
     {
         return $this->hasParam('_routing');
     }
@@ -319,9 +321,9 @@ class AbstractUpdateAction extends Param
      *
      * @return $this
      */
-    public function setFields($fields)
+    public function setFields(mixed $fields) : this
     {
-        if (is_array($fields)) {
+        if ($fields instanceof Indexish) {
             $fields = implode(',', $fields);
         }
 
@@ -331,7 +333,7 @@ class AbstractUpdateAction extends Param
     /**
      * @return $this
      */
-    public function setFieldsSource()
+    public function setFieldsSource() : this
     {
         return $this->setFields('_source');
     }
@@ -339,15 +341,15 @@ class AbstractUpdateAction extends Param
     /**
      * @return string
      */
-    public function getFields()
+    public function getFields() : string
     {
-        return $this->getParam('_fields');
+        return (string)$this->getParam('_fields');
     }
 
     /**
      * @return bool
      */
-    public function hasFields()
+    public function hasFields() : bool
     {
         return $this->hasParam('_fields');
     }
@@ -357,7 +359,7 @@ class AbstractUpdateAction extends Param
      *
      * @return $this
      */
-    public function setRetryOnConflict($num)
+    public function setRetryOnConflict(int $num) : this
     {
         return $this->setParam('_retry_on_conflict', (int) $num);
     }
@@ -365,15 +367,15 @@ class AbstractUpdateAction extends Param
     /**
      * @return int
      */
-    public function getRetryOnConflict()
+    public function getRetryOnConflict() : int
     {
-        return $this->getParam('_retry_on_conflict');
+        return (int)$this->getParam('_retry_on_conflict');
     }
 
     /**
      * @return bool
      */
-    public function hasRetryOnConflict()
+    public function hasRetryOnConflict() : bool
     {
         return $this->hasParam('_retry_on_conflict');
     }
@@ -383,7 +385,7 @@ class AbstractUpdateAction extends Param
      *
      * @return $this
      */
-    public function setTimestamp($timestamp)
+    public function setTimestamp(string $timestamp) : this
     {
         return $this->setParam('_timestamp', $timestamp);
     }
@@ -391,15 +393,15 @@ class AbstractUpdateAction extends Param
     /**
      * @return int
      */
-    public function getTimestamp()
+    public function getTimestamp() : int
     {
-        return $this->getParam('_timestamp');
+        return (int)$this->getParam('_timestamp');
     }
 
     /**
      * @return bool
      */
-    public function hasTimestamp()
+    public function hasTimestamp() : bool
     {
         return $this->hasParam('_timestamp');
     }
@@ -409,7 +411,7 @@ class AbstractUpdateAction extends Param
      *
      * @return $this
      */
-    public function setRefresh($refresh = true)
+    public function setRefresh(bool $refresh = true) : this
     {
         return $this->setParam('_refresh', (bool) $refresh);
     }
@@ -417,15 +419,15 @@ class AbstractUpdateAction extends Param
     /**
      * @return bool
      */
-    public function getRefresh()
+    public function getRefresh() : bool
     {
-        return $this->getParam('_refresh');
+        return (bool)$this->getParam('_refresh');
     }
 
     /**
      * @return bool
      */
-    public function hasRefresh()
+    public function hasRefresh() : bool
     {
         return $this->hasParam('_refresh');
     }
@@ -435,7 +437,7 @@ class AbstractUpdateAction extends Param
      *
      * @return $this
      */
-    public function setTimeout($timeout)
+    public function setTimeout(string $timeout) : this
     {
         return $this->setParam('_timeout', $timeout);
     }
@@ -443,15 +445,15 @@ class AbstractUpdateAction extends Param
     /**
      * @return bool
      */
-    public function getTimeout()
+    public function getTimeout() : bool
     {
-        return $this->getParam('_timeout');
+        return (bool)$this->getParam('_timeout');
     }
 
     /**
-     * @return string
+     * @return bool
      */
-    public function hasTimeout()
+    public function hasTimeout() : bool
     {
         return $this->hasParam('_timeout');
     }
@@ -461,7 +463,7 @@ class AbstractUpdateAction extends Param
      *
      * @return $this
      */
-    public function setConsistency($timeout)
+    public function setConsistency(string $timeout) : this
     {
         return $this->setParam('_consistency', $timeout);
     }
@@ -469,15 +471,15 @@ class AbstractUpdateAction extends Param
     /**
      * @return string
      */
-    public function getConsistency()
+    public function getConsistency() : string
     {
-        return $this->getParam('_consistency');
+        return (string)$this->getParam('_consistency');
     }
 
     /**
-     * @return string
+     * @return bool
      */
-    public function hasConsistency()
+    public function hasConsistency() : bool
     {
         return $this->hasParam('_consistency');
     }
@@ -487,7 +489,7 @@ class AbstractUpdateAction extends Param
      *
      * @return $this
      */
-    public function setReplication($timeout)
+    public function setReplication(string $timeout) : this
     {
         return $this->setParam('_replication', $timeout);
     }
@@ -495,15 +497,15 @@ class AbstractUpdateAction extends Param
     /**
      * @return string
      */
-    public function getReplication()
+    public function getReplication() : string
     {
-        return $this->getParam('_replication');
+        return (string)$this->getParam('_replication');
     }
 
     /**
      * @return bool
      */
-    public function hasReplication()
+    public function hasReplication() : bool
     {
         return $this->hasParam('_replication');
     }
@@ -513,7 +515,7 @@ class AbstractUpdateAction extends Param
      *
      * @return $this
      */
-    public function setUpsert($data)
+    public function setUpsert(mixed $data) : this
     {
         $document = Document::create($data);
         $this->_upsert = $document;
@@ -524,7 +526,7 @@ class AbstractUpdateAction extends Param
     /**
      * @return \Elastica\Document
      */
-    public function getUpsert()
+    public function getUpsert() : ?Document
     {
         return $this->_upsert;
     }
@@ -532,7 +534,7 @@ class AbstractUpdateAction extends Param
     /**
      * @return bool
      */
-    public function hasUpsert()
+    public function hasUpsert() : bool
     {
         return null !== $this->_upsert;
     }
@@ -543,10 +545,10 @@ class AbstractUpdateAction extends Param
      *
      * @return array
      */
-    public function getOptions(array $fields = array(), $withUnderscore = false)
+    public function getOptions(array $fields = array(), bool $withUnderscore = false) : Indexish<string, mixed>
     {
         if (!empty($fields)) {
-            $data = array();
+            $data = Map {};
             foreach ($fields as $field) {
                 $key = '_'.ltrim($field, '_');
                 if ($this->hasParam($key) && '' !== (string) $this->getParam($key)) {
@@ -557,8 +559,8 @@ class AbstractUpdateAction extends Param
             $data = $this->getParams();
         }
         if (!$withUnderscore) {
-            foreach ($data as $key => $value) {
-                $data[ltrim($key, '_')] = $value;
+            foreach ($data->keys() as $key) {
+                $data[ltrim($key, '_')] = $data[$key];
                 unset($data[$key]);
             }
         }

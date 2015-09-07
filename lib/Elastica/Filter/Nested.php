@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Filter;
 
 use Elastica\Query\AbstractQuery;
@@ -19,7 +19,7 @@ class Nested extends AbstractFilter
      *
      * @return $this
      */
-    public function setPath($path)
+    public function setPath(string $path) : this
     {
         return $this->setParam('path', $path);
     }
@@ -31,7 +31,7 @@ class Nested extends AbstractFilter
      *
      * @return $this
      */
-    public function setQuery(AbstractQuery $query)
+    public function setQuery(AbstractQuery $query) : this
     {
         return $this->setParam('query', $query);
     }
@@ -43,7 +43,7 @@ class Nested extends AbstractFilter
      *
      * @return $this
      */
-    public function setFilter(AbstractFilter $filter)
+    public function setFilter(AbstractFilter $filter) : this
     {
         return $this->setParam('filter', $filter);
     }
@@ -55,8 +55,8 @@ class Nested extends AbstractFilter
      *
      * @return $this
      */
-    public function setJoin($join)
+    public function setJoin(bool $join) : this
     {
-        return $this->setParam('join', (bool) $join);
+        return $this->setParam('join', $join);
     }
 }

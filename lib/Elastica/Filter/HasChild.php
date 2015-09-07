@@ -1,5 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Filter;
+
+use Indexish;
 
 /**
  * Returns parent documents having child docs matching the query.
@@ -16,7 +18,7 @@ class HasChild extends AbstractFilter
      * @param string|\Elastica\Query|\Elastica\Filter\AbstractFilter $query Query string or a Elastica\Query object or a filter
      * @param string|\Elastica\Type                                  $type  Child document type
      */
-    public function __construct($query, $type = null)
+    public function __construct(mixed $query, mixed $type = null)
     {
         $this->setType($type);
         if ($query instanceof AbstractFilter) {
@@ -33,7 +35,7 @@ class HasChild extends AbstractFilter
      *
      * @return $this
      */
-    public function setQuery($query)
+    public function setQuery(mixed $query) : this
     {
         return $this->setParam('query', \Elastica\Query::create($query));
     }
@@ -45,7 +47,7 @@ class HasChild extends AbstractFilter
      *
      * @return $this
      */
-    public function setFilter($filter)
+    public function setFilter(@\Elastica\Filter\AbstractFilter $filter) : this
     {
         return $this->setParam('filter', $filter);
     }
@@ -57,7 +59,7 @@ class HasChild extends AbstractFilter
      *
      * @return $this
      */
-    public function setType($type)
+    public function setType(mixed $type) : this
     {
         if ($type instanceof \Elastica\Type) {
             $type = $type->getName();
@@ -73,7 +75,7 @@ class HasChild extends AbstractFilter
      *
      * @return $this
      */
-    public function setMinimumChildrenCount($count)
+    public function setMinimumChildrenCount(int $count) : this
     {
         return $this->setParam('min_children', (int) $count);
     }
@@ -85,7 +87,7 @@ class HasChild extends AbstractFilter
      *
      * @return $this
      */
-    public function setMaximumChildrenCount($count)
+    public function setMaximumChildrenCount(int $count) : this
     {
         return $this->setParam('max_children', (int) $count);
     }
@@ -93,13 +95,14 @@ class HasChild extends AbstractFilter
     /**
      * {@inheritdoc}
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $array = parent::toArray();
 
         $baseName = $this->_getBaseName();
 
-        if (isset($array[$baseName]['query'])) {
+        if (isset(/* UNSAFE_EXPR */ $array[$baseName]['query'])) {
+            /* UNSAFE_EXPR */
             $array[$baseName]['query'] = $array[$baseName]['query']['query'];
         }
 

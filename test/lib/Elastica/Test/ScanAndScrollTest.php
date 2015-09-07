@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Document;
@@ -15,13 +15,13 @@ class ScanAndScrollTest extends BaseTest
      *
      * @group functional
      */
-    public function testForeach()
+    public function testForeach() : void
     {
         $scanAndScroll = new ScanAndScroll($this->_prepareSearch(), '1m', 2);
         $docCount = 0;
 
         /** @var ResultSet $resultSet */
-        foreach ($scanAndScroll as $scrollId => $resultSet) {
+        foreach (/* UNSAFE_EXPR */ $scanAndScroll as $scrollId => $resultSet) {
             $docCount += $resultSet->count();
         }
 
@@ -37,7 +37,7 @@ class ScanAndScrollTest extends BaseTest
      *
      * @group functional
      */
-    public function testQuerySizeRevert()
+    public function testQuerySizeRevert() : void
     {
         $search = $this->_prepareSearch();
         $search->getQuery()->setSize(9);
@@ -56,19 +56,19 @@ class ScanAndScrollTest extends BaseTest
      *
      * @return Search
      */
-    private function _prepareSearch()
+    private function _prepareSearch() : Search
     {
         $index = $this->_createIndex('', true, 2);
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $docs = array();
         for ($x = 1; $x <= 12; ++$x) {
-            $docs[] = new Document($x, array('id' => $x, 'key' => 'value'));
+            $docs[] = new Document((string) $x, array('id' => $x, 'key' => 'value'));
         }
 
         $type = $index->getType('scanAndScrollTest');
-        $type->addDocuments($docs);
-        $index->refresh();
+        $type->addDocuments($docs)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         $search = new Search($this->_getClient());
         $search->addIndex($index)->addType($type);

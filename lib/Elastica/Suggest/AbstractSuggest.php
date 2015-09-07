@@ -1,9 +1,10 @@
-<?php
+<?hh
 namespace Elastica\Suggest;
 
 use Elastica\Exception\InvalidException;
 use Elastica\NameableInterface;
 use Elastica\Param;
+use Indexish;
 
 /**
  * Class AbstractSuggestion.
@@ -13,20 +14,20 @@ abstract class AbstractSuggest extends Param implements NameableInterface
     /**
      * @var string the name of this suggestion
      */
-    protected $_name;
+    protected string $_name;
 
     /**
      * @var string the text for this suggestion
      */
-    protected $_text;
+    protected ?string $_text;
 
     /**
      * @param string $name
      * @param string $field
      */
-    public function __construct($name, $field)
+    public function __construct(string $name, string $field)
     {
-        $this->setName($name);
+        $this->_name = $name;
         $this->setField($field);
     }
 
@@ -37,7 +38,7 @@ abstract class AbstractSuggest extends Param implements NameableInterface
      *
      * @return $this
      */
-    public function setText($text)
+    public function setText(string $text) : this
     {
         $this->_text = $text;
 
@@ -49,7 +50,7 @@ abstract class AbstractSuggest extends Param implements NameableInterface
      *
      * @return $this
      */
-    public function setField($field)
+    public function setField(string $field) : this
     {
         return $this->setParam('field', $field);
     }
@@ -59,7 +60,7 @@ abstract class AbstractSuggest extends Param implements NameableInterface
      *
      * @return $this
      */
-    public function setSize($size)
+    public function setSize(int $size) : this
     {
         return $this->setParam('size', $size);
     }
@@ -69,7 +70,7 @@ abstract class AbstractSuggest extends Param implements NameableInterface
      *
      * @return $this
      */
-    public function setShardSize($size)
+    public function setShardSize(int $size) : this
     {
         return $this->setParam('shard_size', $size);
     }
@@ -84,7 +85,7 @@ abstract class AbstractSuggest extends Param implements NameableInterface
      *
      * @return $this
      */
-    public function setName($name)
+    public function setName(string $name) : this
     {
         if (empty($name)) {
             throw new InvalidException('Suggest name has to be set');
@@ -99,7 +100,7 @@ abstract class AbstractSuggest extends Param implements NameableInterface
      *
      * @return string
      */
-    public function getName()
+    public function getName() : string
     {
         return $this->_name;
     }
@@ -107,7 +108,7 @@ abstract class AbstractSuggest extends Param implements NameableInterface
     /**
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $array = parent::toArray();
         if (isset($this->_text)) {

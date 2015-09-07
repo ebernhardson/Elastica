@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Rescore;
 
 use Elastica\Param;
@@ -17,7 +17,7 @@ abstract class AbstractRescore extends Param
      *
      * @return string name
      */
-    protected function _getBaseName()
+    protected function _getBaseName() : string
     {
         return 'rescore';
     }
@@ -29,7 +29,7 @@ abstract class AbstractRescore extends Param
      *
      * @return $this
      */
-    public function setWindowSize($size)
+    public function setWindowSize(int $size) : this
     {
         return $this->setParam('window_size', $size);
     }

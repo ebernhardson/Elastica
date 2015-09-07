@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Exception;
 
 class ConnectionExceptionTest extends AbstractExceptionTest

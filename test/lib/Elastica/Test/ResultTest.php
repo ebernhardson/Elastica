@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Document;
@@ -11,7 +11,7 @@ class ResultTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGetters()
+    public function testGetters() : void
     {
         // Creates a new index 'xodoa' and a type 'user' inside this index
         $typeName = 'user';
@@ -20,14 +20,14 @@ class ResultTest extends BaseTest
         $type = $index->getType($typeName);
 
         // Adds 1 document to the index
-        $docId = 3;
+        $docId = '3';
         $doc1 = new Document($docId, array('username' => 'hans'));
-        $type->addDocument($doc1);
+        $type->addDocument($doc1)->getWaitHandle()->join();
 
         // Refreshes index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search('hans');
+        $resultSet = $type->search('hans')->getWaitHandle()->join();
 
         $this->assertEquals(1, $resultSet->count());
 
@@ -39,14 +39,14 @@ class ResultTest extends BaseTest
         $this->assertEquals($docId, $result->getId());
         $this->assertGreaterThan(0, $result->getScore());
         $this->assertInternalType('array', $result->getData());
-        $this->assertTrue(isset($result->username));
-        $this->assertEquals('hans', $result->username);
+        $this->assertTrue($result->__isset('username'));
+        $this->assertEquals('hans', $result->__get('username'));
     }
 
     /**
      * @group functional
      */
-    public function testGetIdNoSource()
+    public function testGetIdNoSource() : void
     {
         // Creates a new index 'xodoa' and a type 'user' inside this index
         $indexName = 'xodoa';
@@ -54,22 +54,22 @@ class ResultTest extends BaseTest
 
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType($typeName);
 
         $mapping = new Mapping($type);
         $mapping->disableSource();
-        $mapping->send();
+        $mapping->send()->getWaitHandle()->join();
 
         // Adds 1 document to the index
-        $docId = 3;
+        $docId = '3';
         $doc1 = new Document($docId, array('username' => 'hans'));
-        $type->addDocument($doc1);
+        $type->addDocument($doc1)->getWaitHandle()->join();
 
         // Refreshes index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search('hans');
+        $resultSet = $type->search('hans')->getWaitHandle()->join();
 
         $this->assertEquals(1, $resultSet->count());
 
@@ -87,26 +87,26 @@ class ResultTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGetTotalTimeReturnsExpectedResults()
+    public function testGetTotalTimeReturnsExpectedResults() : void
     {
         $typeName = 'user';
         $index = $this->_createIndex();
         $type = $index->getType($typeName);
 
         // Adds 1 document to the index
-        $docId = 3;
+        $docId = '3';
         $doc1 = new Document($docId, array('username' => 'hans'));
-        $type->addDocument($doc1);
+        $type->addDocument($doc1)->getWaitHandle()->join();
 
         // Refreshes index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search('hans');
+        $resultSet = $type->search('hans')->getWaitHandle()->join();
 
         $this->assertNotNull($resultSet->getTotalTime(), 'Get Total Time should never be a null value');
         $this->assertEquals(
             'integer',
-            getType($resultSet->getTotalTime()),
+            gettype($resultSet->getTotalTime()),
             'Total Time should be an integer'
          );
     }
@@ -114,7 +114,7 @@ class ResultTest extends BaseTest
     /**
      * @group unit
      */
-    public function testHasFields()
+    public function testHasFields() : void
     {
         $data = array('value set');
 

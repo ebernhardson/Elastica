@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Filter\Exists;
@@ -9,19 +9,19 @@ class ExistsTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $field = 'test';
         $filter = new Exists($field);
 
-        $expectedArray = array('exists' => array('field' => $field));
+        $expectedArray = array('exists' => Map {'field' => $field});
         $this->assertEquals($expectedArray, $filter->toArray());
     }
 
     /**
      * @group unit
      */
-    public function testSetField()
+    public function testSetField() : void
     {
         $field = 'test';
         $filter = new Exists($field);

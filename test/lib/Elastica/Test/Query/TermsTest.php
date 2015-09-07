@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -10,28 +10,28 @@ class TermsTest extends BaseTest
     /**
      * @group functional
      */
-    public function testFilteredSearch()
+    public function testFilteredSearch() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('helloworld');
 
         $type->addDocuments(array(
-            new Document(1, array('name' => 'hello world')),
-            new Document(2, array('name' => 'nicolas ruflin')),
-            new Document(3, array('name' => 'ruflin')),
-        ));
+            new Document('1', array('name' => 'hello world')),
+            new Document('2', array('name' => 'nicolas ruflin')),
+            new Document('3', array('name' => 'ruflin')),
+        ))->getWaitHandle()->join();
 
         $query = new Terms();
         $query->setTerms('name', array('nicolas', 'hello'));
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
 
         $this->assertEquals(2, $resultSet->count());
 
         $query->addTerm('ruflin');
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
 
         $this->assertEquals(3, $resultSet->count());
     }
@@ -39,7 +39,7 @@ class TermsTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetMinimum()
+    public function testSetMinimum() : void
     {
         $key = 'name';
         $terms = array('nicolas', 'ruflin');
@@ -49,14 +49,14 @@ class TermsTest extends BaseTest
         $query->setMinimumMatch($minimum);
 
         $data = $query->toArray();
-        $this->assertEquals($minimum, $data['terms']['minimum_match']);
+        $this->assertEquals($minimum, /* UNSAFE_EXPR */ $data['terms']['minimum_match']);
     }
 
     /**
      * @group unit
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testInvalidParams()
+    public function testInvalidParams() : void
     {
         $query = new Terms();
 

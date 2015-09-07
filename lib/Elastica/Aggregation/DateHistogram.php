@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Aggregation;
 
 /**
@@ -17,7 +17,7 @@ class DateHistogram extends Histogram
      *
      * @return $this
      */
-    public function setPreZone($preZone)
+    public function setPreZone(string $preZone) : this
     {
         return $this->setParam('pre_zone', $preZone);
     }
@@ -31,7 +31,7 @@ class DateHistogram extends Histogram
      *
      * @return $this
      */
-    public function setPostZone($postZone)
+    public function setPostZone(string $postZone) : this
     {
         return $this->setParam('post_zone', $postZone);
     }
@@ -43,7 +43,7 @@ class DateHistogram extends Histogram
      *
      * @return $this
      */
-    public function setTimezone($timezone)
+    public function setTimezone(string $timezone) : this
     {
         return $this->setParam('time_zone', $timezone);
     }
@@ -57,7 +57,7 @@ class DateHistogram extends Histogram
      *
      * @return $this
      */
-    public function setPreZoneAdjustLargeInterval($adjust)
+    public function setPreZoneAdjustLargeInterval(string $adjust) : this
     {
         return $this->setParam('pre_zone_adjust_large_interval', $adjust);
     }
@@ -69,7 +69,7 @@ class DateHistogram extends Histogram
      *
      * @return $this
      */
-    public function setFactor($factor)
+    public function setFactor(int $factor) : this
     {
         return $this->setParam('factor', $factor);
     }
@@ -83,7 +83,7 @@ class DateHistogram extends Histogram
      *
      * @return $this
      */
-    public function setPreOffset($offset)
+    public function setPreOffset(string $offset) : this
     {
         return $this->setParam('pre_offset', $offset);
     }
@@ -97,7 +97,7 @@ class DateHistogram extends Histogram
      *
      * @return $this
      */
-    public function setPostOffset($offset)
+    public function setPostOffset(string $offset) : this
     {
         return $this->setParam('post_offset', $offset);
     }
@@ -109,7 +109,7 @@ class DateHistogram extends Histogram
      *
      * @return $this
      */
-    public function setOffset($offset)
+    public function setOffset(string $offset) : this
     {
         return $this->setParam('offset', $offset);
     }
@@ -123,7 +123,7 @@ class DateHistogram extends Histogram
      *
      * @return $this
      */
-    public function setFormat($format)
+    public function setFormat(string $format) : this
     {
         return $this->setParam('format', $format);
     }

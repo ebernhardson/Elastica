@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Aggregation;
 
 use Elastica\Aggregation\Avg;
@@ -6,22 +6,23 @@ use Elastica\Aggregation\Filter;
 use Elastica\Aggregation\Filters;
 use Elastica\Document;
 use Elastica\Filter\Term;
+use Elastica\Index;
 use Elastica\Query;
 
 class FiltersTest extends BaseAggregationTest
 {
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : Index
     {
         $index = $this->_createIndex('filter');
 
         $index->getType('test')->addDocuments(array(
-            new Document(1, array('price' => 5, 'color' => 'blue')),
-            new Document(2, array('price' => 8, 'color' => 'blue')),
-            new Document(3, array('price' => 1, 'color' => 'red')),
-            new Document(4, array('price' => 3, 'color' => 'green')),
-        ));
+            new Document('1', array('price' => 5, 'color' => 'blue')),
+            new Document('2', array('price' => 8, 'color' => 'blue')),
+            new Document('3', array('price' => 1, 'color' => 'red')),
+            new Document('4', array('price' => 3, 'color' => 'green')),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -29,27 +30,27 @@ class FiltersTest extends BaseAggregationTest
     /**
      * @group unit
      */
-    public function testToArrayUsingNamedFilters()
+    public function testToArrayUsingNamedFilters() : void
     {
         $expected = array(
             'filters' => array(
                 'filters' => array(
                     'blue' => array(
-                        'term' => array('color' => 'blue'),
+                        'term' => Map {'color' => 'blue'},
                     ),
                     'red' => array(
-                        'term' => array('color' => 'red'),
+                        'term' => Map {'color' => 'red'},
                     ),
                 ),
             ),
             'aggs' => array(
-                'avg_price' => array('avg' => array('field' => 'price')),
+                'avg_price' => array('avg' => Map {'field' => 'price'}),
             ),
         );
 
         $agg = new Filters('by_color');
-        $agg->addFilter(new Term(array('color' => 'blue')), 'blue');
-        $agg->addFilter(new Term(array('color' => 'red')), 'red');
+        $agg->addFilter(new Term(Map {'color' => 'blue'}), 'blue');
+        $agg->addFilter(new Term(Map {'color' => 'red'}), 'red');
 
         $avg = new Avg('avg_price');
         $avg->setField('price');
@@ -61,7 +62,7 @@ class FiltersTest extends BaseAggregationTest
     /**
      * @group unit
      */
-    public function testToArrayUsingAnonymousFilters()
+    public function testToArrayUsingAnonymousFilters() : void
     {
         $expected = array(
             'filters' => array(
@@ -75,13 +76,13 @@ class FiltersTest extends BaseAggregationTest
                 ),
             ),
             'aggs' => array(
-                'avg_price' => array('avg' => array('field' => 'price')),
+                'avg_price' => array('avg' => Map {'field' => 'price'}),
             ),
         );
 
         $agg = new Filters('by_color');
-        $agg->addFilter(new Term(array('color' => 'blue')));
-        $agg->addFilter(new Term(array('color' => 'red')));
+        $agg->addFilter(new Term(Map {'color' => 'blue'}));
+        $agg->addFilter(new Term(Map {'color' => 'red'}));
 
         $avg = new Avg('avg_price');
         $avg->setField('price');
@@ -93,11 +94,11 @@ class FiltersTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testFilterAggregation()
+    public function testFilterAggregation() : void
     {
         $agg = new Filters('by_color');
-        $agg->addFilter(new Term(array('color' => 'blue')), 'blue');
-        $agg->addFilter(new Term(array('color' => 'red')), 'red');
+        $agg->addFilter(new Term(Map {'color' => 'blue'}), 'blue');
+        $agg->addFilter(new Term(Map {'color' => 'red'}), 'red');
 
         $avg = new Avg('avg_price');
         $avg->setField('price');
@@ -106,7 +107,8 @@ class FiltersTest extends BaseAggregationTest
         $query = new Query();
         $query->addAggregation($agg);
 
-        $results = $this->_getIndexForTest()->search($query)->getAggregation('by_color');
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
+        $results = $response->getAggregation('by_color');
 
         $resultsForBlue = $results['buckets']['blue'];
         $resultsForRed = $results['buckets']['red'];

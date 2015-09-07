@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Document;
@@ -14,7 +14,7 @@ class BoolFilterTest extends BaseTest
     /**
      * @return array
      */
-    public function getTestToArrayData()
+    public function getTestToArrayData() : array
     {
         $out = array();
 
@@ -33,23 +33,23 @@ class BoolFilterTest extends BaseTest
         $mainBool->addShould(array($childBool, $idsFilter3));
 
         $expectedArray = array(
-            'bool' => array(
+            'bool' => Map {
                 'should' => array(
                     array(
                         array(
-                            'bool' => array(
+                            'bool' => Map {
                                 'should' => array(
                                     array(
                                         $idsFilter1->toArray(),
                                         $idsFilter2->toArray(),
                                     ),
                                 ),
-                            ),
+                            },
                         ),
                         $idsFilter3->toArray(),
                     ),
                 ),
-            ),
+            },
         );
         $out[] = array($mainBool, $expectedArray);
 
@@ -62,7 +62,7 @@ class BoolFilterTest extends BaseTest
         $bool->setCached(true);
         $bool->setCacheKey('my-cache-key');
         $expected = array(
-            'bool' => array(
+            'bool' => Map {
                 'must' => array(
                     $terms->toArray(),
                 ),
@@ -71,7 +71,7 @@ class BoolFilterTest extends BaseTest
                 ),
                 '_cache' => true,
                 '_cache_key' => 'my-cache-key',
-            ),
+            },
         );
         $out[] = array($bool, $expected);
 
@@ -85,7 +85,7 @@ class BoolFilterTest extends BaseTest
      * @param Bool  $bool
      * @param array $expectedArray
      */
-    public function testToArray(BoolFilter $bool, $expectedArray)
+    public function testToArray(BoolFilter $bool, $expectedArray) : void
     {
         $this->assertEquals($expectedArray, $bool->toArray());
     }
@@ -93,21 +93,21 @@ class BoolFilterTest extends BaseTest
     /**
      * @group functional
      */
-    public function testBoolFilter()
+    public function testBoolFilter() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('book');
 
         //index some test data
         $type->addDocuments(array(
-            new Document(1, array('author' => 'Michael Shermer', 'title' => 'The Believing Brain', 'publisher' => 'Robinson')),
-            new Document(2, array('author' => 'Jared Diamond', 'title' => 'Guns, Germs and Steel', 'publisher' => 'Vintage')),
-            new Document(3, array('author' => 'Jared Diamond', 'title' => 'Collapse', 'publisher' => 'Penguin')),
-            new Document(4, array('author' => 'Richard Dawkins', 'title' => 'The Selfish Gene', 'publisher' => 'OUP Oxford')),
-            new Document(5, array('author' => 'Anthony Burges', 'title' => 'A Clockwork Orange', 'publisher' => 'Penguin')),
-        ));
+            new Document('1', array('author' => 'Michael Shermer', 'title' => 'The Believing Brain', 'publisher' => 'Robinson')),
+            new Document('2', array('author' => 'Jared Diamond', 'title' => 'Guns, Germs and Steel', 'publisher' => 'Vintage')),
+            new Document('3', array('author' => 'Jared Diamond', 'title' => 'Collapse', 'publisher' => 'Penguin')),
+            new Document('4', array('author' => 'Richard Dawkins', 'title' => 'The Selfish Gene', 'publisher' => 'OUP Oxford')),
+            new Document('5', array('author' => 'Anthony Burges', 'title' => 'A Clockwork Orange', 'publisher' => 'Penguin')),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         //use the terms lookup feature to query for some data
         //build query
@@ -136,7 +136,7 @@ class BoolFilterTest extends BaseTest
         $mainBoolFilter->addMust(array($shouldFilter, $mustNotFilter));
         $query->setPostFilter($mainBoolFilter);
         //execute the query
-        $results = $index->search($query);
+        $results = $index->search($query)->getWaitHandle()->join();
 
         //check the number of results
         $this->assertEquals($results->count(), 2, 'Bool filter with child Bool filters: number of results check');
@@ -149,14 +149,14 @@ class BoolFilterTest extends BaseTest
         }
         $this->assertEquals($ids, array('2', '4'), 'Bool filter with child Bool filters: result ID check');
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group unit
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testAddMustInvalidException()
+    public function testAddMustInvalidException() : void
     {
         $filter = new BoolFilter();
         $filter->addMust('fail!');
@@ -166,7 +166,7 @@ class BoolFilterTest extends BaseTest
      * @group unit
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testAddMustNotInvalidException()
+    public function testAddMustNotInvalidException() : void
     {
         $filter = new BoolFilter();
         $filter->addMustNot('fail!');
@@ -176,7 +176,7 @@ class BoolFilterTest extends BaseTest
      * @group unit
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testAddShouldInvalidException()
+    public function testAddShouldInvalidException() : void
     {
         $filter = new BoolFilter();
         $filter->addShould('fail!');
@@ -188,7 +188,7 @@ class BoolFilterTest extends BaseTest
      * @group unit
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testOldObject()
+    public function testOldObject() : void
     {
         if (version_compare(phpversion(), 7, '>=')) {
             self::markTestSkipped('These objects are not supported in PHP 7');

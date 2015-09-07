@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -14,7 +14,7 @@ class HasParentTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $q = new MatchAll();
 
@@ -23,10 +23,10 @@ class HasParentTest extends BaseTest
         $query = new HasParent($q, $type);
 
         $expectedArray = array(
-            'has_parent' => array(
+            'has_parent' => Map {
                 'query' => $q->toArray(),
                 'type' => $type,
-            ),
+            },
         );
 
         $this->assertEquals($expectedArray, $query->toArray());
@@ -35,7 +35,7 @@ class HasParentTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetScope()
+    public function testSetScope() : void
     {
         $q = new MatchAll();
 
@@ -47,11 +47,11 @@ class HasParentTest extends BaseTest
         $query->setScope($scope);
 
         $expectedArray = array(
-            'has_parent' => array(
+            'has_parent' => Map {
                 'query' => $q->toArray(),
                 'type' => $type,
                 '_scope' => $scope,
-            ),
+            },
         );
 
         $this->assertEquals($expectedArray, $query->toArray());
@@ -60,7 +60,7 @@ class HasParentTest extends BaseTest
     /**
      * @group functional
      */
-    public function testHasParent()
+    public function testHasParent() : void
     {
         $index = $this->_createIndex();
 
@@ -68,30 +68,30 @@ class HasParentTest extends BaseTest
         $productType = $index->getType('product');
         $mapping = new Mapping();
         $mapping->setParent('shop');
-        $productType->setMapping($mapping);
+        $productType->setMapping($mapping)->getWaitHandle()->join();
 
         $shopType->addDocuments(
             array(
                 new Document('zurich', array('brand' => 'google')),
                 new Document('london', array('brand' => 'apple')),
             )
-        );
+        )->getWaitHandle()->join();
 
-        $doc1 = new Document(1, array('device' => 'chromebook'));
+        $doc1 = new Document('1', array('device' => 'chromebook'));
         $doc1->setParent('zurich');
 
-        $doc2 = new Document(2, array('device' => 'macmini'));
+        $doc2 = new Document('2', array('device' => 'macmini'));
         $doc2->setParent('london');
 
-        $productType->addDocument($doc1);
-        $productType->addDocument($doc2);
+        $productType->addDocument($doc1)->getWaitHandle()->join();
+        $productType->addDocument($doc2)->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         // All documents
         $parentQuery = new HasParent(new MatchAll(), $shopType->getName());
         $search = new Search($index->getClient());
-        $results = $search->search($parentQuery);
+        $results = $search->search($parentQuery)->getWaitHandle()->join();
         $this->assertEquals(2, $results->count());
 
         $match = new Match();
@@ -99,7 +99,7 @@ class HasParentTest extends BaseTest
 
         $parentQuery = new HasParent($match, $shopType->getName());
         $search = new Search($index->getClient());
-        $results = $search->search($parentQuery);
+        $results = $search->search($parentQuery)->getWaitHandle()->join();
         $this->assertEquals(1, $results->count());
         $result = $results->current();
         $data = $result->getData();

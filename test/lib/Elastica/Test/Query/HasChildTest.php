@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -14,7 +14,7 @@ class HasChildTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $q = new MatchAll();
 
@@ -23,10 +23,10 @@ class HasChildTest extends BaseTest
         $query = new HasChild($q, $type);
 
         $expectedArray = array(
-            'has_child' => array(
+            'has_child' => Map {
                 'query' => $q->toArray(),
                 'type' => $type,
-            ),
+            },
         );
 
         $this->assertEquals($expectedArray, $query->toArray());
@@ -35,7 +35,7 @@ class HasChildTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetScope()
+    public function testSetScope() : void
     {
         $q = new MatchAll();
 
@@ -47,11 +47,11 @@ class HasChildTest extends BaseTest
         $query->setScope($scope);
 
         $expectedArray = array(
-            'has_child' => array(
+            'has_child' => Map {
                 'query' => $q->toArray(),
                 'type' => $type,
                 '_scope' => $scope,
-            ),
+            },
         );
 
         $this->assertEquals($expectedArray, $query->toArray());
@@ -60,7 +60,7 @@ class HasChildTest extends BaseTest
     /**
      * @group functional
      */
-    public function testTypeInsideHasChildSearch()
+    public function testTypeInsideHasChildSearch() : void
     {
         $index = $this->_getTestIndex();
 
@@ -70,7 +70,7 @@ class HasChildTest extends BaseTest
 
         $searchQuery = new Query();
         $searchQuery->setQuery($query);
-        $searchResults = $index->search($searchQuery);
+        $searchResults = $index->search($searchQuery)->getWaitHandle()->join();
 
         $this->assertEquals(1, $searchResults->count());
 
@@ -80,7 +80,7 @@ class HasChildTest extends BaseTest
         $this->assertEquals($expected, $result);
     }
 
-    protected function _getTestIndex()
+    protected function _getTestIndex() : \Elastica\Index
     {
         $index = $this->_createIndex('has_child_test');
 
@@ -89,28 +89,28 @@ class HasChildTest extends BaseTest
         $childType = $index->getType('child');
         $childMapping = new Mapping($childType);
         $childMapping->setParent('parent');
-        $childMapping->send();
+        $childMapping->send()->getWaitHandle()->join();
 
         $altType = $index->getType('alt');
         $altDoc = new Document('alt1', array('name' => 'altname'));
-        $altType->addDocument($altDoc);
+        $altType->addDocument($altDoc)->getWaitHandle()->join();
 
         $parent1 = new Document('parent1', array('id' => 'parent1', 'user' => 'parent1', 'email' => 'parent1@test.com'));
-        $parentType->addDocument($parent1);
+        $parentType->addDocument($parent1)->getWaitHandle()->join();
         $parent2 = new Document('parent2', array('id' => 'parent2', 'user' => 'parent2', 'email' => 'parent2@test.com'));
-        $parentType->addDocument($parent2);
+        $parentType->addDocument($parent2)->getWaitHandle()->join();
 
         $child1 = new Document('child1', array('id' => 'child1', 'user' => 'child1', 'email' => 'child1@test.com'));
         $child1->setParent('parent1');
-        $childType->addDocument($child1);
+        $childType->addDocument($child1)->getWaitHandle()->join();
         $child2 = new Document('child2', array('id' => 'child2', 'user' => 'child2', 'email' => 'child2@test.com'));
         $child2->setParent('parent2');
-        $childType->addDocument($child2);
+        $childType->addDocument($child2)->getWaitHandle()->join();
         $child3 = new Document('child3', array('id' => 'child3', 'user' => 'child3', 'email' => 'child3@test.com', 'alt' => array(array('name' => 'testname'))));
         $child3->setParent('parent2');
-        $childType->addDocument($child3);
+        $childType->addDocument($child3)->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }

@@ -1,7 +1,8 @@
-<?php
+<?hh // strict
 namespace Elastica\Query;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * DisMax query.
@@ -21,9 +22,9 @@ class DisMax extends AbstractQuery
      *
      * @return $this
      */
-    public function addQuery($args)
+    public function addQuery(mixed $args) : this
     {
-        if (!is_array($args) && !($args instanceof AbstractQuery)) {
+        if (!$args instanceof Indexish && !($args instanceof AbstractQuery)) {
             throw new InvalidException('Invalid parameter. Has to be array or instance of Elastica\Query\AbstractQuery');
         }
 
@@ -37,7 +38,7 @@ class DisMax extends AbstractQuery
      *
      * @return $this
      */
-    public function setBoost($boost)
+    public function setBoost(float $boost) : this
     {
         return $this->setParam('boost', $boost);
     }
@@ -51,7 +52,7 @@ class DisMax extends AbstractQuery
      *
      * @return $this
      */
-    public function setTieBreaker($tieBreaker = 0.0)
+    public function setTieBreaker(float $tieBreaker = 0.0) : this
     {
         return $this->setParam('tie_breaker', $tieBreaker);
     }

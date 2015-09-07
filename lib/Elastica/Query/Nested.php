@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Query;
 
 /**
@@ -17,7 +17,7 @@ class Nested extends AbstractQuery
      *
      * @return $this
      */
-    public function setPath($path)
+    public function setPath(string $path) : this
     {
         return $this->setParam('path', $path);
     }
@@ -29,7 +29,7 @@ class Nested extends AbstractQuery
      *
      * @return $this
      */
-    public function setQuery(AbstractQuery $query)
+    public function setQuery(AbstractQuery $query) : this
     {
         return $this->setParam('query', $query);
     }
@@ -41,7 +41,7 @@ class Nested extends AbstractQuery
      *
      * @return $this
      */
-    public function setScoreMode($scoreMode)
+    public function setScoreMode(string $scoreMode) : this
     {
         return $this->setParam('score_mode', $scoreMode);
     }

@@ -1,8 +1,9 @@
-<?php
+<?hh
 namespace Elastica\Facet;
 
 use Elastica\Exception\InvalidException;
 use Elastica\Script;
+use Indexish;
 
 /**
  * Implements the terms facet.
@@ -21,7 +22,7 @@ class Terms extends AbstractFacet
      *
      * @var array
      */
-    protected $_orderTypes = array('count', 'term', 'reverse_count', 'reverse_term');
+    protected array<string> $_orderTypes = array('count', 'term', 'reverse_count', 'reverse_term');
 
     /**
      * Sets the field for the terms.
@@ -30,7 +31,7 @@ class Terms extends AbstractFacet
      *
      * @return $this
      */
-    public function setField($field)
+    public function setField(string $field) : this
     {
         return $this->setParam('field', $field);
     }
@@ -42,7 +43,7 @@ class Terms extends AbstractFacet
      *
      * @return $this
      */
-    public function setScript($script)
+    public function setScript(string $script) : this
     {
         $this->setParam('script', Script::create($script));
 
@@ -56,7 +57,7 @@ class Terms extends AbstractFacet
      *
      * @return $this
      */
-    public function setFields(array $fields)
+    public function setFields(array $fields) : this
     {
         return $this->setParam('fields', $fields);
     }
@@ -69,7 +70,7 @@ class Terms extends AbstractFacet
      *
      * @return $this
      */
-    public function setAllTerms($allTerms)
+    public function setAllTerms(bool $allTerms) : this
     {
         return $this->setParam('all_terms', (bool) $allTerms);
     }
@@ -84,7 +85,7 @@ class Terms extends AbstractFacet
      *
      * @return $this
      */
-    public function setOrder($type)
+    public function setOrder(string $type) : this
     {
         if (!in_array($type, $this->_orderTypes)) {
             throw new InvalidException('Invalid order type: '.$type);
@@ -100,7 +101,7 @@ class Terms extends AbstractFacet
      *
      * @return $this
      */
-    public function setExclude(array $exclude)
+    public function setExclude(array $exclude) : this
     {
         return $this->setParam('exclude', $exclude);
     }
@@ -112,7 +113,7 @@ class Terms extends AbstractFacet
      *
      * @return $this
      */
-    public function setSize($size)
+    public function setSize(int $size) : this
     {
         return $this->setParam('size', (int) $size);
     }
@@ -125,7 +126,7 @@ class Terms extends AbstractFacet
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $this->_setFacetParam('terms', $this->_params);
 
@@ -133,7 +134,8 @@ class Terms extends AbstractFacet
 
         $baseName = $this->_getBaseName();
 
-        if (isset($array[$baseName]['script'])) {
+        if (isset(/* UNSAFE_EXPR */ $array[$baseName]['script'])) {
+            /* UNSAFE_EXPR */
             $array[$baseName]['script'] = $array[$baseName]['script']['script'];
         }
 

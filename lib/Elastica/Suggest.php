@@ -1,8 +1,9 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Exception\NotImplementedException;
 use Elastica\Suggest\AbstractSuggest;
+use Indexish;
 
 /**
  * Class Suggest.
@@ -14,7 +15,7 @@ class Suggest extends Param
     /**
      * @param AbstractSuggest $suggestion
      */
-    public function __construct(AbstractSuggest $suggestion = null)
+    public function __construct(?AbstractSuggest $suggestion = null)
     {
         if (!is_null($suggestion)) {
             $this->addSuggestion($suggestion);
@@ -28,7 +29,7 @@ class Suggest extends Param
      *
      * @return $this
      */
-    public function setGlobalText($text)
+    public function setGlobalText(string $text) : this
     {
         return $this->setParam('text', $text);
     }
@@ -40,7 +41,7 @@ class Suggest extends Param
      *
      * @return $this
      */
-    public function addSuggestion(AbstractSuggest $suggestion)
+    public function addSuggestion(AbstractSuggest $suggestion) : this
     {
         return $this->addParam('suggestion', $suggestion);
     }
@@ -52,13 +53,12 @@ class Suggest extends Param
      *
      * @return self
      */
-    public static function create($suggestion)
+    public static function create(mixed $suggestion) : Suggest
     {
-        switch (true) {
-            case $suggestion instanceof self:
-                return $suggestion;
-            case $suggestion instanceof AbstractSuggest:
-                return new self($suggestion);
+        if ($suggestion instanceof self) {
+            return $suggestion;
+        } elseif ($suggestion instanceof AbstractSuggest) {
+            return new self($suggestion);
         }
         throw new NotImplementedException();
     }
@@ -66,17 +66,18 @@ class Suggest extends Param
     /**
      * {@inheritdoc}
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $array = parent::toArray();
 
         $baseName = $this->_getBaseName();
 
-        if (isset($array[$baseName]['suggestion'])) {
-            $suggestion = $array[$baseName]['suggestion'];
-            unset($array[$baseName]['suggestion']);
+        if (isset(/* UNSAFE_EXPR */ $array[$baseName]['suggestion'])) {
+            $suggestion = /* UNSAFE_EXPR */ $array[$baseName]['suggestion'];
+            unset(/* UNSAFE_EXPR */ $array[$baseName]['suggestion']);
 
             foreach ($suggestion as $key => $value) {
+                /* UNSAFE_EXPR */
                 $array[$baseName][$key] = $value;
             }
         }

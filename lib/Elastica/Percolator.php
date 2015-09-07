@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica;
 
 /**
@@ -19,7 +19,7 @@ class Percolator
     const EXTRA_AGGS = 'aggs';
     const EXTRA_HIGHLIGHT = 'highlight';
 
-    private $_extraRequestBodyOptions = array(
+    private array<string> $_extraRequestBodyOptions = array(
         self::EXTRA_FILTER,
         self::EXTRA_QUERY,
         self::EXTRA_SIZE,
@@ -35,7 +35,7 @@ class Percolator
      *
      * @var \Elastica\Index
      */
-    protected $_index = null;
+    protected Index $_index;
 
     /**
      * Construct new percolator.
@@ -55,14 +55,17 @@ class Percolator
      * @param array                                                $fields Extra fields to include in the registered query
      *                                                                     and can be used to filter executed queries.
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      */
-    public function registerQuery($name, $query, $fields = array())
+    public function registerQuery(string $name, mixed $query, array $fields = array()) : Awaitable<Response>
     {
         $path = $this->_index->getName().'/.percolator/'.$name;
         $query = Query::create($query);
 
-        $data = array_merge($query->toArray(), $fields);
+		$data = $query->toArray();
+		foreach ($fields as $k => $v) {
+			$data[$k] = $v;
+		}
 
         return $this->_index->getClient()->request($path, Request::PUT, $data);
     }
@@ -72,9 +75,9 @@ class Percolator
      *
      * @param string $name query name
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      */
-    public function unregisterQuery($name)
+    public function unregisterQuery(string $name) : Awaitable<Response>
     {
         $path = $this->_index->getName().'/.percolator/'.$name;
 
@@ -98,9 +101,9 @@ class Percolator
      *                                                                     Percolator::EXTRA_AGGS,
      *                                                                     Percolator::EXTRA_HIGHLIGHT ]
      *
-     * @return array With matching registered queries.
+     * @return Awaitable<array> With matching registered queries.
      */
-    public function matchDoc(Document $doc, $query = null, $type = 'type', $params = array())
+    public function matchDoc(Document $doc, mixed $query = null, string $type = 'type', array $params = array()) : Awaitable<array>
     {
         $path = $this->_index->getName().'/'.$type.'/_percolate';
         $data = array('doc' => $doc->getData());
@@ -127,9 +130,9 @@ class Percolator
      *                                                                     Percolator::EXTRA_AGGS,
      *                                                                     Percolator::EXTRA_HIGHLIGHT ]
      *
-     * @return array With matching registered queries.
+     * @return Awaitable<array> With matching registered queries.
      */
-    public function matchExistingDoc($id, $type, $query = null, $params = array())
+    public function matchExistingDoc(string $id, string $type, mixed $query = null, array $params = array()) : Awaitable<array>
     {
         $id = urlencode($id);
         $path = $this->_index->getName().'/'.$type.'/'.$id.'/_percolate';
@@ -146,7 +149,7 @@ class Percolator
      * @param &$params
      * @param &$data
      */
-    protected function _applyAdditionalRequestBodyOptions(&$params, &$data)
+    protected function _applyAdditionalRequestBodyOptions(@array &$params, @array &$data) : void
     {
         foreach ($params as $key => $value) {
             if (in_array($key, $this->_extraRequestBodyOptions)) {
@@ -162,9 +165,9 @@ class Percolator
      * @param array                                                $data
      * @param array                                                $params
      *
-     * @return array
+     * @return Awaitable<array>
      */
-    protected function _percolate($path, $query, $data = array(), $params = array())
+    protected async function _percolate(string $path, mixed $query, array $data = array(), array $params = array()) : Awaitable<array>
     {
         // Add query to filter the percolator queries which are executed.
         if ($query) {
@@ -172,11 +175,11 @@ class Percolator
             $data['query'] = $query->getQuery()->toArray();
         }
 
-        $response = $this->getIndex()->getClient()->request($path, Request::GET, $data, $params);
+        $response = await $this->getIndex()->getClient()->request($path, Request::GET, $data, $params);
         $data = $response->getData();
 
-        if (isset($data['matches'])) {
-            return $data['matches'];
+        if (isset(/* UNSAFE_EXPR */ $data['matches'])) {
+            return /* UNSAFE_EXPR */ $data['matches'];
         }
 
         return array();
@@ -187,7 +190,7 @@ class Percolator
      *
      * @return \Elastica\Index
      */
-    public function getIndex()
+    public function getIndex() : Index
     {
         return $this->_index;
     }

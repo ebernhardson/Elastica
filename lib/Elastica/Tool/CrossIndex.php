@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Tool;
 
 use Elastica\Bulk;
@@ -7,6 +7,7 @@ use Elastica\Query\MatchAll;
 use Elastica\ScanAndScroll;
 use Elastica\Search;
 use Elastica\Type;
+use Indexish;
 
 /**
  * Functions to move documents and types between indices.
@@ -56,13 +57,13 @@ class CrossIndex
      * @param \Elastica\Index $newIndex
      * @param array           $options  keys: CrossIndex::OPTION_* constants
      *
-     * @return \Elastica\Index The new index object
+     * @return Awaitable<>\Elastica\Index> The new index object
      */
-    public static function reindex(
+    public static async function reindex(
         Index $oldIndex,
         Index $newIndex,
         array $options = array()
-    ) {
+    ) : Awaitable<Index> {
         // prepare search
         $search = new Search($oldIndex->getClient());
 
@@ -79,7 +80,7 @@ class CrossIndex
         $search->addIndex($oldIndex);
         if (isset($options[self::OPTION_TYPE])) {
             $type = $options[self::OPTION_TYPE];
-            $search->addTypes(is_array($type) ? $type : array($type));
+            $search->addTypes($type instanceof Indexish ? $type : array($type));
         }
         $search->setQuery($options[self::OPTION_QUERY]);
 
@@ -102,10 +103,10 @@ class CrossIndex
                 $bulk->addAction($action);
             }
 
-            $bulk->send();
+            await $bulk->send();
         }
 
-        $newIndex->refresh();
+        await $newIndex->refresh();
 
         return $newIndex;
     }
@@ -119,18 +120,18 @@ class CrossIndex
      * @param \Elastica\Index $newIndex
      * @param array           $options  keys: CrossIndex::OPTION_* constants
      *
-     * @return \Elastica\Index The new index object
+     * @return Awaitable<>\Elastica\Index> The new index object
      */
-    public static function copy(
+    public static async function copy(
         Index $oldIndex,
         Index $newIndex,
         array $options = array()
-    ) {
+    ) : Awaitable<Index> {
         // normalize types to array of string
         $types = array();
         if (isset($options[self::OPTION_TYPE])) {
             $types = $options[self::OPTION_TYPE];
-            $types = is_array($types) ? $types : array($types);
+            $types = $types instanceof Indexish ? $types : array($types);
 
             $types = array_map(
                 function ($type) {
@@ -145,16 +146,17 @@ class CrossIndex
         }
 
         // copy mapping
-        foreach ($oldIndex->getMapping() as $type => $mapping) {
+        $mapping = await $oldIndex->getMapping();
+        foreach ($mapping as $type => $mapping) {
             if (!empty($types) && !in_array($type, $types, true)) {
                 continue;
             }
 
             $type = new Type($newIndex, $type);
-            $type->setMapping($mapping['properties']);
+            await $type->setMapping($mapping['properties']);
         }
 
         // copy documents
-        return self::reindex($oldIndex, $newIndex, $options);
+        return await self::reindex($oldIndex, $newIndex, $options);
     }
 }

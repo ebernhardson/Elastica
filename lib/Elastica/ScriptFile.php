@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Script objects, containing script internals.
@@ -16,18 +17,17 @@ class ScriptFile extends AbstractScript
     /**
      * @var string
      */
-    private $_scriptFile;
+    private string $_scriptFile;
 
     /**
      * @param string     $scriptFile
      * @param array|null $params
      * @param null       $id
      */
-    public function __construct($scriptFile, array $params = null, $id = null)
+    public function __construct(string $scriptFile, ?Map<string, mixed> $params = null, $id = null)
     {
         parent::__construct($params, $id);
-
-        $this->setScriptFile($scriptFile);
+        $this->_scriptFile = $scriptFile;
     }
 
     /**
@@ -35,7 +35,7 @@ class ScriptFile extends AbstractScript
      *
      * @return $this
      */
-    public function setScriptFile($scriptFile)
+    public function setScriptFile(string $scriptFile) : this
     {
         $this->_scriptFile = $scriptFile;
 
@@ -45,7 +45,7 @@ class ScriptFile extends AbstractScript
     /**
      * @return string
      */
-    public function getScriptFile()
+    public function getScriptFile() : string
     {
         return $this->_scriptFile;
     }
@@ -57,11 +57,11 @@ class ScriptFile extends AbstractScript
      *
      * @return self
      */
-    public static function create($data)
+    public static function create(mixed $data) : ScriptFile
     {
         if ($data instanceof self) {
             $scriptFile = $data;
-        } elseif (is_array($data)) {
+        } elseif ($data instanceof Indexish) {
             $scriptFile = self::_createFromArray($data);
         } elseif (is_string($data)) {
             $scriptFile = new self($data);
@@ -79,19 +79,20 @@ class ScriptFile extends AbstractScript
      *
      * @return self
      */
-    protected static function _createFromArray(array $data)
+    protected static function _createFromArray(Indexish<string, mixed> $data) : ScriptFile
     {
         if (!isset($data['script_file'])) {
             throw new InvalidException("\$data['script_file'] is required");
         }
 
-        $scriptFile = new self($data['script_file']);
+        $scriptFile = new self((string) $data['script_file']);
 
         if (isset($data['params'])) {
-            if (!is_array($data['params'])) {
+            $params = $data['params'];
+            if (!$params instanceof Map) {
                 throw new InvalidException("\$data['params'] should be array");
             }
-            $scriptFile->setParams($data['params']);
+            $scriptFile->setParams($params);
         }
 
         return $scriptFile;
@@ -100,7 +101,7 @@ class ScriptFile extends AbstractScript
     /**
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $array = array(
             'script_file' => $this->_scriptFile,

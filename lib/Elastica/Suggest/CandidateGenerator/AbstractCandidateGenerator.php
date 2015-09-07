@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Suggest\CandidateGenerator;
 
 use Elastica\Param;

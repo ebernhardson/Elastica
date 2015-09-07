@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Filter\Range;
@@ -9,7 +9,7 @@ class RangeTest extends BaseTest
     /**
      * @group unit
      */
-    public function testAddField()
+    public function testAddField() : void
     {
         $rangeFilter = new Range();
         $returnValue = $rangeFilter->addField('fieldName', array('to' => 'value'));
@@ -19,21 +19,21 @@ class RangeTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $field = 'field_name';
         $range = array('gte' => 10, 'lte' => 99);
 
         $filter = new Range();
         $filter->addField($field, $range);
-        $expectedArray = array('range' => array($field => $range));
+        $expectedArray = array('range' => Map {$field => $range});
         $this->assertEquals($expectedArray, $filter->toArray());
     }
 
     /**
      * @group unit
      */
-    public function testSetExecution()
+    public function testSetExecution() : void
     {
         $field = 'field_name';
         $range = array('gte' => 10, 'lte' => 99);
@@ -51,11 +51,11 @@ class RangeTest extends BaseTest
      *
      * @group unit
      */
-    public function testSetCachedNotOverwritten()
+    public function testSetCachedNotOverwritten() : void
     {
         $filter = new Range('field_name', array());
         $filter->setCached(true);
         $array = $filter->toArray();
-        $this->assertTrue($array['range']['_cache']);
+        $this->assertTrue(/* UNSAFE_EXPR */ $array['range']['_cache']);
     }
 }

@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Filter;
 
 use Elastica\Type as ElasticaType;
+use Indexish;
 
 /**
  * Ids Filter.
@@ -18,7 +19,7 @@ class Ids extends AbstractFilter
      * @param string|\Elastica\Type $type Type to filter on
      * @param array                 $ids  List of ids
      */
-    public function __construct($type = null, array $ids = array())
+    public function __construct(mixed $type = null, array $ids = array())
     {
         $this->setType($type);
         $this->setIds($ids);
@@ -31,7 +32,7 @@ class Ids extends AbstractFilter
      *
      * @return $this
      */
-    public function addId($id)
+    public function addId(string $id) : this
     {
         return $this->addParam('values', $id);
     }
@@ -43,7 +44,7 @@ class Ids extends AbstractFilter
      *
      * @return $this
      */
-    public function addType($type)
+    public function addType(mixed $type) : this
     {
         if ($type instanceof ElasticaType) {
             $type = $type->getName();
@@ -63,7 +64,7 @@ class Ids extends AbstractFilter
      *
      * @return $this
      */
-    public function setType($type)
+    public function setType(mixed $type) : this
     {
         if ($type instanceof ElasticaType) {
             $type = $type->getName();
@@ -83,9 +84,9 @@ class Ids extends AbstractFilter
      *
      * @return $this
      */
-    public function setIds($ids)
+    public function setIds(mixed $ids) : this
     {
-        if (!is_array($ids)) {
+        if (!$ids instanceof Indexish) {
             $ids = array($ids);
         }
 

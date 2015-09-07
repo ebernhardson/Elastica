@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Connection;
@@ -10,7 +10,7 @@ class RequestTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConstructor()
+    public function testConstructor() : void
     {
         $path = 'test';
         $method = Request::POST;
@@ -29,24 +29,24 @@ class RequestTest extends BaseTest
      * @group unit
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testInvalidConnection()
+    public function testInvalidConnection() : void
     {
         $request = new Request('', Request::GET);
-        $request->send();
+        $request->send()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testSend()
+    public function testSend() : void
     {
         $connection = new Connection();
         $connection->setHost($this->_getHost());
-        $connection->setPort('9200');
+        $connection->setPort(9200);
 
         $request = new Request('_status', Request::GET, array(), array(), $connection);
 
-        $response = $request->send();
+        $response = $request->send()->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Response', $response);
     }
@@ -54,7 +54,7 @@ class RequestTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToString()
+    public function testToString() : void
     {
         $path = 'test';
         $method = Request::POST;
@@ -63,27 +63,27 @@ class RequestTest extends BaseTest
 
         $connection = new Connection();
         $connection->setHost($this->_getHost());
-        $connection->setPort('9200');
+        $connection->setPort(9200);
 
         $request = new Request($path, $method, $data, $query, $connection);
 
         $data = $request->toArray();
 
-        $this->assertInternalType('array', $data);
-        $this->assertArrayHasKey('method', $data);
-        $this->assertArrayHasKey('path', $data);
-        $this->assertArrayHasKey('query', $data);
-        $this->assertArrayHasKey('data', $data);
-        $this->assertArrayHasKey('connection', $data);
+        $this->assertInstanceOf('HH\Map', $data);
+        $this->assertTrue(/* UNSAFE_EXPR */ $data->contains('method'));
+        $this->assertTrue(/* UNSAFE_EXPR */ $data->contains('path'));
+        $this->assertTrue(/* UNSAFE_EXPR */ $data->contains('query'));
+        $this->assertTrue(/* UNSAFE_EXPR */ $data->contains('data'));
+        $this->assertTrue(/* UNSAFE_EXPR */ $data->contains('connection'));
         $this->assertEquals($request->getMethod(), $data['method']);
         $this->assertEquals($request->getPath(), $data['path']);
         $this->assertEquals($request->getQuery(), $data['query']);
         $this->assertEquals($request->getData(), $data['data']);
-        $this->assertInternalType('array', $data['connection']);
-        $this->assertArrayHasKey('host', $data['connection']);
-        $this->assertArrayHasKey('port', $data['connection']);
-        $this->assertEquals($request->getConnection()->getHost(), $data['connection']['host']);
-        $this->assertEquals($request->getConnection()->getPort(), $data['connection']['port']);
+        $this->assertInstanceOf('HH\Map', $data['connection']);
+        $this->assertTrue(/* UNSAFE_EXPR */ $data['connection']->contains('host'));
+        $this->assertTrue(/* UNSAFE_EXPR */ $data['connection']->contains('port'));
+        $this->assertEquals($request->getConnection()->getHost(), /* UNSAFE_EXPR */ $data['connection']['host']);
+        $this->assertEquals($request->getConnection()->getPort(), /* UNSAFE_EXPR */ $data['connection']['port']);
 
         $string = $request->toString();
 

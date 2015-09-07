@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Bulk\Action;
 
 class CreateDocument extends IndexDocument
@@ -6,5 +6,5 @@ class CreateDocument extends IndexDocument
     /**
      * @var string
      */
-    protected $_opType = self::OP_TYPE_CREATE;
+    protected string $_opType = self::OP_TYPE_CREATE;
 }

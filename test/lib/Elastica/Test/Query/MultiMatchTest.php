@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -14,7 +14,7 @@ class MultiMatchTest extends BaseTest
     private $index;
     private $multiMatch;
 
-    private static $data = array(
+    private static array<array> $data = array(
         array('id' => 1, 'name' => 'Rodolfo', 'last_name' => 'Moraes',   'full_name' => 'Rodolfo Moraes'),
         array('id' => 2, 'name' => 'Tristan', 'last_name' => 'Maindron', 'full_name' => 'Tristan Maindron'),
         array('id' => 3, 'name' => 'Monique', 'last_name' => 'Maindron', 'full_name' => 'Monique Maindron'),
@@ -24,7 +24,7 @@ class MultiMatchTest extends BaseTest
     /**
      * @group functional
      */
-    public function testMinimumShouldMatch()
+    public function testMinimumShouldMatch() : void
     {
         $multiMatch = new MultiMatch();
         $multiMatch->setQuery('Tristan Maindron');
@@ -38,7 +38,7 @@ class MultiMatchTest extends BaseTest
     /**
      * @group functional
      */
-    public function testAndOperator()
+    public function testAndOperator() : void
     {
         $multiMatch = new MultiMatch();
         $multiMatch->setQuery('Monique Maindron');
@@ -52,7 +52,7 @@ class MultiMatchTest extends BaseTest
     /**
      * @group functional
      */
-    public function testType()
+    public function testType() : void
     {
         $multiMatch = new MultiMatch();
         $multiMatch->setQuery('Trist');
@@ -66,12 +66,12 @@ class MultiMatchTest extends BaseTest
     /**
      * @group functional
      */
-    public function testFuzzy()
+    public function testFuzzy() : void
     {
         $multiMatch = new MultiMatch();
         $multiMatch->setQuery('Tritsan'); // Misspell on purpose
         $multiMatch->setFields(array('full_name', 'name'));
-        $multiMatch->setFuzziness(2);
+        $multiMatch->setFuzziness(2.0);
         $resultSet = $this->_getResults($multiMatch);
 
         $this->assertEquals(1, $resultSet->count());
@@ -79,7 +79,7 @@ class MultiMatchTest extends BaseTest
         $multiMatch = new MultiMatch();
         $multiMatch->setQuery('Tritsan'); // Misspell on purpose
         $multiMatch->setFields(array('full_name', 'name'));
-        $multiMatch->setFuzziness(0);
+        $multiMatch->setFuzziness(0.0);
         $resultSet = $this->_getResults($multiMatch);
 
         $this->assertEquals(0, $resultSet->count());
@@ -88,14 +88,14 @@ class MultiMatchTest extends BaseTest
     /**
      * @group functional
      */
-    public function testFuzzyWithOptions1()
+    public function testFuzzyWithOptions1() : void
     {
         // Here Elasticsearch will not accept mispells
         // on the first 6 letters.
         $multiMatch = new MultiMatch();
         $multiMatch->setQuery('Tritsan'); // Misspell on purpose
         $multiMatch->setFields(array('full_name', 'name'));
-        $multiMatch->setFuzziness(2);
+        $multiMatch->setFuzziness(2.0);
         $multiMatch->setPrefixLength(6);
         $resultSet = $this->_getResults($multiMatch);
 
@@ -105,7 +105,7 @@ class MultiMatchTest extends BaseTest
     /**
      * @group functional
      */
-    public function testFuzzyWithOptions2()
+    public function testFuzzyWithOptions2() : void
     {
         // Here with a 'M' search we should hit 'Moraes' first
         // and then stop because MaxExpansion = 1.
@@ -124,7 +124,7 @@ class MultiMatchTest extends BaseTest
     /**
      * @group functional
      */
-    public function testZeroTerm()
+    public function testZeroTerm() : void
     {
         $multiMatch = new MultiMatch();
         $multiMatch->setQuery('not'); // This is a stopword.
@@ -144,7 +144,7 @@ class MultiMatchTest extends BaseTest
     /**
      * @group functional
      */
-    public function testBaseMultiMatch()
+    public function testBaseMultiMatch() : void
     {
         $multiMatch = new MultiMatch();
         $multiMatch->setQuery('Rodolfo');
@@ -164,15 +164,15 @@ class MultiMatchTest extends BaseTest
     /**
      * Executes the query with the current multimatch.
      */
-    private function _getResults(MultiMatch $multiMatch)
+    private function _getResults(MultiMatch $multiMatch) : \Elastica\ResultSet
     {
-        return $this->_generateIndex()->search(new Query($multiMatch));
+        return $this->_generateIndex()->search(new Query($multiMatch))->getWaitHandle()->join();
     }
 
     /**
      * Builds an index for testing.
      */
-    private function _generateIndex()
+    private function _generateIndex() : \Elastica\Index
     {
         $client = $this->_getClient();
         $index = $client->getIndex('test');
@@ -190,7 +190,7 @@ class MultiMatchTest extends BaseTest
                     ),
                 ),
             ),
-        ), true);
+        ), true)->getWaitHandle()->join();
 
         $type = $index->getType('test');
 
@@ -200,14 +200,14 @@ class MultiMatchTest extends BaseTest
             'full_name' => array('type' => 'string', 'store' => 'no', 'analyzer' => 'noStops'),
         ));
 
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
         foreach (self::$data as $key => $docData) {
-            $type->addDocument(new Document($key, $docData));
+            $type->addDocument(new Document((string) $key, $docData))->getWaitHandle()->join();
         }
 
         // Refresh index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }

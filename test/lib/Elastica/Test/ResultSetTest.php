@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Document;
@@ -10,19 +10,19 @@ class ResultSetTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGetters()
+    public function testGetters() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
 
         $type->addDocuments(array(
-            new Document(1, array('name' => 'elastica search')),
-            new Document(2, array('name' => 'elastica library')),
-            new Document(3, array('name' => 'elastica test')),
-        ));
-        $index->refresh();
+            new Document('1', array('name' => 'elastica search')),
+            new Document('2', array('name' => 'elastica library')),
+            new Document('3', array('name' => 'elastica test')),
+        ))->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search('elastica search');
+        $resultSet = $type->search('elastica search')->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\ResultSet', $resultSet);
         $this->assertEquals(3, $resultSet->getTotalHits());
@@ -34,62 +34,62 @@ class ResultSetTest extends BaseTest
     /**
      * @group functional
      */
-    public function testArrayAccess()
+    public function testArrayAccess() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
 
         $type->addDocuments(array(
-            new Document(1, array('name' => 'elastica search')),
-            new Document(2, array('name' => 'elastica library')),
-            new Document(3, array('name' => 'elastica test')),
-        ));
-        $index->refresh();
+            new Document('1', array('name' => 'elastica search')),
+            new Document('2', array('name' => 'elastica library')),
+            new Document('3', array('name' => 'elastica test')),
+        ))->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search('elastica search');
+        $resultSet = $type->search('elastica search')->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\ResultSet', $resultSet);
-        $this->assertInstanceOf('Elastica\Result', $resultSet[0]);
-        $this->assertInstanceOf('Elastica\Result', $resultSet[1]);
-        $this->assertInstanceOf('Elastica\Result', $resultSet[2]);
+        $this->assertInstanceOf('Elastica\Result', $resultSet->offsetGet(0));
+        $this->assertInstanceOf('Elastica\Result', $resultSet->offsetGet(1));
+        $this->assertInstanceOf('Elastica\Result', $resultSet->offsetGet(2));
 
-        $this->assertFalse(isset($resultSet[3]));
+        $this->assertFalse($resultSet->offsetExists(3));
     }
 
     /**
      * @group functional
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testInvalidOffsetCreation()
+    public function testInvalidOffsetCreation() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
 
-        $doc = new Document(1, array('name' => 'elastica search'));
-        $type->addDocument($doc);
-        $index->refresh();
+        $doc = new Document('1', array('name' => 'elastica search'));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search('elastica search');
+        $resultSet = $type->search('elastica search')->getWaitHandle()->join();
 
         $result = new Result(array('_id' => 'fakeresult'));
-        $resultSet[1] = $result;
+        $resultSet->offsetSet(1, $result);
     }
 
     /**
      * @group functional
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testInvalidOffsetGet()
+    public function testInvalidOffsetGet() : \Elastica\Result
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
 
-        $doc = new Document(1, array('name' => 'elastica search'));
-        $type->addDocument($doc);
-        $index->refresh();
+        $doc = new Document('1', array('name' => 'elastica search'));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search('elastica search');
+        $resultSet = $type->search('elastica search')->getWaitHandle()->join();
 
-        return $resultSet[3];
+        return $resultSet->offsetGet(3);
     }
 }

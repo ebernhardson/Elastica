@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Index;
 
 use Elastica\Document;
@@ -12,207 +12,205 @@ class SettingsTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGet()
+    public function testGet() : void
     {
         $indexName = 'elasticatest';
 
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
-        $index->refresh();
+        $index->create(array(), true)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
         $settings = $index->getSettings();
 
-        $this->assertInternalType('array', $settings->get());
-        $this->assertNotNull($settings->get('number_of_replicas'));
-        $this->assertNotNull($settings->get('number_of_shards'));
-        $this->assertNull($settings->get('kjqwerjlqwer'));
+        $this->assertNotNull($settings->get('number_of_replicas')->getWaitHandle()->join());
+        $this->assertNotNull($settings->get('number_of_shards')->getWaitHandle()->join());
+        $this->assertNull($settings->get('kjqwerjlqwer')->getWaitHandle()->join());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testGetWithAlias()
+    public function testGetWithAlias() : void
     {
         $indexName = 'elasticatest';
         $aliasName = 'elasticatest_alias';
 
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
-        $index->refresh();
+        $index->create(array(), true)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $index->addAlias($aliasName);
+        $index->addAlias($aliasName)->getWaitHandle()->join();
         $index = $client->getIndex($aliasName);
         $settings = $index->getSettings();
 
-        $this->assertInternalType('array', $settings->get());
-        $this->assertNotNull($settings->get('number_of_replicas'));
-        $this->assertNotNull($settings->get('number_of_shards'));
-        $this->assertNull($settings->get('kjqwerjlqwer'));
+        $this->assertNotNull($settings->get('number_of_replicas')->getWaitHandle()->join());
+        $this->assertNotNull($settings->get('number_of_shards')->getWaitHandle()->join());
+        $this->assertNull($settings->get('kjqwerjlqwer')->getWaitHandle()->join());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testSetNumberOfReplicas()
+    public function testSetNumberOfReplicas() : void
     {
         $indexName = 'test';
 
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $settings = $index->getSettings();
 
-        $settings->setNumberOfReplicas(2);
-        $index->refresh();
-        $this->assertEquals(2, $settings->get('number_of_replicas'));
+        $settings->setNumberOfReplicas(2)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
+        $this->assertEquals(2, $settings->get('number_of_replicas')->getWaitHandle()->join());
 
-        $settings->setNumberOfReplicas(3);
-        $index->refresh();
-        $this->assertEquals(3, $settings->get('number_of_replicas'));
+        $settings->setNumberOfReplicas(3)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
+        $this->assertEquals(3, $settings->get('number_of_replicas')->getWaitHandle()->join());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testSetRefreshInterval()
+    public function testSetRefreshInterval() : void
     {
         $indexName = 'test';
 
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
         $settings = $index->getSettings();
 
-        $settings->setRefreshInterval('2s');
-        $index->refresh();
-        $this->assertEquals('2s', $settings->get('refresh_interval'));
+        $settings->setRefreshInterval('2s')->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
+        $this->assertEquals('2s', $settings->get('refresh_interval')->getWaitHandle()->join());
 
-        $settings->setRefreshInterval('5s');
-        $index->refresh();
-        $this->assertEquals('5s', $settings->get('refresh_interval'));
+        $settings->setRefreshInterval('5s')->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
+        $this->assertEquals('5s', $settings->get('refresh_interval')->getWaitHandle()->join());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testGetRefreshInterval()
+    public function testGetRefreshInterval() : void
     {
         $indexName = 'test';
 
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
         $settings = $index->getSettings();
 
-        $this->assertEquals(IndexSettings::DEFAULT_REFRESH_INTERVAL, $settings->getRefreshInterval());
+        $this->assertEquals(IndexSettings::DEFAULT_REFRESH_INTERVAL, $settings->getRefreshInterval()->getWaitHandle()->join());
 
         $interval = '2s';
-        $settings->setRefreshInterval($interval);
-        $index->refresh();
-        $this->assertEquals($interval, $settings->getRefreshInterval());
-        $this->assertEquals($interval, $settings->get('refresh_interval'));
+        $settings->setRefreshInterval($interval)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
+        $this->assertEquals($interval, $settings->getRefreshInterval()->getWaitHandle()->join());
+        $this->assertEquals($interval, $settings->get('refresh_interval')->getWaitHandle()->join());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testSetMergePolicy()
+    public function testSetMergePolicy() : void
     {
         $indexName = 'test';
 
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         //wait for the shards to be allocated
         $this->_waitForAllocation($index);
 
         $settings = $index->getSettings();
 
-        $settings->setMergePolicy('expunge_deletes_allowed', 15);
-        $this->assertEquals(15, $settings->getMergePolicy('expunge_deletes_allowed'));
+        $settings->setMergePolicy('expunge_deletes_allowed', '15')->getWaitHandle()->join();
+        $this->assertEquals(15, $settings->getMergePolicy('expunge_deletes_allowed')->getWaitHandle()->join());
 
-        $settings->setMergePolicy('expunge_deletes_allowed', 10);
-        $this->assertEquals(10, $settings->getMergePolicy('expunge_deletes_allowed'));
+        $settings->setMergePolicy('expunge_deletes_allowed', '10')->getWaitHandle()->join();
+        $this->assertEquals(10, $settings->getMergePolicy('expunge_deletes_allowed')->getWaitHandle()->join());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testSetMergeFactor()
+    public function testSetMergeFactor() : void
     {
         $indexName = 'test';
 
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
         //wait for the shards to be allocated
         $this->_waitForAllocation($index);
 
         $settings = $index->getSettings();
 
-        $response = $settings->setMergePolicy('merge_factor', 15);
-        $this->assertEquals(15, $settings->getMergePolicy('merge_factor'));
+        $response = $settings->setMergePolicy('merge_factor', '15')->getWaitHandle()->join();
+        $this->assertEquals(15, $settings->getMergePolicy('merge_factor')->getWaitHandle()->join());
         $this->assertInstanceOf('Elastica\Response', $response);
         $this->assertTrue($response->isOk());
 
-        $settings->setMergePolicy('merge_factor', 10);
-        $this->assertEquals(10, $settings->getMergePolicy('merge_factor'));
+        $settings->setMergePolicy('merge_factor', '10')->getWaitHandle()->join();
+        $this->assertEquals(10, $settings->getMergePolicy('merge_factor')->getWaitHandle()->join());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testSetMergePolicyType()
+    public function testSetMergePolicyType() : void
     {
         $indexName = 'test';
 
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
         //wait for the shards to be allocated
         $this->_waitForAllocation($index);
 
         $settings = $index->getSettings();
 
-        $settings->setMergePolicyType('log_byte_size');
-        $this->assertEquals('log_byte_size', $settings->getMergePolicyType());
+        $settings->setMergePolicyType('log_byte_size')->getWaitHandle()->join();
+        $this->assertEquals('log_byte_size', $settings->getMergePolicyType()->getWaitHandle()->join());
 
-        $response = $settings->setMergePolicy('merge_factor', 15);
-        $this->assertEquals(15, $settings->getMergePolicy('merge_factor'));
+        $response = $settings->setMergePolicy('merge_factor', '15')->getWaitHandle()->join();
+        $this->assertEquals(15, $settings->getMergePolicy('merge_factor')->getWaitHandle()->join());
         $this->assertInstanceOf('Elastica\Response', $response);
         $this->assertTrue($response->isOk());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testSetReadOnly()
+    public function testSetReadOnly() : void
     {
         $index = $this->_createIndex();
         //wait for the shards to be allocated
         $this->_waitForAllocation($index);
-        $index->getSettings()->setReadOnly(false);
+        $index->getSettings()->setReadOnly(false)->getWaitHandle()->join();
 
         // Add document to normal index
         $doc1 = new Document(null, array('hello' => 'world'));
@@ -220,15 +218,15 @@ class SettingsTest extends BaseTest
         $doc3 = new Document(null, array('hello' => 'world'));
 
         $type = $index->getType('test');
-        $type->addDocument($doc1);
-        $this->assertFalse($index->getSettings()->getReadOnly());
+        $type->addDocument($doc1)->getWaitHandle()->join();
+        $this->assertFalse($index->getSettings()->getReadOnly()->getWaitHandle()->join());
 
         // Try to add doc to read only index
-        $index->getSettings()->setReadOnly(true);
-        $this->assertTrue($index->getSettings()->getReadOnly());
+        $index->getSettings()->setReadOnly(true)->getWaitHandle()->join();
+        $this->assertTrue($index->getSettings()->getReadOnly()->getWaitHandle()->join());
 
         try {
-            $type->addDocument($doc2);
+            $type->addDocument($doc2)->getWaitHandle()->join();
             $this->fail('Should throw exception because of read only');
         } catch (ResponseException $e) {
             $message = $e->getMessage();
@@ -237,98 +235,98 @@ class SettingsTest extends BaseTest
         }
 
         // Remove read only, add document
-        $response = $index->getSettings()->setReadOnly(false);
+        $response = $index->getSettings()->setReadOnly(false)->getWaitHandle()->join();
         $this->assertTrue($response->isOk());
 
-        $type->addDocument($doc3);
-        $index->refresh();
+        $type->addDocument($doc3)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $this->assertEquals(2, $type->count());
+        $this->assertEquals(2, $type->count()->getWaitHandle()->join());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testGetSetBlocksRead()
+    public function testGetSetBlocksRead() : void
     {
         $index = $this->_createIndex();
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
         $settings = $index->getSettings();
 
-        $this->assertFalse($settings->getBlocksRead());
+        $this->assertFalse($settings->getBlocksRead()->getWaitHandle()->join());
 
-        $settings->setBlocksRead(true);
-        $this->assertTrue($settings->getBlocksRead());
+        $settings->setBlocksRead(true)->getWaitHandle()->join();
+        $this->assertTrue($settings->getBlocksRead()->getWaitHandle()->join());
 
-        $settings->setBlocksRead(false);
-        $this->assertFalse($settings->getBlocksRead());
+        $settings->setBlocksRead(false)->getWaitHandle()->join();
+        $this->assertFalse($settings->getBlocksRead()->getWaitHandle()->join());
 
-        $settings->setBlocksRead();
-        $this->assertTrue($settings->getBlocksRead());
+        $settings->setBlocksRead()->getWaitHandle()->join();
+        $this->assertTrue($settings->getBlocksRead()->getWaitHandle()->join());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testGetSetBlocksWrite()
+    public function testGetSetBlocksWrite() : void
     {
         $index = $this->_createIndex();
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
         $settings = $index->getSettings();
 
-        $this->assertFalse($settings->getBlocksWrite());
+        $this->assertFalse($settings->getBlocksWrite()->getWaitHandle()->join());
 
-        $settings->setBlocksWrite(true);
-        $this->assertTrue($settings->getBlocksWrite());
+        $settings->setBlocksWrite(true)->getWaitHandle()->join();
+        $this->assertTrue($settings->getBlocksWrite()->getWaitHandle()->join());
 
-        $settings->setBlocksWrite(false);
-        $this->assertFalse($settings->getBlocksWrite());
+        $settings->setBlocksWrite(false)->getWaitHandle()->join();
+        $this->assertFalse($settings->getBlocksWrite()->getWaitHandle()->join());
 
-        $settings->setBlocksWrite();
-        $this->assertTrue($settings->getBlocksWrite());
+        $settings->setBlocksWrite()->getWaitHandle()->join();
+        $this->assertTrue($settings->getBlocksWrite()->getWaitHandle()->join());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testGetSetBlocksMetadata()
+    public function testGetSetBlocksMetadata() : void
     {
         $index = $this->_createIndex();
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
         $settings = $index->getSettings();
 
-        $this->assertFalse($settings->getBlocksMetadata());
+        $this->assertFalse($settings->getBlocksMetadata()->getWaitHandle()->join());
 
-        $settings->setBlocksMetadata(true);
-        $this->assertTrue($settings->getBlocksMetadata());
+        $settings->setBlocksMetadata(true)->getWaitHandle()->join();
+        $this->assertTrue($settings->getBlocksMetadata()->getWaitHandle()->join());
 
-        $settings->setBlocksMetadata(false);
-        $this->assertFalse($settings->getBlocksMetadata());
+        $settings->setBlocksMetadata(false)->getWaitHandle()->join();
+        $this->assertFalse($settings->getBlocksMetadata()->getWaitHandle()->join());
 
-        $settings->setBlocksMetadata();
-        $this->assertTrue($settings->getBlocksMetadata());
+        $settings->setBlocksMetadata()->getWaitHandle()->join();
+        $this->assertTrue($settings->getBlocksMetadata()->getWaitHandle()->join());
 
-        $settings->setBlocksMetadata(false); // Cannot delete index otherwise
-        $index->delete();
+        $settings->setBlocksMetadata(false)->getWaitHandle()->join(); // Cannot delete index otherwise
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testNotFoundIndex()
+    public function testNotFoundIndex() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('not_found_index');
         //wait for the shards to be allocated
 
         try {
-            $settings = $index->getSettings()->get();
+            $settings = $index->getSettings()->getAll()->getWaitHandle()->join();
             $this->fail('Should throw exception because of index not found');
         } catch (ResponseException $e) {
             $message = $e->getMessage();

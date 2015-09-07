@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Exception;
 
 use Elastica\Document;
@@ -9,7 +9,7 @@ class ResponseExceptionTest extends AbstractExceptionTest
     /**
      * @group functional
      */
-    public function testCreateExistingIndex()
+    public function testCreateExistingIndex() : void
     {
         $this->_createIndex('woo', true);
 
@@ -25,7 +25,7 @@ class ResponseExceptionTest extends AbstractExceptionTest
     /**
      * @group functional
      */
-    public function testBadType()
+    public function testBadType() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
@@ -34,12 +34,12 @@ class ResponseExceptionTest extends AbstractExceptionTest
             'num' => array(
                 'type' => 'long',
             ),
-        ));
+        ))->getWaitHandle()->join();
 
         try {
             $type->addDocument(new Document('', array(
                 'num' => 'not number at all',
-            )));
+            )))->getWaitHandle()->join();
             $this->fail('Indexing with wrong type should fail');
         } catch (ResponseException $ex) {
             $this->assertEquals('MapperParsingException', $ex->getElasticsearchException()->getExceptionName());
@@ -50,13 +50,13 @@ class ResponseExceptionTest extends AbstractExceptionTest
     /**
      * @group functional
      */
-    public function testWhatever()
+    public function testWhatever() : void
     {
         $index = $this->_createIndex();
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
 
         try {
-            $index->search();
+            $index->search()->getWaitHandle()->join();
         } catch (ResponseException $ex) {
             $this->assertEquals('IndexMissingException', $ex->getElasticsearchException()->getExceptionName());
             $this->assertEquals(404, $ex->getElasticsearchException()->getCode());

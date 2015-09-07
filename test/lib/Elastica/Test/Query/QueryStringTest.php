@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -10,16 +10,16 @@ class QueryStringTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSearchMultipleFields()
+    public function testSearchMultipleFields() : void
     {
         $str = md5(rand());
         $query = new QueryString($str);
 
-        $expected = array(
+        $expected = Map {
             'query' => $str,
-        );
+        };
 
-        $this->assertEquals(array('query_string' => $expected), $query->toArray());
+        $this->assertEquals(Map {'query_string' => $expected}, $query->toArray());
 
         $fields = array();
         $max = rand() % 10 + 1;
@@ -29,31 +29,31 @@ class QueryStringTest extends BaseTest
 
         $query->setFields($fields);
         $expected['fields'] = $fields;
-        $this->assertEquals(array('query_string' => $expected), $query->toArray());
+        $this->assertEquals(Map {'query_string' => $expected}, $query->toArray());
 
         foreach (array(false, true) as $val) {
             $query->setUseDisMax($val);
             $expected['use_dis_max'] = $val;
 
-            $this->assertEquals(array('query_string' => $expected), $query->toArray());
+            $this->assertEquals(Map {'query_string' => $expected}, $query->toArray());
         }
     }
 
     /**
      * @group functional
      */
-    public function testSearch()
+    public function testSearch() : void
     {
         $index = $this->_createIndex();
-        $index->getSettings()->setNumberOfReplicas(0);
+        $index->getSettings()->setNumberOfReplicas(0)->getWaitHandle()->join();
         $type = $index->getType('helloworld');
 
-        $doc = new Document(1, array('email' => 'test@test.com', 'username' => 'hanswurst', 'test' => array('2', '3', '5')));
-        $type->addDocument($doc);
-        $index->refresh();
+        $doc = new Document('1', array('email' => 'test@test.com', 'username' => 'hanswurst', 'test' => array('2', '3', '5')));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         $queryString = new QueryString('test*');
-        $resultSet = $type->search($queryString);
+        $resultSet = $type->search($queryString)->getWaitHandle()->join();
 
         $this->assertEquals(1, $resultSet->count());
     }
@@ -63,28 +63,28 @@ class QueryStringTest extends BaseTest
      *
      * @group functional
      */
-    public function testSearchFields()
+    public function testSearchFields() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
 
-        $doc = new Document(1, array('title' => 'hello world', 'firstname' => 'nicolas', 'lastname' => 'ruflin', 'price' => '102', 'year' => '2012'));
-        $type->addDocument($doc);
-        $index->refresh();
+        $doc = new Document('1', array('title' => 'hello world', 'firstname' => 'nicolas', 'lastname' => 'ruflin', 'price' => '102', 'year' => '2012'));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         $query = new QueryString();
         $query = $query->setQuery('ruf*');
         $query = $query->setDefaultField('title');
         $query = $query->setFields(array('title', 'firstname', 'lastname', 'price', 'year'));
 
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->count());
     }
 
     /**
      * @group unit
      */
-    public function testSetDefaultOperator()
+    public function testSetDefaultOperator() : void
     {
         $operator = 'AND';
         $query = new QueryString('test');
@@ -92,13 +92,13 @@ class QueryStringTest extends BaseTest
 
         $data = $query->toArray();
 
-        $this->assertEquals($data['query_string']['default_operator'], $operator);
+        $this->assertEquals(/* UNSAFE_EXPR */ $data['query_string']['default_operator'], $operator);
     }
 
     /**
      * @group unit
      */
-    public function testSetDefaultField()
+    public function testSetDefaultField() : void
     {
         $default = 'field1';
         $query = new QueryString('test');
@@ -106,13 +106,13 @@ class QueryStringTest extends BaseTest
 
         $data = $query->toArray();
 
-        $this->assertEquals($data['query_string']['default_field'], $default);
+        $this->assertEquals(/* UNSAFE_EXPR */ $data['query_string']['default_field'], $default);
     }
 
     /**
      * @group unit
      */
-    public function testSetRewrite()
+    public function testSetRewrite() : void
     {
         $rewrite = 'scoring_boolean';
         $query = new QueryString('test');
@@ -120,23 +120,13 @@ class QueryStringTest extends BaseTest
 
         $data = $query->toArray();
 
-        $this->assertEquals($data['query_string']['rewrite'], $rewrite);
-    }
-
-    /**
-     * @group unit
-     * @expectedException \Elastica\Exception\InvalidException
-     */
-    public function testSetQueryInvalid()
-    {
-        $query = new QueryString();
-        $query->setQuery(array());
+        $this->assertEquals(/* UNSAFE_EXPR */ $data['query_string']['rewrite'], $rewrite);
     }
 
     /**
      * @group unit
      */
-    public function testSetTimezone()
+    public function testSetTimezone() : void
     {
         $timezone = 'Europe/Paris';
         $text = 'date:[2012 TO 2014]';
@@ -144,12 +134,12 @@ class QueryStringTest extends BaseTest
         $query = new QueryString($text);
         $query->setTimezone($timezone);
 
-        $expected = array(
-            'query_string' => array(
+        $expected = Map {
+            'query_string' => Map {
                 'query' => $text,
                 'time_zone' => $timezone,
-            ),
-        );
+            },
+        };
 
         $this->assertEquals($expected, $query->toArray());
         $this->assertInstanceOf('Elastica\Query\QueryString', $query->setTimezone($timezone));
@@ -158,7 +148,7 @@ class QueryStringTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetPhraseSlop()
+    public function testSetPhraseSlop() : void
     {
         $phraseSlop = 9;
 
@@ -166,23 +156,23 @@ class QueryStringTest extends BaseTest
         $query->setPhraseSlop($phraseSlop);
 
         $data = $query->toArray();
-        $this->assertEquals($phraseSlop, $data['query_string']['phrase_slop']);
+        $this->assertEquals($phraseSlop, /* UNSAFE_EXPR */ $data['query_string']['phrase_slop']);
     }
 
     /**
      * @group functional
      */
-    public function testSetBoost()
+    public function testSetBoost() : void
     {
         $index = $this->_createIndex();
         $query = new QueryString('test');
         $query->setBoost(9.3);
 
         $doc = new Document('', array('name' => 'test'));
-        $index->getType('test')->addDocument($doc);
-        $index->refresh();
+        $index->getType('test')->addDocument($doc)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $index->search($query);
+        $resultSet = $index->search($query)->getWaitHandle()->join();
 
         $this->assertEquals(1, $resultSet->count());
     }

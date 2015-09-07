@@ -1,31 +1,32 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Exception\ResponseException;
 use Elastica\Status;
 use Elastica\Test\Base as BaseTest;
+use Indexish;
 
 class StatusTest extends BaseTest
 {
     /**
      * @group functional
      */
-    public function testGetResponse()
+    public function testGetResponse() : void
     {
         $index = $this->_createIndex();
-        $status = new Status($index->getClient());
+        $status = Status::create($index->getClient())->getWaitHandle()->join();
         $this->assertInstanceOf('Elastica\Response', $status->getResponse());
     }
 
     /**
      * @group functional
      */
-    public function testGetIndexStatuses()
+    public function testGetIndexStatuses() : void
     {
         $index = $this->_createIndex();
 
-        $status = new Status($index->getClient());
-        $statuses = $status->getIndexStatuses();
+        $status = Status::create($index->getClient())->getWaitHandle()->join();
+        $statuses = $status->getIndexStatuses()->getWaitHandle()->join();
 
         $this->assertInternalType('array', $statuses);
 
@@ -37,17 +38,17 @@ class StatusTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGetIndexNames()
+    public function testGetIndexNames() : void
     {
         $indexName = 'test';
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $index = $this->_createIndex();
-        $index->refresh();
-        $index->optimize();
+        $index->refresh()->getWaitHandle()->join();
+        $index->optimize()->getWaitHandle()->join();
 
-        $status = new Status($index->getClient());
+        $status = Status::create($index->getClient())->getWaitHandle()->join();
         $names = $status->getIndexNames();
 
         $this->assertInternalType('array', $names);
@@ -61,7 +62,7 @@ class StatusTest extends BaseTest
     /**
      * @group functional
      */
-    public function testIndexExists()
+    public function testIndexExists() : void
     {
         $indexName = 'elastica_test';
         $aliasName = 'elastica_test-alias';
@@ -71,41 +72,41 @@ class StatusTest extends BaseTest
 
         try {
             // Make sure index is deleted first
-            $index->delete();
+            $index->delete()->getWaitHandle()->join();
         } catch (ResponseException $e) {
         }
 
-        $status = new Status($client);
+        $status = Status::create($client)->getWaitHandle()->join();
         $this->assertFalse($status->indexExists($indexName));
-        $index->create();
+        $index->create()->getWaitHandle()->join();
 
-        $status->refresh();
+        $status->refresh()->getWaitHandle()->join();
         $this->assertTrue($status->indexExists($indexName));
     }
 
     /**
      * @group functional
      */
-    public function testAliasExists()
+    public function testAliasExists() : void
     {
         $aliasName = 'elastica_test-alias';
 
         $index1 = $this->_createIndex();
         $indexName = $index1->getName();
 
-        $status = new Status($index1->getClient());
+        $status = Status::create($index1->getClient())->getWaitHandle()->join();
 
-        foreach ($status->getIndicesWithAlias($aliasName) as $tmpIndex) {
+        foreach ($status->getIndicesWithAlias($aliasName)->getWaitHandle()->join() as $tmpIndex) {
             $tmpIndex->removeAlias($aliasName);
         }
 
-        $this->assertFalse($status->aliasExists($aliasName));
+        $this->assertFalse($status->aliasExists($aliasName)->getWaitHandle()->join());
 
-        $index1->addAlias($aliasName);
-        $status->refresh();
-        $this->assertTrue($status->aliasExists($aliasName));
+        $index1->addAlias($aliasName)->getWaitHandle()->join();
+        $status->refresh()->getWaitHandle()->join();
+        $this->assertTrue($status->aliasExists($aliasName)->getWaitHandle()->join());
 
-        $indicesWithAlias = $status->getIndicesWithAlias($aliasName);
+        $indicesWithAlias = $status->getIndicesWithAlias($aliasName)->getWaitHandle()->join();
         $this->assertEquals(array($indexName), array_map(
             function ($index) {
                 return $index->getName();
@@ -115,19 +116,23 @@ class StatusTest extends BaseTest
     /**
      * @group functional
      */
-    public function testServerStatus()
+    public function testServerStatus() : void
     {
         $client = $this->_getClient();
-        $status = $client->getStatus();
-        $serverStatus = $status->getServerStatus();
+        $status = $client->getStatus()->getWaitHandle()->join();
+        $serverStatus = $status->getServerStatus()->getWaitHandle()->join();
 
-        $this->assertTrue(!empty($serverStatus));
-        $this->assertTrue('array' == gettype($serverStatus));
-        $this->assertArrayHasKey('status', $serverStatus);
-        $this->assertTrue($serverStatus['status'] == 200);
-        $this->assertArrayHasKey('version', $serverStatus);
+        if (!$serverStatus instanceof Indexish) {
+            $this->fail('expected array');
+        } else {
+            $this->assertTrue(!empty($serverStatus));
+            $this->assertTrue('array' == gettype($serverStatus));
+            $this->assertArrayHasKey('status', $serverStatus);
+            $this->assertTrue($serverStatus['status'] == 200);
+            $this->assertArrayHasKey('version', $serverStatus);
 
-        $versionInfo = $serverStatus['version'];
-        $this->assertArrayHasKey('number', $versionInfo);
+            $versionInfo = $serverStatus['version'];
+            $this->assertArrayHasKey('number', $versionInfo);
+        }
     }
 }

@@ -1,3 +1,11 @@
+
+Experimental
+============
+
+This branch is *EXPERIMENTAL* and is not ready for use outside of testing. This updates the codebase to use hacklang and to take advantage of asyncronous requests. This is a very naive port and does not attempt to streamline or clean up the api for asyncronous usage. Primarily this applies type signatures to the entire codebase, and then adds async/await keywords everywhere necessary.
+
+The test suite as provided from ruflin is very complete, and passes so there is some confidence that this works. At least for some cases. This has not been extensively tested in any way and should be considered ALPHA quality.
+
 Elastica: elasticsearch PHP Client
 ==================================
 

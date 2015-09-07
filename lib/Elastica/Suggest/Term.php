@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Suggest;
 
 /**
@@ -20,7 +20,7 @@ class Term extends AbstractSuggest
      *
      * @return $this
      */
-    public function setAnalyzer($analyzer)
+    public function setAnalyzer(string $analyzer) : this
     {
         return $this->setParam('analyzer', $analyzer);
     }
@@ -30,7 +30,7 @@ class Term extends AbstractSuggest
      *
      * @return $this
      */
-    public function setSort($sort)
+    public function setSort(string $sort) : this
     {
         return $this->setParam('sort', $sort);
     }
@@ -40,7 +40,7 @@ class Term extends AbstractSuggest
      *
      * @return $this
      */
-    public function setSuggestMode($mode)
+    public function setSuggestMode(string $mode) : this
     {
         return $this->setParam('suggest_mode', $mode);
     }
@@ -52,7 +52,7 @@ class Term extends AbstractSuggest
      *
      * @return $this
      */
-    public function setLowercaseTerms($lowercase = true)
+    public function setLowercaseTerms(bool $lowercase = true) : this
     {
         return $this->setParam('lowercase_terms', (bool) $lowercase);
     }
@@ -64,7 +64,7 @@ class Term extends AbstractSuggest
      *
      * @return $this
      */
-    public function setMaxEdits($max)
+    public function setMaxEdits(int $max) : this
     {
         return $this->setParam('max_edits', (int) $max);
     }
@@ -76,7 +76,7 @@ class Term extends AbstractSuggest
      *
      * @return $this
      */
-    public function setPrefixLength($length)
+    public function setPrefixLength(int $length) : this
     {
         return $this->setParam('prefix_len', (int) $length);
     }
@@ -88,7 +88,7 @@ class Term extends AbstractSuggest
      *
      * @return $this
      */
-    public function setMinWordLength($length)
+    public function setMinWordLength(int $length) : this
     {
         return $this->setParam('min_word_len', (int) $length);
     }
@@ -98,7 +98,7 @@ class Term extends AbstractSuggest
      *
      * @return $this
      */
-    public function setMaxInspections($max)
+    public function setMaxInspections(int $max) : this
     {
         return $this->setParam('max_inspections', $max);
     }
@@ -110,7 +110,7 @@ class Term extends AbstractSuggest
      *
      * @return $this
      */
-    public function setMinDocFrequency($min)
+    public function setMinDocFrequency(mixed $min) : this
     {
         return $this->setParam('min_doc_freq', $min);
     }
@@ -122,7 +122,7 @@ class Term extends AbstractSuggest
      *
      * @return $this
      */
-    public function setMaxTermFrequency($max)
+    public function setMaxTermFrequency(float $max) : this
     {
         return $this->setParam('max_term_freq', $max);
     }

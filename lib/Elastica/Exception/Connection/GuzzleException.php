@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Exception\Connection;
 
 use Elastica\Exception\ConnectionException;
@@ -16,17 +16,17 @@ class GuzzleException extends ConnectionException
     /**
      * @var TransferException
      */
-    protected $_guzzleException;
+    protected TransferException $_guzzleException;
 
     /**
      * @param \GuzzleHttp\Exception\TransferException $guzzleException
      * @param \Elastica\Request                       $request
      * @param \Elastica\Response                      $response
      */
-    public function __construct(TransferException $guzzleException, Request $request = null, Response $response = null)
+    public function __construct(TransferException $guzzleException, ?Request $request = null, ?Response $response = null)
     {
         $this->_guzzleException = $guzzleException;
-        $message = $this->getErrorMessage($this->getGuzzleException());
+        $message = $guzzleException->getMessage();
         parent::__construct($message, $request, $response);
     }
 
@@ -43,8 +43,7 @@ class GuzzleException extends ConnectionException
     /**
      * @return TransferException
      */
-    public function getGuzzleException()
-    {
+    public function getGuzzleException() : TransferException {
         return $this->_guzzleException;
     }
 }

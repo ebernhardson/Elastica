@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Transport;
 
 use Elastica\Document;
@@ -13,7 +13,7 @@ class HttpTest extends BaseTest
      *
      * @return array[]
      */
-    public function getConfig()
+    public function getConfig() : array<array>
     {
         return array(
             array(
@@ -35,20 +35,20 @@ class HttpTest extends BaseTest
      * @group functional
      * @dataProvider getConfig
      */
-    public function testDynamicHttpMethodBasedOnConfigParameter(array $config, $httpMethod)
+    public function testDynamicHttpMethodBasedOnConfigParameter(array $config, $httpMethod) : void
     {
         $client = $this->_getClient($config);
 
         $index = $client->getIndex('dynamic_http_method_test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $this->_waitForAllocation($index);
 
         $type = $index->getType('test');
-        $type->addDocument(new Document(1, array('test' => 'test')));
+        $type->addDocument(new Document('1', array('test' => 'test')))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $index->search('test');
+        $resultSet = $index->search('test')->getWaitHandle()->join();
 
         $info = $resultSet->getResponse()->getTransferInfo();
         $this->assertStringStartsWith($httpMethod, $info['request_header']);
@@ -58,11 +58,11 @@ class HttpTest extends BaseTest
      * @group functional
      * @dataProvider getConfig
      */
-    public function testDynamicHttpMethodOnlyAffectsRequestsWithBody(array $config, $httpMethod)
+    public function testDynamicHttpMethodOnlyAffectsRequestsWithBody(array $config, $httpMethod) : void
     {
         $client = $this->_getClient($config);
 
-        $status = $client->getStatus();
+        $status = $client->getStatus()->getWaitHandle()->join();
         $info = $status->getResponse()->getTransferInfo();
         $this->assertStringStartsWith('GET', $info['request_header']);
     }
@@ -70,26 +70,26 @@ class HttpTest extends BaseTest
     /**
      * @group functional
      */
-    public function testCurlNobodyOptionIsResetAfterHeadRequest()
+    public function testCurlNobodyOptionIsResetAfterHeadRequest() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('curl_test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $this->_waitForAllocation($index);
 
         $type = $index->getType('item');
         // Force HEAD request to set CURLOPT_NOBODY = true
-        $index->exists();
+        $index->exists()->getWaitHandle()->join();
 
-        $id = 1;
+        $id = '1';
         $data = array('id' => $id, 'name' => 'Item 1');
         $doc = new \Elastica\Document($id, $data);
 
-        $type->addDocument($doc);
+        $type->addDocument($doc)->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $doc = $type->getDocument($id);
+        $doc = $type->getDocument($id)->getWaitHandle()->join();
 
         // Document should be retrieved correctly
         $this->assertSame($data, $doc->getData());
@@ -99,19 +99,19 @@ class HttpTest extends BaseTest
     /**
      * @group functional
      */
-    public function testUnicodeData()
+    public function testUnicodeData() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('curl_test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $this->_waitForAllocation($index);
 
         $type = $index->getType('item');
 
         // Force HEAD request to set CURLOPT_NOBODY = true
-        $index->exists();
+        $index->exists()->getWaitHandle()->join();
 
-        $id = 22;
+        $id = '22';
         $data = array('id' => $id, 'name' => '
             Сегодня, я вижу, особенно грустен твой взгляд, /
             И руки особенно тонки, колени обняв. /
@@ -120,11 +120,11 @@ class HttpTest extends BaseTest
 
         $doc = new \Elastica\Document($id, $data);
 
-        $type->addDocument($doc);
+        $type->addDocument($doc)->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $doc = $type->getDocument($id);
+        $doc = $type->getDocument($id)->getWaitHandle()->join();
 
         // Document should be retrieved correctly
         $this->assertSame($data, $doc->getData());
@@ -134,16 +134,16 @@ class HttpTest extends BaseTest
     /**
      * @group functional
      */
-    public function testWithEnvironmentalProxy()
+    public function testWithEnvironmentalProxy() : void
     {
         putenv('http_proxy='.$this->_getProxyUrl().'/');
 
         $client = $this->_getClient();
-        $transferInfo = $client->request('/_nodes')->getTransferInfo();
+        $transferInfo = $client->request('/_nodes')->getWaitHandle()->join()->getTransferInfo();
         $this->assertEquals(200, $transferInfo['http_code']);
 
         $client->getConnection()->setProxy(null); // will not change anything
-        $transferInfo = $client->request('/_nodes')->getTransferInfo();
+        $transferInfo = $client->request('/_nodes')->getWaitHandle()->join()->getTransferInfo();
         $this->assertEquals(200, $transferInfo['http_code']);
 
         putenv('http_proxy=');
@@ -152,15 +152,15 @@ class HttpTest extends BaseTest
     /**
      * @group functional
      */
-    public function testWithEnabledEnvironmentalProxy()
+    public function testWithEnabledEnvironmentalProxy() : void
     {
         putenv('http_proxy='.$this->_getProxyUrl403().'/');
         $client = $this->_getClient();
-        $transferInfo = $client->request('/_nodes')->getTransferInfo();
+        $transferInfo = $client->request('/_nodes')->getWaitHandle()->join()->getTransferInfo();
         $this->assertEquals(403, $transferInfo['http_code']);
         $client = $this->_getClient();
         $client->getConnection()->setProxy('');
-        $transferInfo = $client->request('/_nodes')->getTransferInfo();
+        $transferInfo = $client->request('/_nodes')->getWaitHandle()->join()->getTransferInfo();
         $this->assertEquals(200, $transferInfo['http_code']);
         putenv('http_proxy=');
     }
@@ -168,55 +168,55 @@ class HttpTest extends BaseTest
     /**
      * @group functional
      */
-    public function testWithProxy()
+    public function testWithProxy() : void
     {
         $client = $this->_getClient();
         $client->getConnection()->setProxy($this->_getProxyUrl());
 
-        $transferInfo = $client->request('/_nodes')->getTransferInfo();
+        $transferInfo = $client->request('/_nodes')->getWaitHandle()->join()->getTransferInfo();
         $this->assertEquals(200, $transferInfo['http_code']);
     }
 
     /**
      * @group functional
      */
-    public function testWithoutProxy()
+    public function testWithoutProxy() : void
     {
         $client = $this->_getClient();
         $client->getConnection()->setProxy('');
 
-        $transferInfo = $client->request('/_nodes')->getTransferInfo();
+        $transferInfo = $client->request('/_nodes')->getWaitHandle()->join()->getTransferInfo();
         $this->assertEquals(200, $transferInfo['http_code']);
     }
 
     /**
      * @group functional
      */
-    public function testBodyReuse()
+    public function testBodyReuse() : void
     {
         $client = $this->_getClient();
 
         $index = $client->getIndex('elastica_body_reuse_test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $this->_waitForAllocation($index);
 
         $type = $index->getType('test');
-        $type->addDocument(new Document(1, array('test' => 'test')));
+        $type->addDocument(new Document('1', array('test' => 'test')))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $index->search(array(
-            'query' => array(
-                'query_string' => array(
+        $resultSet = $index->search(Map {
+            'query' => Map {
+                'query_string' => Map {
                     'query' => 'pew pew pew',
-                ),
-            ),
-        ));
+                },
+            },
+        })->getWaitHandle()->join();
 
         $this->assertEquals(0, $resultSet->getTotalHits());
 
-        $response = $index->request('/_search', 'POST');
-        $resultSet = new ResultSet($response, Query::create(array()));
+        $response = $index->request('/_search', 'POST')->getWaitHandle()->join();
+        $resultSet = new ResultSet($response, Query::create(Map {}));
 
         $this->assertEquals(1, $resultSet->getTotalHits());
     }
@@ -224,21 +224,21 @@ class HttpTest extends BaseTest
     /**
      * @group functional
      */
-    public function testPostWith0Body()
+    public function testPostWith0Body() : void
     {
         $client = $this->_getClient();
 
         $index = $client->getIndex('elastica_0_body');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $this->_waitForAllocation($index);
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $tokens = $index->analyze('0');
 
         $this->assertNotEmpty($tokens);
     }
 
-    protected function tearDown()
+    protected function tearDown() : void
     {
         parent::tearDown();
         putenv('http_proxy=');

@@ -1,6 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Aggregation;
 
+use Elastica\ArrayableInterface;
 use Elastica\Exception\InvalidException;
 use Elastica\Filter\AbstractFilter;
 
@@ -15,7 +16,7 @@ class Filter extends AbstractAggregation
      * @param string         $name
      * @param AbstractFilter $filter
      */
-    public function __construct($name, AbstractFilter $filter = null)
+    public function __construct(string $name, ?AbstractFilter $filter = null)
     {
         parent::__construct($name);
 
@@ -31,7 +32,7 @@ class Filter extends AbstractAggregation
      *
      * @return $this
      */
-    public function setFilter(AbstractFilter $filter)
+    public function setFilter(AbstractFilter $filter) : this
     {
         return $this->setParam('filter', $filter);
     }
@@ -41,14 +42,18 @@ class Filter extends AbstractAggregation
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : array
     {
         if (!$this->hasParam('filter')) {
             throw new InvalidException('Filter is required');
         }
 
+        $filter = $this->getParam('filter');
+        if (!$filter instanceof ArrayableInterface) {
+            throw new \RuntimeException('Expected Arrayable, got');
+        }
         $array = array(
-            'filter' => $this->getParam('filter')->toArray(),
+            'filter' => $filter->toArray(),
         );
 
         if ($this->_aggs) {

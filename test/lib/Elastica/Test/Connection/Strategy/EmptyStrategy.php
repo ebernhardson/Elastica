@@ -1,6 +1,7 @@
-<?php
+<?hh // strict
 namespace Elastica\Test\Connection\Strategy;
 
+use Elastica\Connection;
 use Elastica\Connection\Strategy\StrategyInterface;
 
 /**
@@ -10,8 +11,8 @@ use Elastica\Connection\Strategy\StrategyInterface;
  */
 class EmptyStrategy implements StrategyInterface
 {
-    public function getConnection($connections)
+    public function getConnection(array<Connection> $connections) : Connection
     {
-        return;
+        return reset($connections);
     }
 }

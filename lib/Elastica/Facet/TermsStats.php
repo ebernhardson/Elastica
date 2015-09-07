@@ -1,7 +1,8 @@
-<?php
+<?hh // strict
 namespace Elastica\Facet;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Implements the statistical facet on a per term basis.
@@ -19,7 +20,7 @@ class TermsStats extends AbstractFacet
      *
      * @var array
      */
-    protected $_orderTypes = array('term', 'reverse_term', 'count', 'reverse_count',
+    protected array<string> $_orderTypes = array('term', 'reverse_term', 'count', 'reverse_count',
         'total', 'reverse_total', 'min', 'reverse_min', 'max', 'reverse_max', 'mean',
         'reverse_mean', );
 
@@ -30,7 +31,7 @@ class TermsStats extends AbstractFacet
      *
      * @return $this
      */
-    public function setKeyField($keyField)
+    public function setKeyField(string $keyField) : this
     {
         return $this->setParam('key_field', $keyField);
     }
@@ -42,7 +43,7 @@ class TermsStats extends AbstractFacet
      *
      * @return $this
      */
-    public function setValueScript($valueScript)
+    public function setValueScript(string $valueScript) : this
     {
         return $this->setParam('value_script', $valueScript);
     }
@@ -57,7 +58,7 @@ class TermsStats extends AbstractFacet
      *
      * @return $this
      */
-    public function setOrder($type)
+    public function setOrder(string $type) : this
     {
         if (!in_array($type, $this->_orderTypes)) {
             throw new InvalidException('Invalid order type: '.$type);
@@ -73,7 +74,7 @@ class TermsStats extends AbstractFacet
      *
      * @return $this
      */
-    public function setValueField($valueField)
+    public function setValueField(string $valueField) : this
     {
         return $this->setParam('value_field', $valueField);
     }
@@ -85,7 +86,7 @@ class TermsStats extends AbstractFacet
      *
      * @return $this
      */
-    public function setSize($size)
+    public function setSize(int $size) : this
     {
         return $this->setParam('size', (int) $size);
     }
@@ -98,7 +99,7 @@ class TermsStats extends AbstractFacet
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $this->_setFacetParam('terms_stats', $this->_params);
 

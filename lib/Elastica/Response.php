@@ -1,8 +1,9 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Exception\JSONParseException;
 use Elastica\Exception\NotFoundException;
+use Indexish;
 
 /**
  * Elastica Response object.
@@ -18,42 +19,42 @@ class Response
      *
      * @var float Query time
      */
-    protected $_queryTime = null;
+    protected ?float $_queryTime = null;
 
     /**
      * Response string (json).
      *
      * @var string Response
      */
-    protected $_responseString = '';
+    protected string $_responseString = '';
 
     /**
      * Error.
      *
      * @var bool Error
      */
-    protected $_error = false;
+    protected bool $_error = false;
 
     /**
      * Transfer info.
      *
      * @var array transfer info
      */
-    protected $_transferInfo = array();
+    protected array $_transferInfo = array();
 
     /**
      * Response.
      *
-     * @var \Elastica\Response Response object
+     * @var array Response
      */
-    protected $_response = null;
+    protected mixed $_response = null;
 
     /**
      * HTTP response status code.
      *
      * @var int
      */
-    protected $_status = null;
+    protected ?int $_status = null;
 
     /**
      * Construct.
@@ -61,12 +62,12 @@ class Response
      * @param string|array $responseString Response string (json)
      * @param int          $responseStatus http status code
      */
-    public function __construct($responseString, $responseStatus = null)
+    public function __construct(mixed $responseString, ?int $responseStatus = null)
     {
-        if (is_array($responseString)) {
+        if ($responseString instanceof Indexish) {
             $this->_response = $responseString;
         } else {
-            $this->_responseString = $responseString;
+            $this->_responseString = (string) $responseString;
         }
         $this->_status = $responseStatus;
     }
@@ -76,13 +77,13 @@ class Response
      *
      * @return string Error message
      */
-    public function getError()
+    public function getError() : string
     {
         $message = '';
         $response = $this->getData();
 
-        if (isset($response['error'])) {
-            $message = $response['error'];
+        if (isset(/* UNSAFE_EXPR */ $response['error'])) {
+            $message = (string) /* UNSAFE_EXPR */ $response['error'];
         }
 
         return $message;
@@ -93,11 +94,11 @@ class Response
      *
      * @return bool True if response has error
      */
-    public function hasError()
+    public function hasError() : bool
     {
         $response = $this->getData();
 
-        if (isset($response['error'])) {
+        if (isset(/* UNSAFE_EXPR */ $response['error'])) {
             return true;
         }
 
@@ -109,7 +110,7 @@ class Response
      *
      * @return bool True if response has failed shards
      */
-    public function hasFailedShards()
+    public function hasFailedShards() : bool
     {
         try {
             $shardsStatistics = $this->getShardsStatistics();
@@ -125,9 +126,12 @@ class Response
      *
      * @return bool True if ok
      */
-    public function isOk()
+    public function isOk() : bool
     {
         $data = $this->getData();
+        if (!$data instanceof Indexish) {
+            throw new \RuntimeException('expected array');
+        }
 
         // Bulk insert checks. Check every item
         if (isset($data['status'])) {
@@ -154,7 +158,7 @@ class Response
             return true;
         }
 
-        if ($this->_status >= 200 && $this->_status <= 300) {
+        if ($this->_status !== null && ($this->_status >= 200 && $this->_status <= 300)) {
             // http status is ok
             return true;
         }
@@ -165,7 +169,7 @@ class Response
     /**
      * @return int
      */
-    public function getStatus()
+    public function getStatus() : ?int
     {
         return $this->_status;
     }
@@ -173,31 +177,33 @@ class Response
     /**
      * Response data array.
      *
-     * @return array Response data array
+     * @return array|string Response data array
      */
-    public function getData()
+    public function getData() : mixed
     {
         if ($this->_response == null) {
-            $response = $this->_responseString;
-            if ($response === false) {
+            if ($this->_responseString === null) {
                 $this->_error = true;
+                $decoded = null;
             } else {
                 try {
-                    $response = JSON::parse($response);
+                    $decoded = JSON::parse($this->_responseString);
                 } catch (JSONParseException $e) {
                     // leave response as is if parse fails
+                    $this->_error = true;
+                    $decoded = null;
                 }
             }
 
-            if (empty($response)) {
-                $response = array();
+            if ($decoded === '') {
+                $decoded = array();
+            } elseif (is_string($decoded)) {
+                $decoded  = array('message' => $decoded);
+            } elseif ($decoded === null) {
+                $decoded = $this->_responseString;
             }
 
-            if (is_string($response)) {
-                $response = array('message' => $response);
-            }
-
-            $this->_response = $response;
+            $this->_response = $decoded;
         }
 
         return $this->_response;
@@ -208,7 +214,7 @@ class Response
      *
      * @return array Information about the curl request.
      */
-    public function getTransferInfo()
+    public function getTransferInfo() : array
     {
         return $this->_transferInfo;
     }
@@ -221,7 +227,7 @@ class Response
      *
      * @return $this
      */
-    public function setTransferInfo(array $transferInfo)
+    public function setTransferInfo(array $transferInfo) : this
     {
         $this->_transferInfo = $transferInfo;
 
@@ -233,9 +239,9 @@ class Response
      *
      * @return float Query time
      */
-    public function getQueryTime()
+    public function getQueryTime() : float
     {
-        return $this->_queryTime;
+        return (float) $this->_queryTime;
     }
 
     /**
@@ -245,7 +251,7 @@ class Response
      *
      * @return $this
      */
-    public function setQueryTime($queryTime)
+    public function setQueryTime($queryTime) : this
     {
         $this->_queryTime = $queryTime;
 
@@ -259,15 +265,15 @@ class Response
      *
      * @return int Time request took
      */
-    public function getEngineTime()
+    public function getEngineTime() : int
     {
         $data = $this->getData();
 
-        if (!isset($data['took'])) {
+        if (!isset(/* UNSAFE_EXPR */ $data['took'])) {
             throw new NotFoundException('Unable to find the field [took]from the response');
         }
 
-        return $data['took'];
+        return (int) /* UNSAFE_EXPR */ $data['took'];
     }
 
     /**
@@ -277,15 +283,15 @@ class Response
      *
      * @return array
      */
-    public function getShardsStatistics()
+    public function getShardsStatistics() : array
     {
         $data = $this->getData();
 
-        if (!isset($data['_shards'])) {
+        if (!isset(/* UNSAFE_EXPR */ $data['_shards'])) {
             throw new NotFoundException('Unable to find the field [_shards] from the response');
         }
 
-        return $data['_shards'];
+        return /* UNSAFE_EXPR */ $data['_shards'];
     }
 
     /**
@@ -295,14 +301,14 @@ class Response
      *
      * @return string
      */
-    public function getScrollId()
+    public function getScrollId() : string
     {
         $data = $this->getData();
 
-        if (!isset($data['_scroll_id'])) {
+        if (!isset(/* UNSAFE_EXPR */ $data['_scroll_id'])) {
             throw new NotFoundException('Unable to find the field [_scroll_id] from the response');
         }
 
-        return $data['_scroll_id'];
+        return /* UNSAFE_EXPR */ $data['_scroll_id'];
     }
 }

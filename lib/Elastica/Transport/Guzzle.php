@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Transport;
 
 use Elastica\Connection;
@@ -11,6 +11,7 @@ use Elastica\Response;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\Stream\Stream;
+use Indexish;
 
 /**
  * Elastica Guzzle Transport object.
@@ -24,14 +25,14 @@ class Guzzle extends AbstractTransport
      *
      * @var string Http scheme
      */
-    protected $_scheme = 'http';
+    protected string $_scheme = 'http';
 
     /**
      * Curl resource to reuse.
      *
-     * @var resource Guzzle resource to reuse
+     * @var Client Guzzle resource to reuse
      */
-    protected static $_guzzleClientConnection = null;
+    protected static ?Client $_guzzleClientConnection = null;
 
     /**
      * Makes calls to the elasticsearch server.
@@ -45,9 +46,9 @@ class Guzzle extends AbstractTransport
      * @throws \Elastica\Exception\ResponseException
      * @throws \Elastica\Exception\Connection\HttpException
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function exec(Request $request, array $params)
+    public async function exec(Request $request, Indexish<string, mixed> $params) : Awaitable<Response>
     {
         $connection = $this->getConnection();
 
@@ -85,7 +86,7 @@ class Guzzle extends AbstractTransport
                 $req->setMethod(Request::POST);
             }
 
-            if (is_array($data)) {
+            if ($data instanceof Indexish) {
                 $content = JSON::stringify($data, 'JSON_ELASTICSEARCH');
             } else {
                 $content = $data;
@@ -125,11 +126,12 @@ class Guzzle extends AbstractTransport
     /**
      * Return Guzzle resource.
      *
+     * @param string $baseUrl
      * @param bool $persistent False if not persistent connection
      *
-     * @return resource Connection resource
+     * @return Client Connection resource
      */
-    protected function _getGuzzleClient($baseUrl, $persistent = true)
+    protected function _getGuzzleClient(string $baseUrl, bool $persistent = true) : Client
     {
         if (!$persistent || !self::$_guzzleClientConnection) {
             self::$_guzzleClientConnection = new Client(array('base_url' => $baseUrl));
@@ -143,7 +145,7 @@ class Guzzle extends AbstractTransport
      *
      * @param \Elastica\Connection $connection
      */
-    protected function _getBaseUrl(Connection $connection)
+    protected function _getBaseUrl(Connection $connection) : string
     {
         // If url is set, url is taken. Otherwise port, host and path
         $url = $connection->hasConfig('url') ? $connection->getConfig('url') : '';
@@ -162,7 +164,7 @@ class Guzzle extends AbstractTransport
      *
      * @param \Elastica\Request $request
      */
-    protected function _getActionPath(Request $request)
+    protected function _getActionPath(Request $request) : string
     {
         $action = $request->getPath();
         if ($action) {

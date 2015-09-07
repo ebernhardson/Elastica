@@ -1,9 +1,11 @@
-<?php
+<?hh
 namespace Elastica\Type;
 
 use Elastica\Client;
 use Elastica\Exception\InvalidException;
 use Elastica\Index;
+use Elastica\ResultSet;
+use Elastica\Search;
 use Elastica\SearchableInterface;
 use Elastica\Type as BaseType;
 use Elastica\Util;
@@ -35,56 +37,56 @@ abstract class AbstractType implements SearchableInterface
      *
      * @var string Index name
      */
-    protected $_indexName = '';
+    protected string $_indexName = '';
 
     /**
      * Index name.
      *
      * @var string Index name
      */
-    protected $_typeName = '';
+    protected string $_typeName = '';
 
     /**
      * Client.
      *
      * @var \Elastica\Client Client object
      */
-    protected $_client = null;
+    protected Client $_client;
 
     /**
      * Index.
      *
      * @var \Elastica\Index Index object
      */
-    protected $_index = null;
+    protected Index $_index;
 
     /**
      * Type.
      *
      * @var \Elastica\Type Type object
      */
-    protected $_type = null;
+    protected BaseType $_type;
 
     /**
      * Mapping.
      *
      * @var array Mapping
      */
-    protected $_mapping = array();
+    protected array $_mapping = array();
 
     /**
      * Index params.
      *
      * @var array Index  params
      */
-    protected $_indexParams = array();
+    protected array $_indexParams = array();
 
     /**
      * Source.
      *
      * @var bool Source
      */
-    protected $_source = true;
+    protected bool $_source = true;
 
     /**
      * Creates index object with client connection.
@@ -96,7 +98,7 @@ abstract class AbstractType implements SearchableInterface
      *
      * @throws \Elastica\Exception\InvalidException
      */
-    public function __construct(Client $client = null)
+    public function __construct(?Client $client = null)
     {
         if (!$client) {
             $client = new Client();
@@ -119,15 +121,17 @@ abstract class AbstractType implements SearchableInterface
      * Creates the index and sets the mapping for this type.
      *
      * @param bool $recreate OPTIONAL Recreates the index if true (default = false)
+     *
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function create($recreate = false)
+    public async function create(bool $recreate = false) : Awaitable<\Elastica\Response>
     {
-        $this->getIndex()->create($this->_indexParams, $recreate);
+        await $this->getIndex()->create($this->_indexParams, $recreate);
 
         $mapping = new Mapping($this->getType());
         $mapping->setProperties($this->_mapping);
         $mapping->setSource(array('enabled' => $this->_source));
-        $mapping->send();
+        return await $mapping->send();
     }
 
     /**
@@ -136,7 +140,7 @@ abstract class AbstractType implements SearchableInterface
      *
      * @return \Elastica\Search
      */
-    public function createSearch($query = '', $options = null)
+    public function createSearch(mixed $query = '', mixed $options = null) : Search
     {
         return $this->getType()->createSearch($query, $options);
     }
@@ -146,11 +150,11 @@ abstract class AbstractType implements SearchableInterface
      *
      * @param string|array|\Elastica\Query $query Array with all query data inside or a Elastica\Query object
      *
-     * @return \Elastica\ResultSet ResultSet with all results inside
+     * @return Awaitable<\Elastica\ResultSet> ResultSet with all results inside
      *
      * @see \Elastica\SearchableInterface::search
      */
-    public function search($query = '', $options = null)
+    public function search(mixed $query = '', mixed $options = null) : Awaitable<ResultSet>
     {
         return $this->getType()->search($query, $options = null);
     }
@@ -160,11 +164,11 @@ abstract class AbstractType implements SearchableInterface
      *
      * @param string|array|\Elastica\Query $query Array with all query data inside or a Elastica\Query object
      *
-     * @return int number of documents matching the query
+     * @return Awaitable<int> number of documents matching the query
      *
      * @see \Elastica\SearchableInterface::count
      */
-    public function count($query = '')
+    public function count(mixed $query = '') : Awaitable<int>
     {
         return $this->getType()->count($query);
     }
@@ -174,7 +178,7 @@ abstract class AbstractType implements SearchableInterface
      *
      * @return \Elastica\Index Index object
      */
-    public function getIndex()
+    public function getIndex() : Index
     {
         return $this->_index;
     }
@@ -184,7 +188,7 @@ abstract class AbstractType implements SearchableInterface
      *
      * @return \Elastica\Type Type object
      */
-    public function getType()
+    public function getType() : BaseType
     {
         return $this->_type;
     }
@@ -198,7 +202,7 @@ abstract class AbstractType implements SearchableInterface
      *
      * @return string Converted date string
      */
-    public function convertDate($date)
+    public function convertDate(int $date) : string
     {
         return Util::convertDate($date);
     }

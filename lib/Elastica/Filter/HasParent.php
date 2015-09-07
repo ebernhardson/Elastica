@@ -1,5 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Filter;
+
+use Indexish;
 
 /**
  * Returns child documents having parent docs matching the query.
@@ -14,7 +16,7 @@ class HasParent extends AbstractFilter
      * @param string|\Elastica\Query|\Elastica\Filter\AbstractFilter $query Query string or a Query object or a filter
      * @param string|\Elastica\Type                                  $type  Parent document type
      */
-    public function __construct($query, $type)
+    public function __construct(mixed $query, mixed $type)
     {
         if ($query instanceof AbstractFilter) {
             $this->setFilter($query);
@@ -31,7 +33,7 @@ class HasParent extends AbstractFilter
      *
      * @return $this
      */
-    public function setQuery($query)
+    public function setQuery(mixed $query) : this
     {
         return $this->setParam('query', \Elastica\Query::create($query));
     }
@@ -43,7 +45,7 @@ class HasParent extends AbstractFilter
      *
      * @return $this
      */
-    public function setFilter($filter)
+    public function setFilter(AbstractFilter $filter) : this
     {
         return $this->setParam('filter', $filter);
     }
@@ -55,7 +57,7 @@ class HasParent extends AbstractFilter
      *
      * @return $this
      */
-    public function setType($type)
+    public function setType(mixed $type) : this
     {
         if ($type instanceof \Elastica\Type) {
             $type = $type->getName();
@@ -67,13 +69,14 @@ class HasParent extends AbstractFilter
     /**
      * {@inheritdoc}
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $array = parent::toArray();
 
         $baseName = $this->_getBaseName();
 
-        if (isset($array[$baseName]['query'])) {
+        if (isset(/* UNSAFE_EXPR */ $array[$baseName]['query'])) {
+            /* UNSAFE_EXPR */
             $array[$baseName]['query'] = $array[$baseName]['query']['query'];
         }
 

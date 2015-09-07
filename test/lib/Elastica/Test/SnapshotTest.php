@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Document;
@@ -17,14 +17,14 @@ class SnapshotTest extends Base
      */
     protected $_index;
 
-    protected $_snapshotPath = '/tmp/backups/';
+    protected string $_snapshotPath = '/tmp/backups/';
 
     /**
      * @var Document[]
      */
-    protected $_docs;
+    protected ?array<\Elastica\Document> $_docs;
 
-    protected function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
         $this->_snapshot = new Snapshot($this->_getClient());
@@ -35,77 +35,77 @@ class SnapshotTest extends Base
             new Document('2', array('city' => 'San Luis Obispo')),
             new Document('3', array('city' => 'San Francisco')),
         );
-        $this->_index->getType('test')->addDocuments($this->_docs);
-        $this->_index->refresh();
+        $this->_index->getType('test')->addDocuments($this->_docs)->getWaitHandle()->join();
+        $this->_index->refresh()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testRegisterRepository()
+    public function testRegisterRepository() : void
     {
         $repositoryName = 'testrepo';
         $location = $this->_snapshotPath.'backup1';
 
-        $response = $this->_snapshot->registerRepository($repositoryName, 'fs', array('location' => $location));
+        $response = $this->_snapshot->registerRepository($repositoryName, 'fs', array('location' => $location))->getWaitHandle()->join();
         $this->assertTrue($response->isOk());
 
-        $response = $this->_snapshot->getRepository($repositoryName);
+        $response = $this->_snapshot->getRepository($repositoryName)->getWaitHandle()->join();
         $this->assertEquals($location, $response['settings']['location']);
 
         // attempt to retrieve a repository which does not exist
         $this->setExpectedException('Elastica\Exception\NotFoundException');
-        $this->_snapshot->getRepository('foobar');
+        $this->_snapshot->getRepository('foobar')->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testSnapshotAndRestore()
+    public function testSnapshotAndRestore() : void
     {
         $repositoryName = 'testrepo';
         $location = $this->_snapshotPath.'backup2';
 
         // register the repository
-        $response = $this->_snapshot->registerRepository($repositoryName, 'fs', array('location' => $location));
+        $response = $this->_snapshot->registerRepository($repositoryName, 'fs', array('location' => $location))->getWaitHandle()->join();
         $this->assertTrue($response->isOk());
 
         // create a snapshot of our test index
         $snapshotName = 'test_snapshot_1';
-        $response = $this->_snapshot->createSnapshot($repositoryName, $snapshotName, array('indices' => $this->_index->getName()), true);
+        $response = $this->_snapshot->createSnapshot($repositoryName, $snapshotName, array('indices' => $this->_index->getName()), true)->getWaitHandle()->join();
 
         // ensure that the snapshot was created properly
         $this->assertTrue($response->isOk());
         $this->assertArrayHasKey('snapshot', $response->getData());
         $data = $response->getData();
         $this->assertContains($this->_index->getName(), $data['snapshot']['indices']);
-        $this->assertEquals(1, sizeof($data['snapshot']['indices'])); // only the specified index should be present
+        $this->assertEquals(1, count($data['snapshot']['indices'])); // only the specified index should be present
         $this->assertEquals($snapshotName, $data['snapshot']['snapshot']);
 
         // retrieve data regarding the snapshot
-        $response = $this->_snapshot->getSnapshot($repositoryName, $snapshotName);
+        $response = $this->_snapshot->getSnapshot($repositoryName, $snapshotName)->getWaitHandle()->join();
         $this->assertContains($this->_index->getName(), $response['indices']);
 
         // delete our test index
-        $this->_index->delete();
+        $this->_index->delete()->getWaitHandle()->join();
 
         // restore the index from our snapshot
-        $response = $this->_snapshot->restoreSnapshot($repositoryName, $snapshotName, array(), true);
+        $response = $this->_snapshot->restoreSnapshot($repositoryName, $snapshotName, array(), true)->getWaitHandle()->join();
         $this->assertTrue($response->isOk());
 
-        $this->_index->refresh();
-        $this->_index->optimize();
+        $this->_index->refresh()->getWaitHandle()->join();
+        $this->_index->optimize()->getWaitHandle()->join();
 
         // ensure that the index has been restored
-        $count = $this->_index->getType('test')->count();
-        $this->assertEquals(sizeof($this->_docs), $count);
+        $count = $this->_index->getType('test')->count()->getWaitHandle()->join();
+        $this->assertEquals(count($this->_docs), $count);
 
         // delete the snapshot
-        $response = $this->_snapshot->deleteSnapshot($repositoryName, $snapshotName);
+        $response = $this->_snapshot->deleteSnapshot($repositoryName, $snapshotName)->getWaitHandle()->join();
         $this->assertTrue($response->isOk());
 
         // ensure that the snapshot has been deleted
         $this->setExpectedException('Elastica\Exception\NotFoundException');
-        $this->_snapshot->getSnapshot($repositoryName, $snapshotName);
+        $this->_snapshot->getSnapshot($repositoryName, $snapshotName)->getWaitHandle()->join();
     }
 }

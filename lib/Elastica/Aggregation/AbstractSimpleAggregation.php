@@ -1,7 +1,9 @@
-<?php
+<?hh
 namespace Elastica\Aggregation;
 
+use Elastica\Aggregation\AbstractSimpleAggregation;
 use Elastica\Script;
+use Indexish;
 
 abstract class AbstractSimpleAggregation extends AbstractAggregation
 {
@@ -12,7 +14,7 @@ abstract class AbstractSimpleAggregation extends AbstractAggregation
      *
      * @return $this
      */
-    public function setField($field)
+    public function setField(string $field) : AbstractSimpleAggregation
     {
         return $this->setParam('field', $field);
     }
@@ -24,26 +26,29 @@ abstract class AbstractSimpleAggregation extends AbstractAggregation
      *
      * @return $this
      */
-    public function setScript($script)
-    {
+    public function setScript(mixed $script) : AbstractSimpleAggregation {
         return $this->setParam('script', $script);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $array = parent::toArray();
 
         $baseName = $this->_getBaseName();
 
-        if (isset($array[$baseName]['script']) && is_array($array[$baseName]['script'])) {
-            $script = $array[$baseName]['script'];
+        if (isset(/* UNSAFE_EXPR */ $array[$baseName]['script']) && /* UNSAFE_EXPR */ $array[$baseName]['script'] instanceof Indexish) {
 
-            unset($array[$baseName]['script']);
+            $script = /* UNSAFE_EXPR */ $array[$baseName]['script'];
 
-            $array[$baseName] = array_merge($array[$baseName], $script);
+            unset(/* UNSAFE_EXPR */ $array[$baseName]['script']);
+
+            foreach ($script as $k => $v) {
+				/* UNSAFE_EXPR */
+                $array[$baseName][$k] = $v;
+            }
         }
 
         return $array;

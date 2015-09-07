@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Filter\GeoBoundingBox;
@@ -9,7 +9,7 @@ class GeoBoundingBoxTest extends BaseTest
     /**
      * @group unit
      */
-    public function testAddCoordinates()
+    public function testAddCoordinates() : void
     {
         $key = 'pin.location';
         $coords = array('40.73, -74.1', '40.01, -71.12');
@@ -27,7 +27,7 @@ class GeoBoundingBoxTest extends BaseTest
      * @group unit
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testAddCoordinatesInvalidException()
+    public function testAddCoordinatesInvalidException() : void
     {
         $filter = new GeoBoundingBox('foo', array());
     }
@@ -35,19 +35,19 @@ class GeoBoundingBoxTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $key = 'pin.location';
         $coords = array('40.73, -74.1', '40.01, -71.12');
         $filter = new GeoBoundingBox($key, $coords);
 
         $expectedArray = array(
-            'geo_bounding_box' => array(
+            'geo_bounding_box' => Map {
                 $key => array(
                     'top_left' => $coords[0],
                     'bottom_right' => $coords[1],
                 ),
-            ),
+            },
         );
 
         $this->assertEquals($expectedArray, $filter->toArray());

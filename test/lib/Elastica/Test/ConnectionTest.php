@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Connection;
@@ -10,7 +10,7 @@ class ConnectionTest extends BaseTest
     /**
      * @group unit
      */
-    public function testEmptyConstructor()
+    public function testEmptyConstructor() : void
     {
         $connection = new Connection();
         $this->assertEquals(Connection::DEFAULT_HOST, $connection->getHost());
@@ -19,14 +19,14 @@ class ConnectionTest extends BaseTest
         $this->assertInstanceOf('Elastica\Transport\AbstractTransport', $connection->getTransportObject());
         $this->assertEquals(Connection::TIMEOUT, $connection->getTimeout());
         $this->assertEquals(Connection::CONNECT_TIMEOUT, $connection->getConnectTimeout());
-        $this->assertEquals(array(), $connection->getConfig());
+        $this->assertEquals(array(), $connection->getFullConfig());
         $this->assertTrue($connection->isEnabled());
     }
 
     /**
      * @group unit
      */
-    public function testEnabledDisable()
+    public function testEnabledDisable() : void
     {
         $connection = new Connection();
         $this->assertTrue($connection->isEnabled());
@@ -40,30 +40,30 @@ class ConnectionTest extends BaseTest
      * @group unit
      * @expectedException \Elastica\Exception\ConnectionException
      */
-    public function testInvalidConnection()
+    public function testInvalidConnection() : void
     {
-        $connection = new Connection(array('port' => 9999));
+        $connection = new Connection(Map {'port' => 39999});
 
         $request = new Request('_status', Request::GET);
         $request->setConnection($connection);
 
         // Throws exception because no valid connection
-        $request->send();
+        $request->send()->getWaitHandle()->join();
     }
 
     /**
      * @group unit
      */
-    public function testCreate()
+    public function testCreate() : void
     {
         $connection = Connection::create();
         $this->assertInstanceOf('Elastica\Connection', $connection);
 
-        $connection = Connection::create(array());
+        $connection = Connection::create(Map {});
         $this->assertInstanceOf('Elastica\Connection', $connection);
 
         $port = 9999;
-        $connection = Connection::create(array('port' => $port));
+        $connection = Connection::create(Map {'port' => $port});
         $this->assertInstanceOf('Elastica\Connection', $connection);
         $this->assertEquals($port, $connection->getPort());
     }
@@ -73,7 +73,7 @@ class ConnectionTest extends BaseTest
      * @expectedException \Elastica\Exception\InvalidException
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testCreateInvalid()
+    public function testCreateInvalid() : void
     {
         Connection::create('test');
     }
@@ -81,10 +81,10 @@ class ConnectionTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetConfig()
+    public function testGetConfig() : void
     {
         $url = 'test';
-        $connection = new Connection(array('config' => array('url' => $url)));
+        $connection = new Connection(Map {'config' => Map {'url' => $url}});
         $this->assertTrue($connection->hasConfig('url'));
         $this->assertEquals($url, $connection->getConfig('url'));
     }
@@ -92,9 +92,9 @@ class ConnectionTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetConfigWithArrayUsedForTransport()
+    public function testGetConfigWithArrayUsedForTransport() : void
     {
-        $connection = new Connection(array('transport' => array('type' => 'Http')));
+        $connection = new Connection(Map {'transport' => Map {'type' => 'Http'}});
         $this->assertInstanceOf('Elastica\Transport\Http', $connection->getTransportObject());
     }
 
@@ -103,9 +103,9 @@ class ConnectionTest extends BaseTest
      * @expectedException Elastica\Exception\InvalidException
      * @expectedExceptionMessage Invalid transport
      */
-    public function testGetInvalidConfigWithArrayUsedForTransport()
+    public function testGetInvalidConfigWithArrayUsedForTransport() : void
     {
-        $connection = new Connection(array('transport' => array('type' => 'invalidtransport')));
+        $connection = new Connection(Map {'transport' => Map {'type' => 'invalidtransport'}});
         $connection->getTransportObject();
     }
 
@@ -113,7 +113,7 @@ class ConnectionTest extends BaseTest
      * @group unit
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testGetConfigInvalidValue()
+    public function testGetConfigInvalidValue() : void
     {
         $connection = new Connection();
         $connection->getConfig('url');

@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Filter;
 
 use Elastica\Index as ElasticaIndex;
@@ -26,7 +26,7 @@ class Indices extends AbstractFilter
      *
      * @return $this
      */
-    public function setIndices(array $indices)
+    public function setIndices(array $indices) : this
     {
         $this->setParam('indices', array());
         foreach ($indices as $index) {
@@ -43,7 +43,7 @@ class Indices extends AbstractFilter
      *
      * @return $this
      */
-    public function addIndex($index)
+    public function addIndex(mixed $index) : this
     {
         if ($index instanceof ElasticaIndex) {
             $index = $index->getName();
@@ -59,7 +59,7 @@ class Indices extends AbstractFilter
      *
      * @return $this
      */
-    public function setFilter(AbstractFilter $filter)
+    public function setFilter(AbstractFilter $filter) : this
     {
         return $this->setParam('filter', $filter);
     }
@@ -71,7 +71,7 @@ class Indices extends AbstractFilter
      *
      * @return $this
      */
-    public function setNoMatchFilter(AbstractFilter $filter)
+    public function setNoMatchFilter(AbstractFilter $filter) : this
     {
         return $this->setParam('no_match_filter', $filter);
     }

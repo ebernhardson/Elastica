@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Aggregation;
 
 use Elastica\Aggregation\Nested;
@@ -10,7 +10,7 @@ use Elastica\Type\Mapping;
 
 class ReverseNestedTest extends BaseAggregationTest
 {
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : \Elastica\Index
     {
         $index = $this->_createIndex();
         $mapping = new Mapping();
@@ -24,10 +24,10 @@ class ReverseNestedTest extends BaseAggregationTest
             ),
         ));
         $type = $index->getType('test');
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
         $type->addDocuments(array(
-            new Document(1, array(
+            new Document('1', array(
                 'comments' => array(
                     array(
                         'name' => 'bob',
@@ -40,7 +40,7 @@ class ReverseNestedTest extends BaseAggregationTest
                 ),
                 'tags' => array('foo', 'bar'),
             )),
-            new Document(2, array(
+            new Document('2', array(
                  'comments' => array(
                     array(
                         'name' => 'bob',
@@ -53,9 +53,9 @@ class ReverseNestedTest extends BaseAggregationTest
                 ),
                 'tags' => array('foo', 'baz'),
             )),
-        ));
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -63,7 +63,7 @@ class ReverseNestedTest extends BaseAggregationTest
     /**
      * @group unit
      */
-    public function testPathNotSetIfNull()
+    public function testPathNotSetIfNull() : void
     {
         $agg = new ReverseNested('nested');
         $this->assertFalse($agg->hasParam('path'));
@@ -72,7 +72,7 @@ class ReverseNestedTest extends BaseAggregationTest
     /**
      * @group unit
      */
-    public function testPathSetIfNotNull()
+    public function testPathSetIfNotNull() : void
     {
         $agg = new ReverseNested('nested', 'some_field');
         $this->assertEquals('some_field', $agg->getParam('path'));
@@ -81,7 +81,7 @@ class ReverseNestedTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testReverseNestedAggregation()
+    public function testReverseNestedAggregation() : void
     {
         $agg = new Nested('comments', 'comments');
         $names = new Terms('name');
@@ -99,7 +99,8 @@ class ReverseNestedTest extends BaseAggregationTest
 
         $query = new Query();
         $query->addAggregation($agg);
-        $results = $this->_getIndexForTest()->search($query)->getAggregation('comments');
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
+        $results = $response->getAggregation('comments');
 
         $this->assertArrayHasKey('name', $results);
         $nameResults = $results['name'];

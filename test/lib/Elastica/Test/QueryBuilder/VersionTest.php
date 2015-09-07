@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\QueryBuilder;
 
 use Elastica\QueryBuilder\DSL;
@@ -10,7 +10,7 @@ class VersionTest extends BaseTest
     /**
      * @group unit
      */
-    public function testVersions()
+    public function testVersions() : void
     {
         $dsl = array(
             new DSL\Query(),
@@ -35,7 +35,7 @@ class VersionTest extends BaseTest
         }
     }
 
-    private function assertVersions(Version $version, array $dsl)
+    private function assertVersions(Version $version, array $dsl) : void
     {
         foreach ($version->getQueries() as $query) {
             $this->assertTrue(

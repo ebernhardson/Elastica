@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Aggregation;
 
 use Elastica\Aggregation\Max;
@@ -8,18 +8,18 @@ use Elastica\Script;
 
 class MaxTest extends BaseAggregationTest
 {
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : \Elastica\Index
     {
         $index = $this->_createIndex();
 
         $index->getType('test')->addDocuments(array(
-            new Document(1, array('price' => 5)),
-            new Document(2, array('price' => 8)),
-            new Document(3, array('price' => 1)),
-            new Document(4, array('price' => 3)),
-        ));
+            new Document('1', array('price' => 5)),
+            new Document('2', array('price' => 8)),
+            new Document('3', array('price' => 1)),
+            new Document('4', array('price' => 3)),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -27,24 +27,24 @@ class MaxTest extends BaseAggregationTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $expected = array(
-            'max' => array(
+            'max' => Map {
                 'field' => 'price',
                 'script' => '_value * conversion_rate',
-                'params' => array(
+                'params' => Map {
                     'conversion_rate' => 1.2,
-                ),
-            ),
+                },
+            },
             'aggs' => array(
-                'subagg' => array('max' => array('field' => 'foo')),
+                'subagg' => array('max' => Map {'field' => 'foo'}),
             ),
         );
 
         $agg = new Max('min_price_in_euros');
         $agg->setField('price');
-        $agg->setScript(new Script('_value * conversion_rate', array('conversion_rate' => 1.2)));
+        $agg->setScript(new Script('_value * conversion_rate', Map {'conversion_rate' => 1.2}));
         $max = new Max('subagg');
         $max->setField('foo');
         $agg->addAggregation($max);
@@ -55,7 +55,7 @@ class MaxTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testMaxAggregation()
+    public function testMaxAggregation() : void
     {
         $index = $this->_getIndexForTest();
 
@@ -64,15 +64,15 @@ class MaxTest extends BaseAggregationTest
 
         $query = new Query();
         $query->addAggregation($agg);
-        $results = $index->search($query)->getAggregation('min_price');
+        $results = $index->search($query)->getWaitHandle()->join()->getAggregation('min_price');
 
         $this->assertEquals(8, $results['value']);
 
         // test using a script
-        $agg->setScript(new Script('_value * conversion_rate', array('conversion_rate' => 1.2)));
+        $agg->setScript(new Script('_value * conversion_rate', Map {'conversion_rate' => 1.2}));
         $query = new Query();
         $query->addAggregation($agg);
-        $results = $index->search($query)->getAggregation('min_price');
+        $results = $index->search($query)->getWaitHandle()->join()->getAggregation('min_price');
 
         $this->assertEquals(8 * 1.2, $results['value']);
     }

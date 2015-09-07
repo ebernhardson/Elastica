@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\QueryBuilder\DSL;
 
 use Elastica\Filter\Exists;
@@ -10,7 +10,7 @@ class QueryTest extends AbstractDSLTest
     /**
      * @group unit
      */
-    public function testType()
+    public function testType() : void
     {
         $queryDSL = new DSL\Query();
 
@@ -21,7 +21,7 @@ class QueryTest extends AbstractDSLTest
     /**
      * @group unit
      */
-    public function testMatch()
+    public function testMatch() : void
     {
         $queryDSL = new DSL\Query();
 
@@ -33,7 +33,7 @@ class QueryTest extends AbstractDSLTest
     /**
      * @group unit
      */
-    public function testInterface()
+    public function testInterface() : void
     {
         $queryDSL = new DSL\Query();
 

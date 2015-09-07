@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Class to handle params.
@@ -15,16 +16,16 @@ class Param implements ArrayableInterface
     /**
      * Params.
      *
-     * @var array
+     * @var <string, mixed>
      */
-    protected $_params = array();
+    protected Map<string, mixed> $_params = Map {};
 
     /**
      * Raw Params.
      *
-     * @var array
+     * @var Map<string, mixed>
      */
-    protected $_rawParams = array();
+    protected Map<string, mixed> $_rawParams = Map {};
 
     /**
      * Converts the params to an array. A default implementation exist to create
@@ -33,7 +34,7 @@ class Param implements ArrayableInterface
      *
      * @return array Filter array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $data = array($this->_getBaseName() => $this->getParams());
 
@@ -51,14 +52,18 @@ class Param implements ArrayableInterface
      *
      * @return array
      */
-    protected function _convertArrayable(array $array)
+    protected function _convertArrayable(Indexish<string, mixed> $array) : Indexish<string, mixed>
     {
-        $arr = array();
+		if ( $array instanceof Map) {
+			$arr = Map {};
+		} else {
+	        $arr = array();
+		}
 
         foreach ($array as $key => $value) {
             if ($value instanceof ArrayableInterface) {
                 $arr[$value instanceof NameableInterface ? $value->getName() : $key] = $value->toArray();
-            } elseif (is_array($value)) {
+            } elseif ($value instanceof Indexish) {
                 $arr[$key] = $this->_convertArrayable($value);
             } else {
                 $arr[$key] = $value;
@@ -75,7 +80,7 @@ class Param implements ArrayableInterface
      *
      * @return string name
      */
-    protected function _getBaseName()
+    protected function _getBaseName() : string
     {
         return Util::getParamName($this);
     }
@@ -88,7 +93,7 @@ class Param implements ArrayableInterface
      *
      * @return $this
      */
-    protected function _setRawParam($key, $value)
+    protected function _setRawParam(string $key, mixed $value) : this
     {
         $this->_rawParams[$key] = $value;
 
@@ -103,7 +108,7 @@ class Param implements ArrayableInterface
      *
      * @return $this
      */
-    public function setParam($key, $value)
+    public function setParam(string $key, mixed $value) : this
     {
         $this->_params[$key] = $value;
 
@@ -117,7 +122,7 @@ class Param implements ArrayableInterface
      *
      * @return $this
      */
-    public function setParams(array $params)
+    public function setParams(Map<string, mixed> $params) : this
     {
         $this->_params = $params;
 
@@ -134,16 +139,19 @@ class Param implements ArrayableInterface
      *
      * @return $this
      */
-    public function addParam($key, $value)
+    public function addParam(string $key, mixed $value) : this
     {
         if ($key != null) {
             if (!isset($this->_params[$key])) {
                 $this->_params[$key] = array();
             }
 
+            /* UNSAFE_EXPR */
             $this->_params[$key][] = $value;
-        } else {
+        } elseif ($value instanceof :utableMap) {
             $this->_params = $value;
+        } else {
+            throw new \RuntimeException();
         }
 
         return $this;
@@ -158,7 +166,7 @@ class Param implements ArrayableInterface
      *
      * @return mixed Key value
      */
-    public function getParam($key)
+    public function getParam(string $key) : mixed
     {
         if (!$this->hasParam($key)) {
             throw new InvalidException('Param '.$key.' does not exist');
@@ -174,7 +182,7 @@ class Param implements ArrayableInterface
      *
      * @return bool True if the param is set, false otherwise
      */
-    public function hasParam($key)
+    public function hasParam(string $key) : bool
     {
         return isset($this->_params[$key]);
     }
@@ -184,8 +192,8 @@ class Param implements ArrayableInterface
      *
      * @return array Params
      */
-    public function getParams()
+    public function getParams() : Map<string, mixed>
     {
-        return $this->_params;
+        return clone $this->_params;
     }
 }

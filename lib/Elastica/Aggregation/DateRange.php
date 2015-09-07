@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Aggregation;
 
 /**
@@ -15,7 +15,7 @@ class DateRange extends Range
      *
      * @return $this
      */
-    public function setFormat($format)
+    public function setFormat(string $format) : this
     {
         return $this->setParam('format', $format);
     }

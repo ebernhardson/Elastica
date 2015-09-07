@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Aggregation;
 
 use Elastica\Aggregation\Sum;
@@ -8,7 +8,7 @@ use Elastica\Script;
 
 class ScriptTest extends BaseAggregationTest
 {
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : \Elastica\Index
     {
         $index = $this->_createIndex();
 
@@ -17,9 +17,9 @@ class ScriptTest extends BaseAggregationTest
             new Document('2', array('price' => 8)),
             new Document('3', array('price' => 1)),
             new Document('4', array('price' => 3)),
-        ));
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -27,7 +27,7 @@ class ScriptTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testAggregationScript()
+    public function testAggregationScript() : void
     {
         $agg = new Sum('sum');
         // x = (0..1) is groovy-specific syntax, to see if lang is recognized
@@ -36,7 +36,8 @@ class ScriptTest extends BaseAggregationTest
 
         $query = new Query();
         $query->addAggregation($agg);
-        $results = $this->_getIndexForTest()->search($query)->getAggregation('sum');
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
+        $results = $response->getAggregation('sum');
 
         $this->assertEquals(5 + 8 + 1 + 3, $results['value']);
     }
@@ -44,14 +45,15 @@ class ScriptTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testAggregationScriptAsString()
+    public function testAggregationScriptAsString() : void
     {
         $agg = new Sum('sum');
         $agg->setScript("doc['price'].value");
 
         $query = new Query();
         $query->addAggregation($agg);
-        $results = $this->_getIndexForTest()->search($query)->getAggregation('sum');
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
+        $results = $response->getAggregation('sum');
 
         $this->assertEquals(5 + 8 + 1 + 3, $results['value']);
     }
@@ -59,14 +61,14 @@ class ScriptTest extends BaseAggregationTest
     /**
      * @group unit
      */
-    public function testSetScript()
+    public function testSetScript() : void
     {
         $aggregation = 'sum';
         $string = "doc['price'].value";
-        $params = array(
+        $params = Map {
             'param1' => 'one',
             'param2' => 1,
-        );
+        };
         $lang = 'groovy';
 
         $agg = new Sum($aggregation);
@@ -76,11 +78,11 @@ class ScriptTest extends BaseAggregationTest
         $array = $agg->toArray();
 
         $expected = array(
-            $aggregation => array(
+            $aggregation => Map {
                 'script' => $string,
                 'params' => $params,
                 'lang' => $lang,
-            ),
+            },
         );
         $this->assertEquals($expected, $array);
     }

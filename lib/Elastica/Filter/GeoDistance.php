@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Filter;
 
 /**
@@ -27,7 +27,7 @@ class GeoDistance extends AbstractGeoDistance
      *
      * @throws \Elastica\Exception\InvalidException
      */
-    public function __construct($key, $location, $distance)
+    public function __construct(string $key, mixed $location, string $distance)
     {
         parent::__construct($key, $location);
 
@@ -39,7 +39,7 @@ class GeoDistance extends AbstractGeoDistance
      *
      * @return $this
      */
-    public function setDistance($distance)
+    public function setDistance(string $distance) : this
     {
         $this->setParam('distance', $distance);
 
@@ -53,7 +53,7 @@ class GeoDistance extends AbstractGeoDistance
      *
      * @return $this
      */
-    public function setDistanceType($distanceType)
+    public function setDistanceType(string $distanceType) : this
     {
         $this->setParam('distance_type', $distanceType);
 
@@ -67,7 +67,7 @@ class GeoDistance extends AbstractGeoDistance
      *
      * @return $this
      */
-    public function setOptimizeBbox($optimizeBbox)
+    public function setOptimizeBbox(string $optimizeBbox) : this
     {
         $this->setParam('optimize_bbox', $optimizeBbox);
 

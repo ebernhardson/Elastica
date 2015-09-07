@@ -1,5 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Filter;
+
+use Indexish;
 
 /**
  * Range Filter.
@@ -15,7 +17,7 @@ class Range extends AbstractFilter
      *
      * @var array Fields
      */
-    protected $_fields = array();
+    protected array $_fields = array();
 
     /**
      * Construct range filter.
@@ -23,7 +25,7 @@ class Range extends AbstractFilter
      * @param string $fieldName Field name
      * @param array  $args      Field arguments
      */
-    public function __construct($fieldName = '', array $args = array())
+    public function __construct(string $fieldName = '', array $args = array())
     {
         if ($fieldName) {
             $this->addField($fieldName, $args);
@@ -38,7 +40,7 @@ class Range extends AbstractFilter
      *
      * @return $this
      */
-    public function addField($fieldName, array $args)
+    public function addField(string $fieldName, array $args) : this
     {
         $this->_fields[$fieldName] = $args;
 
@@ -52,7 +54,7 @@ class Range extends AbstractFilter
      *
      * @return $this
      */
-    public function setExecution($execution)
+    public function setExecution(string $execution) : this
     {
         return $this->setParam('execution', (string) $execution);
     }
@@ -64,9 +66,13 @@ class Range extends AbstractFilter
      *
      * @return array Filter array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
-        $this->setParams(array_merge($this->getParams(), $this->_fields));
+		$params = $this->getParams();
+		foreach ($this->_fields as $k => $v) {
+			$params[$k] = $v;
+		}
+        $this->setParams($params);
 
         return parent::toArray();
     }

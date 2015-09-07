@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Facet;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Implements the range facet.
@@ -20,7 +21,7 @@ class Range extends AbstractFacet
      *
      * @return $this
      */
-    public function setField($field)
+    public function setField(string $field) : this
     {
         return $this->setParam('field', $field);
     }
@@ -33,7 +34,7 @@ class Range extends AbstractFacet
      *
      * @return $this
      */
-    public function setKeyValueFields($keyField, $valueField)
+    public function setKeyValueFields(string $keyField, string $valueField) : this
     {
         return $this->setParam('key_field', $keyField)
                     ->setParam('value_field', $valueField);
@@ -47,7 +48,7 @@ class Range extends AbstractFacet
      *
      * @return $this
      */
-    public function setKeyValueScripts($keyScript, $valueScript)
+    public function setKeyValueScripts(string $keyScript, string $valueScript) : this
     {
         return $this->setParam('key_script', $keyScript)
                     ->setParam('value_script', $valueScript);
@@ -66,7 +67,7 @@ class Range extends AbstractFacet
      *
      * @return $this
      */
-    public function setRanges(array $ranges)
+    public function setRanges(array $ranges) : this
     {
         return $this->setParam('ranges', $ranges);
     }
@@ -79,9 +80,9 @@ class Range extends AbstractFacet
      *
      * @return $this
      */
-    public function addRange($from = null, $to = null)
+    public function addRange(mixed $from = null, mixed $to = null) : this
     {
-        if (!isset($this->_params['ranges']) || !is_array($this->_params['ranges'])) {
+        if (!isset($this->_params['ranges']) || !$this->_params['ranges'] instanceof Indexish) {
             $this->_params['ranges'] = array();
         }
 
@@ -92,6 +93,7 @@ class Range extends AbstractFacet
         if (isset($to)) {
             $range['to'] = $to;
         }
+        /* UNSAFE_EXPR */
         $this->_params['ranges'][] = $range;
 
         return $this;
@@ -107,7 +109,7 @@ class Range extends AbstractFacet
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         /*
          * Check the facet for validity.

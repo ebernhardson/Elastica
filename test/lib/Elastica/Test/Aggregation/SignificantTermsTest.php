@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Aggregation;
 
 use Elastica\Aggregation\SignificantTerms;
@@ -9,17 +9,17 @@ use Elastica\Query\Terms;
 
 class SignificantTermsTest extends BaseAggregationTest
 {
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : \Elastica\Index
     {
         $index = $this->_createIndex();
         $colors = array('blue', 'blue', 'red', 'red', 'green', 'yellow', 'white', 'cyan', 'magenta');
         $temperatures = array(1500, 1500, 1500, 1500, 2500, 3500, 4500, 5500, 6500, 7500, 7500, 8500, 9500);
         $docs = array();
         for ($i = 0;$i < 250;++$i) {
-            $docs[] = new Document($i, array('color' => $colors[$i % count($colors)], 'temperature' => $temperatures[$i % count($temperatures)]));
+            $docs[] = new Document((string) $i, array('color' => $colors[$i % count($colors)], 'temperature' => $temperatures[$i % count($temperatures)]));
         }
-        $index->getType('test')->addDocuments($docs);
-        $index->refresh();
+        $index->getType('test')->addDocuments($docs)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -27,7 +27,7 @@ class SignificantTermsTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testSignificantTermsAggregation()
+    public function testSignificantTermsAggregation() : void
     {
         $agg = new SignificantTerms('significantTerms');
         $agg->setField('temperature');
@@ -38,7 +38,7 @@ class SignificantTermsTest extends BaseAggregationTest
 
         $query = new Query($termsQuery);
         $query->addAggregation($agg);
-        $results = $this->_getIndexForTest()->search($query)->getAggregation('significantTerms');
+        $results = $this->_getIndexForTest()->search($query)->getWaitHandle()->join()->getAggregation('significantTerms');
 
         $this->assertEquals(1, count($results['buckets']));
         $this->assertEquals(63, $results['buckets'][0]['doc_count']);
@@ -49,7 +49,7 @@ class SignificantTermsTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testSignificantTermsAggregationWithBackgroundFilter()
+    public function testSignificantTermsAggregationWithBackgroundFilter() : void
     {
         $agg = new SignificantTerms('significantTerms');
         $agg->setField('temperature');
@@ -63,7 +63,7 @@ class SignificantTermsTest extends BaseAggregationTest
 
         $query = new Query($termsQuery);
         $query->addAggregation($agg);
-        $results = $this->_getIndexForTest()->search($query)->getAggregation('significantTerms');
+        $results = $this->_getIndexForTest()->search($query)->getWaitHandle()->join()->getAggregation('significantTerms');
 
         $this->assertEquals(15, $results['buckets'][0]['doc_count']);
         $this->assertEquals(12, $results['buckets'][0]['bg_count']);

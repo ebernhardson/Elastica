@@ -1,5 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Facet;
+
+use Indexish;
 
 /**
  * Implements the Histogram facet.
@@ -18,7 +20,7 @@ class Histogram extends AbstractFacet
      *
      * @return $this
      */
-    public function setField($field)
+    public function setField(string $field) : this
     {
         return $this->setParam('field', $field);
     }
@@ -30,7 +32,7 @@ class Histogram extends AbstractFacet
      *
      * @return $this
      */
-    public function setInterval($interval)
+    public function setInterval(string $interval) : this
     {
         return $this->setParam('interval', $interval);
     }
@@ -43,7 +45,7 @@ class Histogram extends AbstractFacet
      *
      * @return $this
      */
-    public function setKeyValueFields($keyField, $valueField)
+    public function setKeyValueFields(string $keyField, string $valueField) : this
     {
         return $this->setParam('key_field', $keyField)->setParam('value_field', $valueField);
     }
@@ -56,7 +58,7 @@ class Histogram extends AbstractFacet
      *
      * @return $this
      */
-    public function setKeyValueScripts($keyScript, $valueScript)
+    public function setKeyValueScripts(string $keyScript, string $valueScript) : this
     {
         return $this->setParam('key_script', $keyScript)
                     ->setParam('value_script', $valueScript);
@@ -69,7 +71,7 @@ class Histogram extends AbstractFacet
      *
      * @return $this
      */
-    public function setScriptParams(array $params)
+    public function setScriptParams(array $params) : this
     {
         return $this->setParam('params', $params);
     }
@@ -84,7 +86,7 @@ class Histogram extends AbstractFacet
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         /*
          * Set the range in the abstract as param.

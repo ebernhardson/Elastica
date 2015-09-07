@@ -1,9 +1,11 @@
-<?php
+<?hh
 namespace Elastica\Aggregation;
 
+use Elastica\Aggregation\AbstractAggregation;
 use Elastica\Exception\InvalidException;
 use Elastica\NameableInterface;
 use Elastica\Param;
+use Indexish;
 
 abstract class AbstractAggregation extends Param implements NameableInterface
 {
@@ -15,12 +17,12 @@ abstract class AbstractAggregation extends Param implements NameableInterface
     /**
      * @var array Subaggregations belonging to this aggregation
      */
-    protected $_aggs = array();
+    protected array $_aggs = array();
 
     /**
      * @param string $name the name of this aggregation
      */
-    public function __construct($name)
+    public function __construct(string $name)
     {
         $this->setName($name);
     }
@@ -32,7 +34,7 @@ abstract class AbstractAggregation extends Param implements NameableInterface
      *
      * @return $this
      */
-    public function setName($name)
+    public function setName(string $name) : this
     {
         $this->_name = $name;
 
@@ -44,7 +46,7 @@ abstract class AbstractAggregation extends Param implements NameableInterface
      *
      * @return string
      */
-    public function getName()
+    public function getName() : string
     {
         return $this->_name;
     }
@@ -54,7 +56,7 @@ abstract class AbstractAggregation extends Param implements NameableInterface
      *
      * @return array
      */
-    public function getAggs()
+    public function getAggs() : array
     {
         return $this->_aggs;
     }
@@ -68,7 +70,7 @@ abstract class AbstractAggregation extends Param implements NameableInterface
      *
      * @return $this
      */
-    public function addAggregation(AbstractAggregation $aggregation)
+    public function addAggregation(AbstractAggregation $aggregation) : AbstractAggregation
     {
         if ($aggregation instanceof GlobalAggregation) {
             throw new InvalidException('Global aggregators can only be placed as top level aggregators');
@@ -82,7 +84,7 @@ abstract class AbstractAggregation extends Param implements NameableInterface
     /**
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $array = parent::toArray();
 
@@ -90,7 +92,7 @@ abstract class AbstractAggregation extends Param implements NameableInterface
             // compensate for class name GlobalAggregation
             $array = array('global' => new \stdClass());
         }
-        if (sizeof($this->_aggs)) {
+        if (count($this->_aggs)) {
             $array['aggs'] = $this->_convertArrayable($this->_aggs);
         }
 

@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Node;
 
 use Elastica\Node;
@@ -10,19 +10,19 @@ class InfoTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGet()
+    public function testGet() : void
     {
         $client = $this->_getClient();
-        $names = $client->getCluster()->getNodeNames();
+        $names = $client->getCluster()->getWaitHandle()->join()->getNodeNames();
         $name = reset($names);
 
         $node = new Node($name, $client);
-        $info = new NodeInfo($node);
+        $info = NodeInfo::create($node)->getWaitHandle()->join();
 
         $this->assertNull($info->get('os', 'mem', 'total'));
 
         // Load os infos
-        $info = new NodeInfo($node, array('os'));
+        $info = NodeInfo::create($node, array('os'))->getWaitHandle()->join();
 
         $this->assertNotNull($info->get('os', 'mem', 'total_in_bytes'));
         $this->assertInternalType('array', $info->get('os', 'mem'));
@@ -32,31 +32,31 @@ class InfoTest extends BaseTest
     /**
      * @group functional
      */
-    public function testHasPlugin()
+    public function testHasPlugin() : void
     {
         $client = $this->_getClient();
-        $nodes = $client->getCluster()->getNodes();
+        $nodes = $client->getCluster()->getWaitHandle()->join()->getNodes();
         $node = $nodes[0];
-        $info = $node->getInfo();
+        $info = $node->getInfo()->getWaitHandle()->join();
 
         $pluginName = 'mapper-attachments';
 
-        $this->assertTrue($info->hasPlugin($pluginName));
-        $this->assertFalse($info->hasPlugin('foo'));
+        $this->assertTrue($info->hasPlugin($pluginName)->getWaitHandle()->join());
+        $this->assertFalse($info->hasPlugin('foo')->getWaitHandle()->join());
     }
 
     /**
      * @group functional
      */
-    public function testGetId()
+    public function testGetId() : void
     {
         $client = $this->_getClient();
-        $nodes = $client->getCluster()->getNodes();
+        $nodes = $client->getCluster()->getWaitHandle()->join()->getNodes();
 
         $ids = array();
 
         foreach ($nodes as $node) {
-            $id = $node->getInfo()->getId();
+            $id = $node->getInfo()->getWaitHandle()->join()->getId();
 
             // Checks that the ids are unique
             $this->assertFalse(in_array($id, $ids));
@@ -67,13 +67,13 @@ class InfoTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGetName()
+    public function testGetName() : void
     {
         $client = $this->_getClient();
-        $nodes = $client->getCluster()->getNodes();
+        $nodes = $client->getCluster()->getWaitHandle()->join()->getNodes();
 
         foreach ($nodes as $node) {
-            $this->assertEquals('Elastica', $node->getInfo()->getName());
+            $this->assertEquals('Elastica', $node->getInfo()->getWaitHandle()->join()->getName());
         }
     }
 }

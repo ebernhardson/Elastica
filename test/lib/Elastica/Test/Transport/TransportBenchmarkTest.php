@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Transport;
 
 use Elastica\Document;
@@ -8,13 +8,13 @@ use Elastica\Test\Base as BaseTest;
 
 class TransportBenchmarkTest extends BaseTest
 {
-    protected $_max = 1000;
+    protected int $_max = 1000;
 
-    protected $_maxData = 20;
+    protected int $_maxData = 20;
 
-    protected static $_results = array();
+    protected static array $_results = array();
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass() : void
     {
         self::printResults();
     }
@@ -24,11 +24,11 @@ class TransportBenchmarkTest extends BaseTest
      *
      * @return \Elastica\Type
      */
-    protected function getType(array $config)
+    protected function getType(array $config) : \Elastica\Type
     {
         $client = $this->_getClient($config);
         $index = $client->getIndex('benchmark'.uniqid());
-        $index->create(array('index' => array('number_of_shards' => 1, 'number_of_replicas' => 0)), true);
+        $index->create(array('index' => array('number_of_shards' => 1, 'number_of_replicas' => 0)), true)->getWaitHandle()->join();
 
         return $index->getType('benchmark');
     }
@@ -37,24 +37,24 @@ class TransportBenchmarkTest extends BaseTest
      * @dataProvider providerTransport
      * @group benchmark
      */
-    public function testAddDocument(array $config, $transport)
+    public function testAddDocument(array $config, $transport) : void
     {
         $this->_checkThrift($transport);
 
         $type = $this->getType($config);
         $index = $type->getIndex();
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
         $times = array();
         for ($i = 0; $i < $this->_max; ++$i) {
             $data = $this->getData($i);
-            $doc = new Document($i, $data);
-            $result = $type->addDocument($doc);
+            $doc = new Document((string) $i, $data);
+            $result = $type->addDocument($doc)->getWaitHandle()->join();
             $times[] = $result->getQueryTime();
             $this->assertTrue($result->isOk());
         }
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         self::logResults('insert', $transport, $times);
     }
@@ -64,21 +64,21 @@ class TransportBenchmarkTest extends BaseTest
      * @dataProvider providerTransport
      * @group benchmark
      */
-    public function testRandomRead(array $config, $transport)
+    public function testRandomRead(array $config, $transport) : void
     {
         $this->_checkThrift($transport);
 
         $type = $this->getType($config);
 
-        $type->search('test');
+        $type->search('test')->getWaitHandle()->join();
 
         $times = array();
         for ($i = 0; $i < $this->_max; ++$i) {
             $test = rand(1, $this->_max);
             $query = new Query();
             $query->setQuery(new \Elastica\Query\MatchAll());
-            $query->setPostFilter(new \Elastica\Filter\Term(array('test' => $test)));
-            $result = $type->search($query);
+            $query->setPostFilter(new \Elastica\Filter\Term(Map {'test' => $test}));
+            $result = $type->search($query)->getWaitHandle()->join();
             $times[] = $result->getResponse()->getQueryTime();
         }
 
@@ -90,7 +90,7 @@ class TransportBenchmarkTest extends BaseTest
      * @dataProvider providerTransport
      * @group benchmark
      */
-    public function testBulk(array $config, $transport)
+    public function testBulk(array $config, $transport) : void
     {
         $type = $this->getType($config);
 
@@ -99,10 +99,10 @@ class TransportBenchmarkTest extends BaseTest
             $docs = array();
             for ($j = 0; $j < 10; ++$j) {
                 $data = $this->getData($i.$j);
-                $docs[] = new Document($i, $data);
+                $docs[] = new Document((string) $i, $data);
             }
 
-            $result = $type->addDocuments($docs);
+            $result = $type->addDocuments($docs)->getWaitHandle()->join();
             $times[] = $result->getQueryTime();
         }
 
@@ -113,11 +113,11 @@ class TransportBenchmarkTest extends BaseTest
      * @dataProvider providerTransport
      * @group benchmark
      */
-    public function testGetMapping(array $config, $transport)
+    public function testGetMapping(array $config, $transport) : void
     {
         $client = $this->_getClient($config);
         $index = $client->getIndex('benchmark');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('mappingTest');
 
         // Define mapping
@@ -138,18 +138,18 @@ class TransportBenchmarkTest extends BaseTest
             '_boost' => array('type' => 'float', 'include_in_all' => false),
         ));
 
-        $type->setMapping($mapping);
-        $index->refresh();
+        $type->setMapping($mapping)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         $times = array();
         for ($i = 0; $i < $this->_max; ++$i) {
-            $response = $type->request('_mapping', \Elastica\Request::GET);
+            $response = $type->request('_mapping', \Elastica\Request::GET)->getWaitHandle()->join();
             $times[] = $response->getQueryTime();
         }
         self::logResults('get mapping', $transport, $times);
     }
 
-    public function providerTransport()
+    public function providerTransport() : array<array>
     {
         return array(
             array(
@@ -189,7 +189,7 @@ class TransportBenchmarkTest extends BaseTest
      *
      * @return array
      */
-    protected function getData($test)
+    protected function getData($test) : array
     {
         $data = array(
             'test' => $test,
@@ -207,7 +207,7 @@ class TransportBenchmarkTest extends BaseTest
      * @param $transport
      * @param array $times
      */
-    protected static function logResults($name, $transport, array $times)
+    protected static function logResults(@string $name, $transport, array $times) : void
     {
         self::$_results[$name][$transport] = array(
             'count' => count($times),
@@ -217,7 +217,7 @@ class TransportBenchmarkTest extends BaseTest
         );
     }
 
-    protected static function printResults()
+    protected static function printResults() : void
     {
         echo sprintf(
             "\n%-12s | %-20s | %-12s | %-12s | %-12s | %-12s\n\n",
@@ -226,8 +226,7 @@ class TransportBenchmarkTest extends BaseTest
             'COUNT',
             'MAX',
             'MIN',
-            'MEAN',
-            '%'
+            'MEAN'
         );
         foreach (self::$_results as $name => $values) {
             $means = array();
@@ -252,7 +251,7 @@ class TransportBenchmarkTest extends BaseTest
         }
     }
 
-    protected function _checkThrift($transport)
+    protected function _checkThrift($transport) : void
     {
         if (strpos($transport, 'Thrift') !== false && !class_exists('Elasticsearch\\RestClient')) {
             self::markTestSkipped('munkie/elasticsearch-thrift-php package should be installed to run thrift transport tests');

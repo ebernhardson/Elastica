@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * QueryString query.
@@ -17,14 +18,14 @@ class QueryString extends AbstractQuery
      *
      * @var string Query string
      */
-    protected $_queryString = '';
+    protected string $_queryString = '';
 
     /**
      * Creates query string object. Calls setQuery with argument.
      *
      * @param string $queryString OPTIONAL Query string for object
      */
-    public function __construct($queryString = '')
+    public function __construct(string $queryString = '')
     {
         $this->setQuery($queryString);
     }
@@ -38,12 +39,8 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setQuery($query = '')
+    public function setQuery(string $query = '') : this
     {
-        if (!is_string($query)) {
-            throw new InvalidException('Parameter has to be a string');
-        }
-
         return $this->setParam('query', $query);
     }
 
@@ -56,7 +53,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setDefaultField($field)
+    public function setDefaultField(string $field) : this
     {
         return $this->setParam('default_field', $field);
     }
@@ -70,7 +67,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setDefaultOperator($operator)
+    public function setDefaultOperator(string $operator) : this
     {
         return $this->setParam('default_operator', $operator);
     }
@@ -82,7 +79,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setAnalyzer($analyzer)
+    public function setAnalyzer(string $analyzer) : this
     {
         return $this->setParam('analyzer', $analyzer);
     }
@@ -96,7 +93,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setAllowLeadingWildcard($allow = true)
+    public function setAllowLeadingWildcard(bool $allow = true) : this
     {
         return $this->setParam('allow_leading_wildcard', (bool) $allow);
     }
@@ -110,7 +107,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setEnablePositionIncrements($enabled = true)
+    public function setEnablePositionIncrements(bool $enabled = true) : this
     {
         return $this->setParam('enable_position_increments', (bool) $enabled);
     }
@@ -124,7 +121,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setFuzzyPrefixLength($length = 0)
+    public function setFuzzyPrefixLength(int $length = 0) : this
     {
         return $this->setParam('fuzzy_prefix_length', (int) $length);
     }
@@ -138,7 +135,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setFuzzyMinSim($minSim = 0.5)
+    public function setFuzzyMinSim(float $minSim = 0.5) : this
     {
         return $this->setParam('fuzzy_min_sim', (float) $minSim);
     }
@@ -153,7 +150,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setPhraseSlop($phraseSlop = 0)
+    public function setPhraseSlop(int $phraseSlop = 0) : this
     {
         return $this->setParam('phrase_slop', (int) $phraseSlop);
     }
@@ -167,7 +164,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setBoost($boost = 1.0)
+    public function setBoost(float $boost = 1.0) : this
     {
         return $this->setParam('boost', (float) $boost);
     }
@@ -181,7 +178,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setAnalyzeWildcard($analyze = true)
+    public function setAnalyzeWildcard(bool $analyze = true) : this
     {
         return $this->setParam('analyze_wildcard', (bool) $analyze);
     }
@@ -195,7 +192,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setAutoGeneratePhraseQueries($autoGenerate = true)
+    public function setAutoGeneratePhraseQueries(bool $autoGenerate = true) : this
     {
         return $this->setParam('auto_generate_phrase_queries', (bool) $autoGenerate);
     }
@@ -209,9 +206,9 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setFields(array $fields)
+    public function setFields(array $fields) : this
     {
-        if (!is_array($fields)) {
+        if (!$fields instanceof Indexish) {
             throw new InvalidException('Parameter has to be an array');
         }
 
@@ -225,7 +222,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setUseDisMax($value = true)
+    public function setUseDisMax(bool $value = true) : this
     {
         return $this->setParam('use_dis_max', (bool) $value);
     }
@@ -239,7 +236,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setTieBreaker($tieBreaker = 0)
+    public function setTieBreaker(int $tieBreaker = 0) : this
     {
         return $this->setParam('tie_breaker', (float) $tieBreaker);
     }
@@ -251,7 +248,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setRewrite($rewrite = '')
+    public function setRewrite(string $rewrite = '') : this
     {
         return $this->setParam('rewrite', $rewrite);
     }
@@ -263,7 +260,7 @@ class QueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setTimezone($timezone)
+    public function setTimezone(string $timezone) : this
     {
         return $this->setParam('time_zone', $timezone);
     }
@@ -275,8 +272,12 @@ class QueryString extends AbstractQuery
      *
      * @return array Query array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
-        return array('query_string' => array_merge(array('query' => $this->_queryString), $this->getParams()));
+        $params = $this->getParams();
+        if (!$params->contains('query')) {
+            $params->set('query', $this->_queryString);
+        }
+        return Map {'query_string' => $params};
     }
 }

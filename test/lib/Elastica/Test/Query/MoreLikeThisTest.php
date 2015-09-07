@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -14,13 +14,13 @@ class MoreLikeThisTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSearch()
+    public function testSearch() : void
     {
         $client = $this->_getClient();
         $index = new Index($client, 'test');
-        $index->create(array(), true);
-        $index->getSettings()->setNumberOfReplicas(0);
-        //$index->getSettings()->setNumberOfShards(1);
+        $index->create(array(), true)->getWaitHandle()->join();
+        $index->getSettings()->setNumberOfReplicas(0)->getWaitHandle()->join();
+        //$index->getSettings()->setNumberOfShards(1)->getWaitHandle()->join();
 
         $type = new Type($index, 'helloworldmlt');
         $mapping = new Mapping($type, array(
@@ -29,16 +29,16 @@ class MoreLikeThisTest extends BaseTest
         ));
 
         $mapping->setSource(array('enabled' => false));
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
-        $doc = new Document(1000, array('email' => 'testemail@gmail.com', 'content' => 'This is a sample post. Hello World Fuzzy Like This!'));
-        $type->addDocument($doc);
+        $doc = new Document('1000', array('email' => 'testemail@gmail.com', 'content' => 'This is a sample post. Hello World Fuzzy Like This!'));
+        $type->addDocument($doc)->getWaitHandle()->join();
 
-        $doc = new Document(1001, array('email' => 'nospam@gmail.com', 'content' => 'This is a fake nospam email address for gmail'));
-        $type->addDocument($doc);
+        $doc = new Document('1001', array('email' => 'nospam@gmail.com', 'content' => 'This is a fake nospam email address for gmail'));
+        $type->addDocument($doc)->getWaitHandle()->join();
 
         // Refresh index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $mltQuery = new MoreLikeThis();
         $mltQuery->setLikeText('fake gmail sample');
@@ -51,7 +51,7 @@ class MoreLikeThisTest extends BaseTest
         $query->setFields(array('email', 'content'));
         $query->setQuery($mltQuery);
 
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
         $resultSet->getResponse()->getData();
         $this->assertEquals(2, $resultSet->count());
     }
@@ -59,7 +59,7 @@ class MoreLikeThisTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetFields()
+    public function testSetFields() : void
     {
         $query = new MoreLikeThis();
 
@@ -67,38 +67,38 @@ class MoreLikeThisTest extends BaseTest
         $query->setFields($fields);
 
         $data = $query->toArray();
-        $this->assertEquals($fields, $data['more_like_this']['fields']);
+        $this->assertEquals($fields, /* UNSAFE_EXPR */ $data['more_like_this']['fields']);
     }
 
     /**
      * @group unit
      */
-    public function testSetIds()
+    public function testSetIds() : void
     {
         $query = new MoreLikeThis();
         $ids = array(1, 2, 3);
         $query->setIds($ids);
 
         $data = $query->toArray();
-        $this->assertEquals($ids, $data['more_like_this']['ids']);
+        $this->assertEquals($ids, /* UNSAFE_EXPR */ $data['more_like_this']['ids']);
     }
 
     /**
      * @group unit
      */
-    public function testSetLikeText()
+    public function testSetLikeText() : void
     {
         $query = new MoreLikeThis();
         $query->setLikeText(' hello world');
 
         $data = $query->toArray();
-        $this->assertEquals('hello world', $data['more_like_this']['like_text']);
+        $this->assertEquals('hello world', /* UNSAFE_EXPR */ $data['more_like_this']['like_text']);
     }
 
     /**
      * @group unit
      */
-    public function testSetBoost()
+    public function testSetBoost() : void
     {
         $query = new MoreLikeThis();
 
@@ -111,7 +111,7 @@ class MoreLikeThisTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetMaxQueryTerms()
+    public function testSetMaxQueryTerms() : void
     {
         $query = new MoreLikeThis();
 
@@ -124,7 +124,7 @@ class MoreLikeThisTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetPercentTermsToMatch()
+    public function testSetPercentTermsToMatch() : void
     {
         $query = new MoreLikeThis();
 
@@ -137,7 +137,7 @@ class MoreLikeThisTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetMinimumShouldMatch()
+    public function testSetMinimumShouldMatch() : void
     {
         $query = new MoreLikeThis();
 
@@ -150,7 +150,7 @@ class MoreLikeThisTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetMinDocFrequency()
+    public function testSetMinDocFrequency() : void
     {
         $query = new MoreLikeThis();
 
@@ -163,7 +163,7 @@ class MoreLikeThisTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetMaxDocFrequency()
+    public function testSetMaxDocFrequency() : void
     {
         $query = new MoreLikeThis();
 
@@ -176,7 +176,7 @@ class MoreLikeThisTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetMinWordLength()
+    public function testSetMinWordLength() : void
     {
         $query = new MoreLikeThis();
 
@@ -189,7 +189,7 @@ class MoreLikeThisTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetMaxWordLength()
+    public function testSetMaxWordLength() : void
     {
         $query = new MoreLikeThis();
 
@@ -202,7 +202,7 @@ class MoreLikeThisTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetBoostTerms()
+    public function testSetBoostTerms() : void
     {
         $query = new MoreLikeThis();
 
@@ -215,7 +215,7 @@ class MoreLikeThisTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetAnalyzer()
+    public function testSetAnalyzer() : void
     {
         $query = new MoreLikeThis();
 
@@ -228,7 +228,7 @@ class MoreLikeThisTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetStopWords()
+    public function testSetStopWords() : void
     {
         $query = new MoreLikeThis();
 

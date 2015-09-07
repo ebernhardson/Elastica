@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Aggregation;
 
 use Elastica\Aggregation\IpRange;
@@ -8,22 +8,22 @@ use Elastica\Type\Mapping;
 
 class IpRangeTest extends BaseAggregationTest
 {
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : \Elastica\Index
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
 
         $type->setMapping(new Mapping(null, array(
             'address' => array('type' => 'ip'),
-        )));
+        )))->getWaitHandle()->join();
 
         $type->addDocuments(array(
-            new Document(1, array('address' => '192.168.1.100')),
-            new Document(2, array('address' => '192.168.1.150')),
-            new Document(3, array('address' => '192.168.1.200')),
-        ));
+            new Document('1', array('address' => '192.168.1.100')),
+            new Document('2', array('address' => '192.168.1.150')),
+            new Document('3', array('address' => '192.168.1.200')),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -31,7 +31,7 @@ class IpRangeTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testIpRangeAggregation()
+    public function testIpRangeAggregation() : void
     {
         $agg = new IpRange('ip', 'address');
         $agg->addRange('192.168.1.101');
@@ -42,7 +42,8 @@ class IpRangeTest extends BaseAggregationTest
 
         $query = new Query();
         $query->addAggregation($agg);
-        $results = $this->_getIndexForTest()->search($query)->getAggregation('ip');
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
+        $results = $response->getAggregation('ip');
 
         foreach ($results['buckets'] as $bucket) {
             if (array_key_exists('key', $bucket) && $bucket['key'] == $cidrRange) {

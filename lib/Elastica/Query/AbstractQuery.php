@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Query;
 
 use Elastica\Param;

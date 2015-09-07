@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica;
 
 use Elastica\Exception\JSONParseException;
@@ -16,15 +16,15 @@ class JSON
      *
      * @param string $json JSON string to parse
      *
-     * @return array PHP array representation of JSON string
+     * @return mixed PHP representation of JSON string
      */
-    public static function parse(/* inherit from json_decode */)
+    public static function parse(.../* inherit from json_decode */) : mixed
     {
         // extract arguments
         $args = func_get_args();
 
         // default to decoding into an assoc array
-        if (sizeof($args) === 1) {
+        if (count($args) === 1) {
             $args[] = true;
         }
 
@@ -50,13 +50,13 @@ class JSON
      *
      * @return string Valid JSON representation of $input
      */
-    public static function stringify(/* inherit from json_encode */)
+    public static function stringify(.../* inherit from json_encode */) : string
     {
         // extract arguments
         $args = func_get_args();
 
         // allow special options value for Elasticsearch compatibility
-        if (sizeof($args) > 1 && $args[1] === 'JSON_ELASTICSEARCH') {
+        if (count($args) > 1 && $args[1] === 'JSON_ELASTICSEARCH') {
             // Use built in JSON constants if available (php >= 5.4)
             $args[1] = defined('JSON_UNESCAPED_UNICODE') ? JSON_UNESCAPED_UNICODE : 256;
         }

@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Constant score query.
@@ -17,7 +18,7 @@ class ConstantScore extends AbstractQuery
      *
      * @param null|\Elastica\Filter\AbstractFilter|array $filter
      */
-    public function __construct($filter = null)
+    public function __construct(mixed $filter = null)
     {
         if (!is_null($filter)) {
             $this->setFilter($filter);
@@ -31,7 +32,7 @@ class ConstantScore extends AbstractQuery
      *
      * @return $this
      */
-    public function setFilter($filter)
+    public function setFilter(mixed $filter) : this
     {
         return $this->setParam('filter', $filter);
     }
@@ -45,9 +46,9 @@ class ConstantScore extends AbstractQuery
      *
      * @return $this
      */
-    public function setQuery($query)
+    public function setQuery(mixed $query) : this
     {
-        if (!is_array($query) && !($query instanceof AbstractQuery)) {
+        if (!$query instanceof Indexish && !($query instanceof AbstractQuery)) {
             throw new InvalidException('Invalid parameter. Has to be array or instance of Elastica\Query\AbstractQuery');
         }
 
@@ -61,7 +62,7 @@ class ConstantScore extends AbstractQuery
      *
      * @return $this
      */
-    public function setBoost($boost)
+    public function setBoost(float $boost) : this
     {
         return $this->setParam('boost', $boost);
     }

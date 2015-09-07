@@ -1,23 +1,25 @@
-<?php
+<?hh // strict
 namespace Elastica\Bulk\Action;
 
 use Elastica\AbstractUpdateAction;
 use Elastica\Bulk\Action;
 use Elastica\Document;
 use Elastica\Script;
+use Indexish;
 
 abstract class AbstractDocument extends Action
 {
     /**
      * @var \Elastica\Document|\Elastica\Script
      */
-    protected $_data;
+    protected mixed $_data;
 
     /**
      * @param \Elastica\Document|\Elastica\Script $document
      */
-    public function __construct($document)
+    public function __construct(mixed $document)
     {
+        parent::__construct($this->_opType);
         $this->setData($document);
     }
 
@@ -26,7 +28,7 @@ abstract class AbstractDocument extends Action
      *
      * @return $this
      */
-    public function setDocument(Document $document)
+    public function setDocument(Document $document) : this
     {
         $this->_data = $document;
 
@@ -42,7 +44,7 @@ abstract class AbstractDocument extends Action
      *
      * @return $this
      */
-    public function setScript(Script $script)
+    public function setScript(Script $script) : this
     {
         if (!($this instanceof UpdateDocument)) {
             throw new \BadMethodCallException('setScript() can only be used for UpdateDocument');
@@ -63,7 +65,7 @@ abstract class AbstractDocument extends Action
      *
      * @return $this
      */
-    public function setData($data)
+    public function setData(mixed $data) : this
     {
         if ($data instanceof Script) {
             $this->setScript($data);
@@ -81,13 +83,13 @@ abstract class AbstractDocument extends Action
      *
      * @return \Elastica\Document|null
      */
-    public function getDocument()
+    public function getDocument() : ?Document
     {
         if ($this->_data instanceof Document) {
             return $this->_data;
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -95,19 +97,19 @@ abstract class AbstractDocument extends Action
      *
      * @return \Elastica\Script|null
      */
-    public function getScript()
+    public function getScript() : ?Script
     {
         if ($this->_data instanceof Script) {
             return $this->_data;
         }
 
-        return;
+        return null;
     }
 
     /**
      * @return \Elastica\Document|\Elastica\Script
      */
-    public function getData()
+    public function getData() : mixed
     {
         return $this->_data;
     }
@@ -117,7 +119,7 @@ abstract class AbstractDocument extends Action
      *
      * @return array
      */
-    abstract protected function _getMetadata(AbstractUpdateAction $source);
+    abstract protected function _getMetadata(AbstractUpdateAction $source) : Indexish<string, mixed>; 
 
     /**
      * @param \Elastica\Document|\Elastica\Script $data
@@ -125,7 +127,7 @@ abstract class AbstractDocument extends Action
      *
      * @return static
      */
-    public static function create($data, $opType = null)
+    public static function create(AbstractUpdateAction $data, ?string $opType = null) : AbstractDocument
     {
         //Check type
         if (!($data instanceof Document) && !($data instanceof Script)) {
@@ -145,6 +147,9 @@ abstract class AbstractDocument extends Action
             }
         }
 
+        if ($opType === null) {
+            $opType = self::OP_TYPE_INDEX;
+        }
         switch ($opType) {
             case self::OP_TYPE_DELETE:
                 $action = new DeleteDocument($data);

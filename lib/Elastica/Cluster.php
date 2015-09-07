@@ -1,9 +1,11 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Cluster\Health;
 use Elastica\Cluster\Settings;
 use Elastica\Exception\NotImplementedException;
+use Elastica\Node;
+use Indexish;
 
 /**
  * Cluster informations for elasticsearch.
@@ -19,41 +21,63 @@ class Cluster
      *
      * @var \Elastica\Client Client object
      */
-    protected $_client = null;
+    protected Client $_client;
 
     /**
      * Cluster state response.
      *
      * @var \Elastica\Response
      */
-    protected $_response;
+    protected Response $_response;
 
     /**
      * Cluster state data.
      *
      * @var array
      */
-    protected $_data;
+    protected Indexish<string, mixed> $_data;
+
+    static public async function create(Client $client) : Awaitable<Cluster>
+    {
+        $response = await self::_refreshRequest($client);
+        return new self($client, $response);
+    }
 
     /**
      * Creates a cluster object.
      *
      * @param \Elastica\Client $client Connection client object
      */
-    public function __construct(Client $client)
+    protected function __construct(Client $client, Response $response)
     {
         $this->_client = $client;
-        $this->refresh();
+        $this->onResponse($response);
+    }
+
+    protected static function _refreshRequest(Client $client) : Awaitable<Response>
+    {
+        $path = '_cluster/state';
+        return $client->request($path, Request::GET);
+    }
+
+    private function onResponse(Response $response) : void
+    {
+        $this->_response = $response;
+        $data = $response->getData();
+        if (!$data instanceof Indexish) {
+            throw new \RuntimeException('expected array');
+        }
+        $this->_data = $data;
     }
 
     /**
      * Refreshes all cluster information (state).
      */
-    public function refresh()
+    public async function refresh() : Awaitable<Response>
     {
-        $path = '_cluster/state';
-        $this->_response = $this->_client->request($path, Request::GET);
-        $this->_data = $this->getResponse()->getData();
+        $response = await self::_refreshRequest($this->getClient());
+        $this->onResponse($response);
+        return $response;
     }
 
     /**
@@ -61,7 +85,7 @@ class Cluster
      *
      * @return \Elastica\Response Response object
      */
-    public function getResponse()
+    public function getResponse() : Response
     {
         return $this->_response;
     }
@@ -71,9 +95,9 @@ class Cluster
      *
      * @return array List of index names
      */
-    public function getIndexNames()
+    public function getIndexNames() : array<string>
     {
-        $metaData = $this->_data['metadata']['indices'];
+        $metaData = /* UNSAFE_EXPR */ $this->_data['metadata']['indices'];
 
         $indices = array();
         foreach ($metaData as $key => $value) {
@@ -90,7 +114,7 @@ class Cluster
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-state.html
      */
-    public function getState()
+    public function getState() : Indexish<string, mixed>
     {
         return $this->_data;
     }
@@ -100,11 +124,11 @@ class Cluster
      *
      * @return array List of node names
      */
-    public function getNodeNames()
+    public function getNodeNames() : array<string>
     {
         $data = $this->getState();
         $nodeNames = array();
-        foreach ($data['nodes'] as $node) {
+        foreach (/* UNSAFE_EXPR */ $data['nodes'] as $node) {
             $nodeNames[] = $node['name'];
         }
 
@@ -116,13 +140,14 @@ class Cluster
      *
      * @return \Elastica\Node[]
      */
-    public function getNodes()
+    public function getNodes() : array<Node>
     {
         $nodes = array();
         $data = $this->getState();
-
-        foreach ($data['nodes'] as $id => $name) {
-            $nodes[] = new Node($id, $this->getClient());
+        if (isset($data['nodes'])) {
+               foreach (/* UNSAFE_EXPR */ $data['nodes'] as $id => $name) {
+                   $nodes[] = new Node($id, $this->getClient());
+               }
         }
 
         return $nodes;
@@ -133,7 +158,7 @@ class Cluster
      *
      * @return \Elastica\Client Client object
      */
-    public function getClient()
+    public function getClient() : Client
     {
         return $this->_client;
     }
@@ -147,7 +172,7 @@ class Cluster
      *
      * @throws \Elastica\Exception\NotImplementedException
      */
-    public function getInfo(array $args)
+    public function getInfo(array $args) : void
     {
         throw new NotImplementedException('not implemented yet');
     }
@@ -157,11 +182,11 @@ class Cluster
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-health.html
      *
-     * @return \Elastica\Cluster\Health
+     * @return Awaitable<\Elastica\Cluster\Health>
      */
-    public function getHealth()
+    public function getHealth() : Awaitable<Health>
     {
-        return new Health($this->getClient());
+        return Health::create($this->getClient());
     }
 
     /**
@@ -169,7 +194,7 @@ class Cluster
      *
      * @return \Elastica\Cluster\Settings
      */
-    public function getSettings()
+    public function getSettings() : Settings
     {
         return new Settings($this->getClient());
     }
@@ -181,9 +206,9 @@ class Cluster
      *
      * @param string $delay OPTIONAL Seconds to shutdown cluster after (default = 1s)
      *
-     * @return \Elastica\Response
+     * @return Awaitable<\Elastica\Response>
      */
-    public function shutdown($delay = '1s')
+    public function shutdown(string $delay = '1s') : Awaitable<Response>
     {
         $path = '_shutdown?delay='.$delay;
 

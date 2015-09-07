@@ -1,5 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Query;
+
+use Indexish;
 
 /**
  * Class Common.
@@ -14,19 +16,19 @@ class Common extends AbstractQuery
     /**
      * @var string
      */
-    protected $_field;
+    protected string $_field = '';
 
     /**
      * @var array
      */
-    protected $_queryParams = array();
+    protected array $_queryParams = array();
 
     /**
      * @param string $field           the field on which to query
      * @param string $query           the query string
      * @param float  $cutoffFrequency percentage in decimal form (.001 == 0.1%)
      */
-    public function __construct($field, $query, $cutoffFrequency)
+    public function __construct(string $field, string $query, float $cutoffFrequency)
     {
         $this->setField($field);
         $this->setQuery($query);
@@ -40,7 +42,7 @@ class Common extends AbstractQuery
      *
      * @return $this
      */
-    public function setField($field)
+    public function setField(string $field) : this
     {
         $this->_field = $field;
 
@@ -54,7 +56,7 @@ class Common extends AbstractQuery
      *
      * @return $this
      */
-    public function setQuery($query)
+    public function setQuery(string $query) : this
     {
         return $this->setQueryParam('query', $query);
     }
@@ -66,7 +68,7 @@ class Common extends AbstractQuery
      *
      * @return $this
      */
-    public function setCutoffFrequency($frequency)
+    public function setCutoffFrequency(float $frequency) : this
     {
         return $this->setQueryParam('cutoff_frequency', (float) $frequency);
     }
@@ -78,7 +80,7 @@ class Common extends AbstractQuery
      *
      * @return $this
      */
-    public function setLowFrequencyOperator($operator)
+    public function setLowFrequencyOperator(string $operator) : this
     {
         return $this->setQueryParam('low_freq_operator', $operator);
     }
@@ -90,7 +92,7 @@ class Common extends AbstractQuery
      *
      * @return $this
      */
-    public function setHighFrequencyOperator($operator)
+    public function setHighFrequencyOperator(string $operator) : this
     {
         return $this->setQueryParam('high_frequency_operator', $operator);
     }
@@ -104,7 +106,7 @@ class Common extends AbstractQuery
      *
      * @link Possible values for minimum_should_match http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-minimum-should-match.html
      */
-    public function setMinimumShouldMatch($minimum)
+    public function setMinimumShouldMatch(mixed $minimum) : this
     {
         return $this->setQueryParam('minimum_should_match', $minimum);
     }
@@ -116,7 +118,7 @@ class Common extends AbstractQuery
      *
      * @return $this
      */
-    public function setBoost($boost)
+    public function setBoost(float $boost) : this
     {
         return $this->setQueryParam('boost', (float) $boost);
     }
@@ -128,7 +130,7 @@ class Common extends AbstractQuery
      *
      * @return $this
      */
-    public function setAnalyzer($analyzer)
+    public function setAnalyzer(string $analyzer) : this
     {
         return $this->setQueryParam('analyzer', $analyzer);
     }
@@ -140,7 +142,7 @@ class Common extends AbstractQuery
      *
      * @return $this
      */
-    public function setDisableCoord($disable = true)
+    public function setDisableCoord(bool $disable = true) : this
     {
         return $this->setQueryParam('disable_coord', (bool) $disable);
     }
@@ -153,7 +155,7 @@ class Common extends AbstractQuery
      *
      * @return $this
      */
-    public function setQueryParam($key, $value)
+    public function setQueryParam(string $key, mixed $value) : this
     {
         $this->_queryParams[$key] = $value;
 
@@ -163,7 +165,7 @@ class Common extends AbstractQuery
     /**
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $this->setParam($this->_field, $this->_queryParams);
 

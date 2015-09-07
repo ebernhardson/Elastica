@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Transport;
 
 use Elastica\Connection;
@@ -8,7 +8,7 @@ use Elastica\Test\Base as BaseTest;
 
 class ThriftTest extends BaseTest
 {
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass() : void
     {
         if (!class_exists('Elasticsearch\\RestClient')) {
             self::markTestSkipped('munkie/elasticsearch-thrift-php package should be installed to run thrift transport tests');
@@ -18,7 +18,7 @@ class ThriftTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConstruct()
+    public function testConstruct() : void
     {
         $host = $this->_getHost();
         $port = 9500;
@@ -32,7 +32,7 @@ class ThriftTest extends BaseTest
      * @group functional
      * @dataProvider configProvider
      */
-    public function testSearchRequest($config)
+    public function testSearchRequest($config) : void
     {
         $this->_checkPlugin();
 
@@ -40,30 +40,30 @@ class ThriftTest extends BaseTest
         $client = $this->_getClient($config);
 
         $index = $client->getIndex('elastica_test1');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
         $type = $index->getType('user');
 
         // Adds 1 document to the index
-        $doc1 = new Document(1,
+        $doc1 = new Document('1',
             array('username' => 'hans', 'test' => array('2', '3', '5'))
         );
         $doc1->setVersion(0);
-        $type->addDocument($doc1);
+        $type->addDocument($doc1)->getWaitHandle()->join();
 
         // Adds a list of documents with _bulk upload to the index
         $docs = array();
-        $docs[] = new Document(2,
+        $docs[] = new Document('2',
             array('username' => 'john', 'test' => array('1', '3', '6'))
         );
-        $docs[] = new Document(3,
+        $docs[] = new Document('3',
             array('username' => 'rolf', 'test' => array('2', '3', '7'))
         );
-        $type->addDocuments($docs);
+        $type->addDocuments($docs)->getWaitHandle()->join();
 
         // Refresh index
-        $index->refresh();
-        $resultSet = $type->search('rolf');
+        $index->refresh()->getWaitHandle()->join();
+        $resultSet = $type->search('rolf')->getWaitHandle()->join();
 
         $this->assertEquals(1, $resultSet->getTotalHits());
     }
@@ -72,19 +72,19 @@ class ThriftTest extends BaseTest
      * @group unit
      * @expectedException \Elastica\Exception\ConnectionException
      */
-    public function testInvalidHostRequest()
+    public function testInvalidHostRequest() : void
     {
         $this->_checkPlugin();
 
         $client = $this->_getClient(array('host' => 'unknown', 'port' => 9555, 'transport' => 'Thrift'));
-        $client->getStatus();
+        $client->getStatus()->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      * @expectedException \Elastica\Exception\ResponseException
      */
-    public function testInvalidElasticRequest()
+    public function testInvalidElasticRequest() : void
     {
         $this->_checkPlugin();
 
@@ -97,10 +97,10 @@ class ThriftTest extends BaseTest
         $client->addConnection($connection);
 
         $index = new Index($client, 'missing_index');
-        $index->getStatus();
+        $index->getStatus()->getWaitHandle()->join();
     }
 
-    public function configProvider()
+    public function configProvider() : array<array<array>>
     {
         return array(
             array(
@@ -125,10 +125,10 @@ class ThriftTest extends BaseTest
         );
     }
 
-    protected function _checkPlugin()
+    protected function _checkPlugin() : void
     {
-        $nodes = $this->_getClient()->getCluster()->getNodes();
-        if (!$nodes[0]->getInfo()->hasPlugin('transport-thrift')) {
+        $nodes = $this->_getClient()->getCluster()->getWaitHandle()->join()->getNodes();
+        if (empty($nodes) || !$nodes[0]->getInfo()->getWaitHandle()->join()->hasPlugin('transport-thrift')->getWaitHandle()->join()) {
             $this->markTestSkipped('transport-thrift plugin not installed.');
         }
     }

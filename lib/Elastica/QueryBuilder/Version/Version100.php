@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\QueryBuilder\Version;
 
 use Elastica\QueryBuilder\Version;
@@ -12,7 +12,7 @@ use Elastica\QueryBuilder\Version;
  */
 class Version100 extends Version
 {
-    protected $queries = array(
+    protected array<string> $queries = array(
         'match',
         'multi_match',
         'bool',
@@ -59,7 +59,7 @@ class Version100 extends Version
         // 'custom_boost_factor'
     );
 
-    protected $filters = array(
+    protected array<string> $filters = array(
         'bool_and', // original: bool
         'bool',
         'exists',
@@ -93,7 +93,7 @@ class Version100 extends Version
         // 'numeric_range'
     );
 
-    protected $aggregations = array(
+    protected array<string> $aggregations = array(
         'min',
         'max',
         'sum',
@@ -115,7 +115,7 @@ class Version100 extends Version
         'geohash_grid',
     );
 
-    protected $suggesters = array(
+    protected array<string> $suggesters = array(
         'term',
         'phrase',
         'completion',

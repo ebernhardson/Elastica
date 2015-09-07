@@ -1,8 +1,10 @@
-<?php
+<?hh
 namespace Elastica\Node;
 
 use Elastica\Node as BaseNode;
 use Elastica\Request;
+use Elastica\Response;
+use Indexish;
 
 /**
  * Elastica cluster node object.
@@ -13,33 +15,35 @@ use Elastica\Request;
  */
 class Info
 {
+    protected $_id = null;
+
     /**
      * Response.
      *
      * @var \Elastica\Response Response object
      */
-    protected $_response = null;
+    protected Response $_response;
 
     /**
      * Stats data.
      *
      * @var array stats data
      */
-    protected $_data = array();
+    protected array $_data = array();
 
     /**
      * Node.
      *
      * @var \Elastica\Node Node object
      */
-    protected $_node = null;
+    protected BaseNode $_node;
 
     /**
      * Query parameters.
      *
      * @var array
      */
-    protected $_params = array();
+    protected array $_params = array();
 
     /**
      * Create new info object for node.
@@ -47,10 +51,21 @@ class Info
      * @param \Elastica\Node $node   Node object
      * @param array          $params List of params to return. Can be: settings, os, process, jvm, thread_pool, network, transport, http
      */
-    public function __construct(BaseNode $node, array $params = array())
+    static public async function create(BaseNode $node, array $params = array()) : Awaitable<Info>
+    {
+        $response = await self::_refreshRequest($node, $params);
+        return new self($node, $params, $response);
+    }
+
+    /**
+     * Create new info object for node.
+     *
+     * @param \Elastica\Node $node   Node object
+     */
+    protected function __construct(BaseNode $node, array $params, Response $response)
     {
         $this->_node = $node;
-        $this->refresh($params);
+        $this->onResponse($response, $params);
     }
 
     /**
@@ -63,7 +78,7 @@ class Info
      *
      * @return mixed Data array entry or null if not found
      */
-    public function get()
+    public function get(...) : mixed
     {
         $data = $this->getData();
 
@@ -83,7 +98,7 @@ class Info
      *
      * @return string Returns Node port
      */
-    public function getPort()
+    public function getPort() : string
     {
         // Returns string in format: inet[/192.168.1.115:9201]
         $data = $this->get('http_address');
@@ -98,7 +113,7 @@ class Info
      *
      * @return string Returns Node ip address
      */
-    public function getIp()
+    public function getIp() : string
     {
         // Returns string in format: inet[/192.168.1.115:9201]
         $data = $this->get('http_address');
@@ -111,19 +126,19 @@ class Info
     /**
      * Return data regarding plugins installed on this node.
      *
-     * @return array plugin data
+     * @return Awaitable<array> plugin data
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-info.html
      */
-    public function getPlugins()
+    public async function getPlugins() : Awaitable<array>
     {
         if (!in_array('plugins', $this->_params)) {
             //Plugin data was not retrieved when refresh() was called last. Get it now.
             $this->_params[] = 'plugins';
-            $this->refresh($this->_params);
+            await $this->refresh($this->_params);
         }
 
-        return $this->get('plugins');
+        return (array) $this->get('plugins');
     }
 
     /**
@@ -131,11 +146,12 @@ class Info
      *
      * @param string $name plugin name
      *
-     * @return bool true if the plugin is installed, false otherwise
+     * @return Awaitable<bool> true if the plugin is installed, false otherwise
      */
-    public function hasPlugin($name)
+    public async function hasPlugin(@string $name) : Awaitable<bool>
     {
-        foreach ($this->getPlugins() as $plugin) {
+        $plugins = await $this->getPlugins();
+        foreach ($plugins as $plugin) {
             if ($plugin['name'] == $name) {
                 return true;
             }
@@ -149,7 +165,7 @@ class Info
      *
      * @return array Data array
      */
-    public function getData()
+    public function getData() : array
     {
         return $this->_data;
     }
@@ -159,7 +175,7 @@ class Info
      *
      * @return \Elastica\Node Node object
      */
-    public function getNode()
+    public function getNode() : BaseNode
     {
         return $this->_node;
     }
@@ -167,7 +183,7 @@ class Info
     /**
      * @return string Unique node id
      */
-    public function getId()
+    public function getId() : string
     {
         return $this->_id;
     }
@@ -175,7 +191,7 @@ class Info
     /**
      * @return string Node name
      */
-    public function getName()
+    public function getName() : string
     {
         return $this->_data['name'];
     }
@@ -185,7 +201,7 @@ class Info
      *
      * @return \Elastica\Response Response object
      */
-    public function getResponse()
+    public function getResponse() : Response
     {
         return $this->_response;
     }
@@ -195,13 +211,11 @@ class Info
      *
      * @param array $params Params to return (default none). Possible options: settings, os, process, jvm, thread_pool, network, transport, http, plugin
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function refresh(array $params = array())
+    private static function _refreshRequest(BaseNode $node, array $params = array()) : Awaitable<Response>
     {
-        $this->_params = $params;
-
-        $path = '_nodes/'.$this->getNode()->getId();
+        $path = '_nodes/'.$node->getId();
 
         if (!empty($params)) {
             $path .= '?';
@@ -210,9 +224,25 @@ class Info
             }
         }
 
-        $this->_response = $this->getNode()->getClient()->request($path, Request::GET);
+        return $node->getClient()->request($path, Request::GET);
+    }
+
+    public async function refresh(array $params = array()) : Awaitable<void>
+    {
+        $response = await self::_refreshRequest($this->getNode(), $params);
+        $this->onResponse($response, $params);
+    }
+
+    private function onResponse(Response $response, array $params) : void
+    {
+        $this->_response = $response;
+        $this->_params = $params;
+
         $data = $this->getResponse()->getData();
 
+        if (!$data instanceof Indexish) {
+            throw new \RuntimeException('expected array');
+        }
         $this->_data = reset($data['nodes']);
         $this->_id = key($data['nodes']);
         $this->getNode()->setId($this->getId());

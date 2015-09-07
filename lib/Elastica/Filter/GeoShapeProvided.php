@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Filter;
 
 /**
@@ -24,14 +24,14 @@ class GeoShapeProvided extends AbstractGeoShape
      *
      * @var string
      */
-    protected $_shapeType;
+    protected string $_shapeType;
 
     /**
      * Coordinates making up geo_shape.
      *
      * @var array Coordinates making up geo_shape
      */
-    protected $_coordinates;
+    protected array $_coordinates;
 
     /**
      * Construct geo_shape filter.
@@ -42,7 +42,7 @@ class GeoShapeProvided extends AbstractGeoShape
      *                            point, envelope, linestring, polygon,
      *                            multipoint or multipolygon
      */
-    public function __construct($path, array $coordinates, $shapeType = self::TYPE_ENVELOPE)
+    public function __construct(string $path, array $coordinates, string $shapeType = self::TYPE_ENVELOPE)
     {
         $this->_path = $path;
         $this->_shapeType = $shapeType;
@@ -56,7 +56,7 @@ class GeoShapeProvided extends AbstractGeoShape
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : array<string, array>
     {
         return array(
             'geo_shape' => array(

@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Filter;
 
 /**
@@ -14,7 +14,7 @@ class GeohashCell extends AbstractGeoDistance
      * @param string|int   $precision Integer length of geohash prefix or distance (3, or "50m")
      * @param bool         $neighbors If true, filters cells next to the given cell.
      */
-    public function __construct($key, $location, $precision = -1, $neighbors = false)
+    public function __construct(string $key, mixed $location, mixed $precision = -1, bool $neighbors = false)
     {
         parent::__construct($key, $location);
         $this->setPrecision($precision);
@@ -28,7 +28,7 @@ class GeohashCell extends AbstractGeoDistance
      *
      * @return $this
      */
-    public function setPrecision($precision)
+    public function setPrecision(mixed $precision) : this
     {
         return $this->setParam('precision', $precision);
     }
@@ -40,7 +40,7 @@ class GeohashCell extends AbstractGeoDistance
      *
      * @return $this
      */
-    public function setNeighbors($neighbors)
+    public function setNeighbors(bool $neighbors) : this
     {
         return $this->setParam('neighbors', (bool) $neighbors);
     }

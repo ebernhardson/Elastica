@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Bulk\Action;
 
 use Elastica\Document;
@@ -9,7 +9,7 @@ class UpdateDocument extends IndexDocument
     /**
      * @var string
      */
-    protected $_opType = self::OP_TYPE_UPDATE;
+    protected string $_opType = self::OP_TYPE_UPDATE;
 
     /**
      * Set the document for this bulk update action.
@@ -18,7 +18,7 @@ class UpdateDocument extends IndexDocument
      *
      * @return $this
      */
-    public function setDocument(Document $document)
+    public function setDocument(Document $document) : this
     {
         parent::setDocument($document);
 
@@ -27,7 +27,7 @@ class UpdateDocument extends IndexDocument
         if ($document->getDocAsUpsert()) {
             $source['doc_as_upsert'] = true;
         } elseif ($document->hasUpsert()) {
-            $upsert = $document->getUpsert()->getData();
+            $upsert = $document->getUpsert()?->getData();
 
             if (!empty($upsert)) {
                 $source['upsert'] = $upsert;
@@ -44,7 +44,7 @@ class UpdateDocument extends IndexDocument
      *
      * @return $this
      */
-    public function setScript(Script $script)
+    public function setScript(Script $script) : this
     {
         parent::setScript($script);
 
@@ -52,7 +52,7 @@ class UpdateDocument extends IndexDocument
         $source = $script->toArray();
 
         if ($script->hasUpsert()) {
-            $upsert = $script->getUpsert()->getData();
+            $upsert = $script->getUpsert()?->getData();
 
             if (!empty($upsert)) {
                 $source['upsert'] = $upsert;

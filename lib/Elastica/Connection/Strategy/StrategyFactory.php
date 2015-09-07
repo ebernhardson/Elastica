@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Connection\Strategy;
 
 use Elastica\Exception\InvalidException;
@@ -17,29 +17,32 @@ class StrategyFactory
      *
      * @return \Elastica\Connection\Strategy\StrategyInterface
      */
-    public static function create($strategyName)
+    public static function create(mixed $strategyName) : StrategyInterface
     {
         if ($strategyName instanceof StrategyInterface) {
             return $strategyName;
         }
 
         if (CallbackStrategy::isValid($strategyName)) {
-            return new CallbackStrategy($strategyName);
+            return new CallbackStrategy(/* UNSAFE_EXPR */ $strategyName);
         }
 
         if (is_string($strategyName)) {
-            $requiredInterface = '\\Elastica\\Connection\\Strategy\\StrategyInterface';
-            $predefinedStrategy = '\\Elastica\\Connection\\Strategy\\'.$strategyName;
-
-            if (class_exists($predefinedStrategy) && class_implements($predefinedStrategy, $requiredInterface)) {
-                return new $predefinedStrategy();
-            }
-
-            if (class_exists($strategyName) && class_implements($strategyName, $requiredInterface)) {
-                return new $strategyName();
-            }
+			$map = self::createStrategyMap();
+			if ($map->contains($strategyName)) {
+				$factory = $map->at($strategyName);
+				return $factory();
+			}
         }
 
         throw new InvalidException('Can\'t create strategy instance by given argument');
     }
+
+	protected static function createStrategyMap() : Map<string, (function() : StrategyInterface)>
+	{
+		return Map {
+			'RoundRobin' => () ==> new RoundRobin(),
+			'Simple' => () ==> new Simple(),
+		};
+	}
 }

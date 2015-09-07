@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Exception\Bulk;
 
 use Elastica\Exception\BulkException;

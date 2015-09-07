@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Query\Builder;
@@ -11,7 +11,7 @@ class BuilderTest extends BaseTest
      * @covers \Elastica\Query\Builder::factory
      * @covers \Elastica\Query\Builder::__construct
      */
-    public function testFactory()
+    public function testFactory() : void
     {
         $this->assertInstanceOf(
             'Elastica\Query\Builder',
@@ -19,7 +19,7 @@ class BuilderTest extends BaseTest
         );
     }
 
-    public function getQueryData()
+    public function getQueryData() : array<array<mixed>>
     {
         return array(
             array('allowLeadingWildcard', false, '{"allow_leading_wildcard":"false"}'),
@@ -29,7 +29,7 @@ class BuilderTest extends BaseTest
             array('analyzer', 'someAnalyzer', '{"analyzer":"someAnalyzer"}'),
             array('autoGeneratePhraseQueries', true, '{"auto_generate_phrase_queries":"true"}'),
             array('autoGeneratePhraseQueries', false, '{"auto_generate_phrase_queries":"false"}'),
-            array('boost', 2, '{"boost":"2"}'),
+            array('boost', 2.0, '{"boost":"2"}'),
             array('boost', 4.2, '{"boost":"4.2"}'),
             array('defaultField', 'fieldName', '{"default_field":"fieldName"}'),
             array('defaultOperator', 'OR', '{"default_operator":"OR"}'),
@@ -49,7 +49,7 @@ class BuilderTest extends BaseTest
             array('minimumNumberShouldMatch', 21, '{"minimum_number_should_match":"21"}'),
             array('phraseSlop', 6, '{"phrase_slop":"6"}'),
             array('size', 7, '{"size":"7"}'),
-            array('tieBreakerMultiplier', 7, '{"tie_breaker_multiplier":"7"}'),
+            array('tieBreakerMultiplier', 7.0, '{"tie_breaker_multiplier":"7"}'),
             array('matchAll', 1.1, '{"match_all":{"boost":"1.1"}}'),
             array('fields', array('age', 'sex', 'location'), '{"fields":["age","sex","location"]}'),
         );
@@ -83,14 +83,14 @@ class BuilderTest extends BaseTest
      * @covers \Elastica\Query\Builder::matchAll
      * @covers \Elastica\Query\Builder::fields
      */
-    public function testAllowLeadingWildcard($method, $argument, $result)
+    public function testAllowLeadingWildcard($method, $argument, $result) : void
     {
         $builder = new Builder();
         $this->assertSame($builder, $builder->$method($argument));
         $this->assertSame($result, (string) $builder);
     }
 
-    public function getQueryTypes()
+    public function getQueryTypes() : array<array<string>>
     {
         return array(
             array('bool', 'bool'),
@@ -153,11 +153,12 @@ class BuilderTest extends BaseTest
      * @covers \Elastica\Query\Builder::wildcard
      * @covers \Elastica\Query\Builder::wildcardClose
      */
-    public function testQueryTypes($method, $queryType)
+    public function testQueryTypes($method, $queryType) : void
     {
         $builder = new Builder();
         $this->assertSame($builder, $builder->$method()); // open
-        $this->assertSame($builder, $builder->{$method.'Close'}()); // close
+        // UNSAFE
+        $this->assertSame($builder, call_user_func( array( $builder, $method.'Close'))); // close
         $this->assertSame('{"'.$queryType.'":{}}', (string) $builder);
     }
 
@@ -168,7 +169,7 @@ class BuilderTest extends BaseTest
      * @covers \Elastica\Query\Builder::open
      * @covers \Elastica\Query\Builder::close
      */
-    public function testFieldOpenAndClose()
+    public function testFieldOpenAndClose() : void
     {
         $builder = new Builder();
         $this->assertSame($builder, $builder->fieldOpen('someField'));
@@ -180,7 +181,7 @@ class BuilderTest extends BaseTest
      * @group unit
      * @covers \Elastica\Query\Builder::sortField
      */
-    public function testSortField()
+    public function testSortField() : void
     {
         $builder = new Builder();
         $this->assertSame($builder, $builder->sortField('name', true));
@@ -191,7 +192,7 @@ class BuilderTest extends BaseTest
      * @group unit
      * @covers \Elastica\Query\Builder::sortFields
      */
-    public function testSortFields()
+    public function testSortFields() : void
     {
         $builder = new Builder();
         $this->assertSame($builder, $builder->sortFields(array('field1' => 'asc', 'field2' => 'desc', 'field3' => 'asc')));
@@ -202,7 +203,7 @@ class BuilderTest extends BaseTest
      * @group unit
      * @covers \Elastica\Query\Builder::queries
      */
-    public function testQueries()
+    public function testQueries() : void
     {
         $queries = array();
 
@@ -217,7 +218,7 @@ class BuilderTest extends BaseTest
         $this->assertSame('{"queries":[{"term":{"age":"34"}},{"term":{"name":"christer"}}]}', (string) $builder);
     }
 
-    public function getFieldData()
+    public function getFieldData() : array<array<mixed>>
     {
         return array(
             array('name', 'value', '{"name":"value"}'),
@@ -233,7 +234,7 @@ class BuilderTest extends BaseTest
      * @dataProvider getFieldData
      * @covers \Elastica\Query\Builder::field
      */
-    public function testField($name, $value, $result)
+    public function testField($name, $value, $result) : void
     {
         $builder = new Builder();
         $this->assertSame($builder, $builder->field($name, $value));
@@ -246,10 +247,10 @@ class BuilderTest extends BaseTest
      * @expectedExceptionMessage The produced query is not a valid json string : "{{}"
      * @covers \Elastica\Query\Builder::toArray
      */
-    public function testToArrayWithInvalidData()
+    public function testToArrayWithInvalidData() : void
     {
         $builder = new Builder();
-        $builder->open('foo');
+        $builder->open();
         $builder->toArray();
     }
 
@@ -257,7 +258,7 @@ class BuilderTest extends BaseTest
      * @group unit
      * @covers \Elastica\Query\Builder::toArray
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $builder = new Builder();
         $builder->query()->term()->field('category.id', array(1, 2, 3))->termClose()->queryClose();

@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 /**
@@ -15,10 +15,10 @@ class SimpleQueryString extends AbstractQuery
      * @param string $query
      * @param array  $fields
      */
-    public function __construct($query, array $fields = array())
+    public function __construct(string $query, array $fields = array())
     {
         $this->setQuery($query);
-        if (sizeof($fields)) {
+        if (count($fields)) {
             $this->setFields($fields);
         }
     }
@@ -30,7 +30,7 @@ class SimpleQueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setQuery($query)
+    public function setQuery(string $query) : this
     {
         return $this->setParam('query', $query);
     }
@@ -40,7 +40,7 @@ class SimpleQueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setFields(array $fields)
+    public function setFields(array<string> $fields) : this
     {
         return $this->setParam('fields', $fields);
     }
@@ -52,7 +52,7 @@ class SimpleQueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setDefaultOperator($operator)
+    public function setDefaultOperator(string $operator) : this
     {
         return $this->setParam('default_operator', $operator);
     }
@@ -64,7 +64,7 @@ class SimpleQueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setAnalyzer($analyzer)
+    public function setAnalyzer(string $analyzer) : this
     {
         return $this->setParam('analyzer', $analyzer);
     }
@@ -76,7 +76,7 @@ class SimpleQueryString extends AbstractQuery
      *
      * @return $this
      */
-    public function setMinimumShouldMatch($minimumShouldMatch)
+    public function setMinimumShouldMatch(mixed $minimumShouldMatch) : this
     {
         return $this->setParam('minimum_should_match', $minimumShouldMatch);
     }

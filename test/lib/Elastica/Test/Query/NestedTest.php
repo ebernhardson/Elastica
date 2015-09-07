@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Query\Nested;
@@ -10,7 +10,7 @@ class NestedTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetQuery()
+    public function testSetQuery() : void
     {
         $nested = new Nested();
         $path = 'test1';
@@ -19,10 +19,10 @@ class NestedTest extends BaseTest
         $this->assertInstanceOf('Elastica\Query\Nested', $nested->setQuery($queryString));
         $this->assertInstanceOf('Elastica\Query\Nested', $nested->setPath($path));
         $expected = array(
-            'nested' => array(
+            'nested' => Map {
                 'query' => $queryString->toArray(),
                 'path' => $path,
-            ),
+            },
         );
 
         $this->assertEquals($expected, $nested->toArray());

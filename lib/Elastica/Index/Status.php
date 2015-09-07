@@ -1,8 +1,10 @@
-<?php
+<?hh
 namespace Elastica\Index;
 
 use Elastica\Index as BaseIndex;
 use Elastica\Request;
+use Elastica\Response;
+use Indexish;
 
 /**
  * Elastica index status object.
@@ -18,31 +20,44 @@ class Status
      *
      * @var \Elastica\Response Response object
      */
-    protected $_response = null;
+    protected Response $_response;
 
     /**
      * Stats info.
      *
      * @var array Stats info
      */
-    protected $_data = array();
+    protected Indexish<string, mixed> $_data;
 
     /**
      * Index.
      *
      * @var \Elastica\Index Index object
      */
-    protected $_index = null;
+    protected BaseIndex $_index;
+
+    /**
+     * Create.
+     *
+     * @param \Elastica\Index $index Index object
+     *
+     * @return Awaitable<\Elastica\Status>
+     */
+    static public async function create(BaseIndex $index) : Awaitable<Status>
+    {
+        $response = await self::_refreshRequest($index);
+        return new self($index, $response);
+    }
 
     /**
      * Construct.
      *
      * @param \Elastica\Index $index Index object
      */
-    public function __construct(BaseIndex $index)
+    protected function __construct(BaseIndex $index, Response $response)
     {
         $this->_index = $index;
-        $this->refresh();
+        $this->onResponse($response);
     }
 
     /**
@@ -50,7 +65,7 @@ class Status
      *
      * @return array Status info
      */
-    public function getData()
+    public function getData() : Indexish<string, mixed>
     {
         return $this->_data;
     }
@@ -61,10 +76,10 @@ class Status
      *
      * @return mixed Data array entry or null if not found
      */
-    public function get()
+    public function get() : mixed
     {
         $data = $this->getData();
-        $data = $data['indices'][$this->getIndex()->getName()];
+        $data = /* UNSAFE_EXPR */ $data['indices'][$this->getIndex()->getName()];
 
         foreach (func_get_args() as $arg) {
             if (isset($data[$arg])) {
@@ -80,13 +95,14 @@ class Status
     /**
      * Returns all index aliases.
      *
-     * @return array Aliases
+     * @return Awaitable<array> Aliases
      */
-    public function getAliases()
+    public async function getAliases() : Awaitable<array>
     {
-        $responseData = $this->getIndex()->request('_aliases', \Elastica\Request::GET)->getData();
+        $response = await $this->getIndex()->request('_aliases', \Elastica\Request::GET);
+        $responseData = $response->getData();
 
-        $data = $responseData[$this->getIndex()->getName()];
+        $data = /* UNSAFE_EXPR */ $responseData[$this->getIndex()->getName()];
         if (!empty($data['aliases'])) {
             return array_keys($data['aliases']);
         }
@@ -97,13 +113,14 @@ class Status
     /**
      * Returns all index settings.
      *
-     * @return array Index settings
+     * @return Awaitable<array> Index settings
      */
-    public function getSettings()
+    public async function getSettings() : Awaitable<array>
     {
-        $responseData = $this->getIndex()->request('_settings', \Elastica\Request::GET)->getData();
+        $response = await $this->getIndex()->request('_settings', \Elastica\Request::GET);
+        $responseData = $response->getData();
 
-        return $responseData[$this->getIndex()->getName()]['settings'];
+        return /* UNSAFE_EXPR */ $responseData[$this->getIndex()->getName()]['settings'];
     }
 
     /**
@@ -111,11 +128,12 @@ class Status
      *
      * @param string $name Alias name
      *
-     * @return bool
+     * @return Awaitable<bool>
      */
-    public function hasAlias($name)
+    public async function hasAlias(string $name) : Awaitable<bool>
     {
-        return in_array($name, $this->getAliases());
+        $aliases = await $this->getAliases();
+        return in_array($name, $aliases);
     }
 
     /**
@@ -123,7 +141,7 @@ class Status
      *
      * @return \Elastica\Index Index object
      */
-    public function getIndex()
+    public function getIndex() : BaseIndex
     {
         return $this->_index;
     }
@@ -133,18 +151,35 @@ class Status
      *
      * @return \Elastica\Response Response object
      */
-    public function getResponse()
+    public function getResponse() : Response
     {
         return $this->_response;
     }
 
-    /**
-     * Reloads all status data of this object.
-     */
-    public function refresh()
+    protected static function _refreshRequest(BaseIndex $index) : Awaitable<Response>
     {
         $path = '_status';
-        $this->_response = $this->getIndex()->request($path, Request::GET);
-        $this->_data = $this->getResponse()->getData();
+        return $index->request($path, Request::GET);
+    }
+
+    /**
+     * Reloads all status data of this object.
+     *
+     * @return Awaitable<void>
+     */
+    public async function refresh() : Awaitable<void>
+    {
+        $response = await self::_refreshRequest($this->getIndex());
+        $this->onResponse($response);
+    }
+
+    private function onResponse(Response $response) : void
+    {
+        $this->_response = $response;
+        $data = $response->getData();
+        if (!$data instanceof Indexish) {
+            throw new \RuntimeException('expected array');
+        }
+        $this->_data = $data;
     }
 }

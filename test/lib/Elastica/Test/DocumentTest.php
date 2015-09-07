@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Document;
@@ -12,7 +12,7 @@ class DocumentTest extends BaseTest
     /**
      * @group unit
      */
-    public function testAddFile()
+    public function testAddFile() : void
     {
         $fileName = '/dev/null';
         if (!file_exists($fileName)) {
@@ -26,7 +26,7 @@ class DocumentTest extends BaseTest
     /**
      * @group unit
      */
-    public function testAddGeoPoint()
+    public function testAddGeoPoint() : void
     {
         $doc = new Document();
         $returnValue = $doc->addGeoPoint('point', 38.89859, -77.035971);
@@ -36,7 +36,7 @@ class DocumentTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetData()
+    public function testSetData() : void
     {
         $doc = new Document();
         $returnValue = $doc->setData(array('data'));
@@ -46,23 +46,23 @@ class DocumentTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
-        $id = 17;
+        $id = '17';
         $data = array('hello' => 'world');
         $type = 'testtype';
         $index = 'textindex';
 
         $doc = new Document($id, $data, $type, $index);
 
-        $result = array('_index' => $index, '_type' => $type, '_id' => $id, '_source' => $data);
+        $result = Map {'_index' => $index, '_type' => $type, '_id' => $id, '_source' => $data};
         $this->assertEquals($result, $doc->toArray());
     }
 
     /**
      * @group unit
      */
-    public function testSetType()
+    public function testSetType() : void
     {
         $document = new Document();
         $document->setType('type');
@@ -84,7 +84,7 @@ class DocumentTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetIndex()
+    public function testSetIndex() : void
     {
         $document = new Document();
         $document->setIndex('index2');
@@ -104,13 +104,13 @@ class DocumentTest extends BaseTest
     /**
      * @group unit
      */
-    public function testHasId()
+    public function testHasId() : void
     {
         $document = new Document();
         $this->assertFalse($document->hasId());
         $document->setId('');
         $this->assertFalse($document->hasId());
-        $document->setId(0);
+        $document->setId('0');
         $this->assertTrue($document->hasId());
         $document->setId('hello');
         $this->assertTrue($document->hasId());
@@ -119,49 +119,49 @@ class DocumentTest extends BaseTest
     /**
      * @group unit
      */
-    public function testGetOptions()
+    public function testGetOptions() : void
     {
         $document = new Document();
         $document->setIndex('index');
         $document->setOpType('create');
         $document->setParent('2');
-        $document->setId(1);
+        $document->setId('1');
 
         $options = $document->getOptions(array('index', 'type', 'id', 'parent'));
 
-        $this->assertInternalType('array', $options);
+        $this->assertInstanceOf('HH\Map', $options);
         $this->assertEquals(3, count($options));
-        $this->assertArrayHasKey('index', $options);
-        $this->assertArrayHasKey('id', $options);
-        $this->assertArrayHasKey('parent', $options);
+        $this->assertTrue(/* UNSAFE_EXPR */ $options->contains('index'));
+        $this->assertTrue(/* UNSAFE_EXPR */ $options->contains('id'));
+        $this->assertTrue(/* UNSAFE_EXPR */ $options->contains('parent'));
         $this->assertEquals('index', $options['index']);
         $this->assertEquals(1, $options['id']);
         $this->assertEquals('2', $options['parent']);
-        $this->assertArrayNotHasKey('type', $options);
-        $this->assertArrayNotHasKey('op_type', $options);
-        $this->assertArrayNotHasKey('_index', $options);
-        $this->assertArrayNotHasKey('_id', $options);
-        $this->assertArrayNotHasKey('_parent', $options);
+        $this->assertFalse(/* UNSAFE_EXPR */ $options->contains('type'));
+        $this->assertFalse(/* UNSAFE_EXPR */ $options->contains('op_type'));
+        $this->assertFalse(/* UNSAFE_EXPR */ $options->contains('_index'));
+        $this->assertFalse(/* UNSAFE_EXPR */ $options->contains('_id'));
+        $this->assertFalse(/* UNSAFE_EXPR */ $options->contains('_parent'));
 
         $options = $document->getOptions(array('parent', 'op_type', 'percolate'), true);
 
-        $this->assertInternalType('array', $options);
+        $this->assertInstanceOf('HH\Map', $options);
         $this->assertEquals(2, count($options));
-        $this->assertArrayHasKey('_parent', $options);
-        $this->assertArrayHasKey('_op_type', $options);
+        $this->assertTrue(/* UNSAFE_EXPR */ $options->contains('_parent'));
+        $this->assertTrue(/* UNSAFE_EXPR */ $options->contains('_op_type'));
         $this->assertEquals('2', $options['_parent']);
         $this->assertEquals('create', $options['_op_type']);
-        $this->assertArrayNotHasKey('percolate', $options);
-        $this->assertArrayNotHasKey('op_type', $options);
-        $this->assertArrayNotHasKey('parent', $options);
+        $this->assertFalse(/* UNSAFE_EXPR */ $options->contains('percolate'));
+        $this->assertFalse(/* UNSAFE_EXPR */ $options->contains('op_type'));
+        $this->assertFalse(/* UNSAFE_EXPR */ $options->contains('parent'));
     }
 
     /**
      * @group unit
      */
-    public function testGetSetHasRemove()
+    public function testGetSetHasRemove() : void
     {
-        $document = new Document(1, array('field1' => 'value1', 'field2' => 'value2', 'field3' => 'value3', 'field4' => null));
+        $document = new Document('1', array('field1' => 'value1', 'field2' => 'value2', 'field3' => 'value3', 'field4' => null));
 
         $this->assertEquals('value1', $document->get('field1'));
         $this->assertEquals('value2', $document->get('field2'));
@@ -183,13 +183,13 @@ class DocumentTest extends BaseTest
         $data = $document->getData();
 
         $this->assertArrayHasKey('field1', $data);
-        $this->assertEquals('value1', $data['field1']);
+        $this->assertEquals('value1', /* UNSAFE_EXPR */ $data['field1']);
         $this->assertArrayHasKey('field2', $data);
-        $this->assertEquals('value2', $data['field2']);
+        $this->assertEquals('value2', /* UNSAFE_EXPR */ $data['field2']);
         $this->assertArrayHasKey('field3', $data);
-        $this->assertEquals('value3', $data['field3']);
+        $this->assertEquals('value3', /* UNSAFE_EXPR */ $data['field3']);
         $this->assertArrayHasKey('field4', $data);
-        $this->assertNull($data['field4']);
+        $this->assertNull(/* UNSAFE_EXPR */ $data['field4']);
 
         $returnValue = $document->set('field1', 'changed1');
         $this->assertInstanceOf('Elastica\Document', $returnValue);
@@ -213,49 +213,49 @@ class DocumentTest extends BaseTest
     /**
      * @group unit
      */
-    public function testDataPropertiesOverloading()
+    public function testDataPropertiesOverloading() : void
     {
-        $document = new Document(1, array('field1' => 'value1', 'field2' => 'value2', 'field3' => 'value3', 'field4' => null));
+        $document = new Document('1', array('field1' => 'value1', 'field2' => 'value2', 'field3' => 'value3', 'field4' => null));
 
-        $this->assertEquals('value1', $document->field1);
-        $this->assertEquals('value2', $document->field2);
-        $this->assertEquals('value3', $document->field3);
-        $this->assertNull($document->field4);
+        $this->assertEquals('value1', $document->get('field1'));
+        $this->assertEquals('value2', $document->get('field2'));
+        $this->assertEquals('value3', $document->get('field3'));
+        $this->assertNull($document->get('field4'));
         try {
-            $document->field5;
+            $document->get('field5');
             $this->fail('Undefined field get should throw exception');
         } catch (InvalidException $e) {
             $this->assertTrue(true);
         }
 
-        $this->assertTrue(isset($document->field1));
-        $this->assertTrue(isset($document->field2));
-        $this->assertTrue(isset($document->field3));
-        $this->assertFalse(isset($document->field4), 'Field4 should not be isset, because it is null');
-        $this->assertFalse(isset($document->field5), 'Field5 should not be isset, because it is not set');
+        $this->assertTrue($document->__isset('field1'));
+        $this->assertTrue($document->__isset('field2'));
+        $this->assertTrue($document->__isset('field3'));
+        $this->assertFalse($document->__isset('field4'), 'Field4 should not be isset, because it is null');
+        $this->assertFalse($document->__isset('field5'), 'Field5 should not be isset, because it is not set');
 
         $data = $document->getData();
 
         $this->assertArrayHasKey('field1', $data);
-        $this->assertEquals('value1', $data['field1']);
+        $this->assertEquals('value1', /* UNSAFE_EXPR */ $data['field1']);
         $this->assertArrayHasKey('field2', $data);
-        $this->assertEquals('value2', $data['field2']);
+        $this->assertEquals('value2', /* UNSAFE_EXPR */ $data['field2']);
         $this->assertArrayHasKey('field3', $data);
-        $this->assertEquals('value3', $data['field3']);
+        $this->assertEquals('value3', /* UNSAFE_EXPR */ $data['field3']);
         $this->assertArrayHasKey('field4', $data);
-        $this->assertNull($data['field4']);
+        $this->assertNull(/* UNSAFE_EXPR */ $data['field4']);
 
-        $document->field1 = 'changed1';
-        unset($document->field3);
+        $document->set('field1', 'changed1');
+        $document->remove('field3');
         try {
-            unset($document->field5);
+            $document->remove('field5');
             $this->fail('Undefined field unset should throw exception');
         } catch (InvalidException $e) {
             $this->assertTrue(true);
         }
 
-        $this->assertEquals('changed1', $document->field1);
-        $this->assertFalse(isset($document->field3));
+        $this->assertEquals('changed1', $document->get('field1'));
+        $this->assertFalse($document->has('field3'));
 
         $newData = $document->getData();
 
@@ -265,19 +265,19 @@ class DocumentTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetTtl()
+    public function testSetTtl() : void
     {
         $document = new Document();
 
         $this->assertFalse($document->hasTtl());
         $options = $document->getOptions();
-        $this->assertArrayNotHasKey('ttl', $options);
+        $this->assertFalse(/* UNSAFE_EXPR */ $options->contains('ttl'));
 
         $document->setTtl('1d');
 
         $newOptions = $document->getOptions();
 
-        $this->assertArrayHasKey('ttl', $newOptions);
+        $this->assertTrue(/* UNSAFE_EXPR */ $newOptions->contains('ttl'));
         $this->assertEquals('1d', $newOptions['ttl']);
         $this->assertNotEquals($options, $newOptions);
 
@@ -288,10 +288,10 @@ class DocumentTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSerializedData()
+    public function testSerializedData() : void
     {
         $data = '{"user":"rolf"}';
-        $document = new Document(1, $data);
+        $document = new Document('1', $data);
 
         $this->assertFalse($document->has('user'));
 
@@ -320,7 +320,7 @@ class DocumentTest extends BaseTest
     /**
      * @group unit
      */
-    public function testUpsert()
+    public function testUpsert() : void
     {
         $document = new Document();
 
@@ -338,7 +338,7 @@ class DocumentTest extends BaseTest
     /**
      * @group unit
      */
-    public function testDocAsUpsert()
+    public function testDocAsUpsert() : void
     {
         $document = new Document();
 

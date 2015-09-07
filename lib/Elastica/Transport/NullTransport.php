@@ -1,9 +1,10 @@
-<?php
+<?hh // strict
 namespace Elastica\Transport;
 
 use Elastica\JSON;
 use Elastica\Request;
 use Elastica\Response;
+use Indexish;
 
 /**
  * Elastica Null Transport object.
@@ -21,9 +22,9 @@ class NullTransport extends AbstractTransport
      * @param \Elastica\Request $request
      * @param array             $params  Hostname, port, path, ...
      *
-     * @return \Elastica\Response Response empty object
+     * @return Awaitable<\Elastica\Response> Response empty object
      */
-    public function exec(Request $request, array $params)
+    public async function exec(Request $request, Indexish<string, mixed> $params) : Awaitable<Response>
     {
         $response = array(
             'took' => 0,

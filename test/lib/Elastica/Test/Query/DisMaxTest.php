@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -12,7 +12,7 @@ class DisMaxTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $query = new DisMax();
 
@@ -26,7 +26,7 @@ class DisMaxTest extends BaseTest
         $idsQuery3->setIds(3);
 
         $boost = 1.2;
-        $tieBreaker = 2;
+        $tieBreaker = 2.0;
 
         $query->setBoost($boost);
         $query->setTieBreaker($tieBreaker);
@@ -35,7 +35,7 @@ class DisMaxTest extends BaseTest
         $query->addQuery($idsQuery3->toArray());
 
         $expectedArray = array(
-            'dis_max' => array(
+            'dis_max' => Map {
                 'tie_breaker' => $tieBreaker,
                 'boost' => $boost,
                 'queries' => array(
@@ -43,7 +43,7 @@ class DisMaxTest extends BaseTest
                     $idsQuery2->toArray(),
                     $idsQuery3->toArray(),
                 ),
-            ),
+            },
         );
 
         $this->assertEquals($expectedArray, $query->toArray());
@@ -52,32 +52,32 @@ class DisMaxTest extends BaseTest
     /**
      * @group functional
      */
-    public function testQuery()
+    public function testQuery() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
 
         $type->addDocuments(array(
-            new Document(1, array('name' => 'Basel-Stadt')),
-            new Document(2, array('name' => 'New York')),
-            new Document(3, array('name' => 'Baden')),
-            new Document(4, array('name' => 'Baden Baden')),
-        ));
+            new Document('1', array('name' => 'Basel-Stadt')),
+            new Document('2', array('name' => 'New York')),
+            new Document('3', array('name' => 'Baden')),
+            new Document('4', array('name' => 'Baden Baden')),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $queryString1 = new QueryString('Bade*');
         $queryString2 = new QueryString('Base*');
 
         $boost = 1.2;
-        $tieBreaker = 2;
+        $tieBreaker = 2.0;
 
         $query = new DisMax();
         $query->setBoost($boost);
         $query->setTieBreaker($tieBreaker);
         $query->addQuery($queryString1);
         $query->addQuery($queryString2);
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
 
         $this->assertEquals(3, $resultSet->count());
     }

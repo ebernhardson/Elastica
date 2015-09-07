@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Aggregation;
 
 use Elastica\Aggregation\Range;
@@ -7,20 +7,20 @@ use Elastica\Query;
 
 class RangeTest extends BaseAggregationTest
 {
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : \Elastica\Index
     {
         $index = $this->_createIndex();
 
         $index->getType('test')->addDocuments(array(
-            new Document(1, array('price' => 5)),
-            new Document(2, array('price' => 8)),
-            new Document(3, array('price' => 1)),
-            new Document(4, array('price' => 3)),
-            new Document(5, array('price' => 1.5)),
-            new Document(6, array('price' => 2)),
-        ));
+            new Document('1', array('price' => 5)),
+            new Document('2', array('price' => 8)),
+            new Document('3', array('price' => 1)),
+            new Document('4', array('price' => 3)),
+            new Document('5', array('price' => 1.5)),
+            new Document('6', array('price' => 2)),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -28,7 +28,7 @@ class RangeTest extends BaseAggregationTest
     /**
      * @group functional
      */
-    public function testRangeAggregation()
+    public function testRangeAggregation() : void
     {
         $agg = new Range('range');
         $agg->setField('price');
@@ -36,7 +36,8 @@ class RangeTest extends BaseAggregationTest
 
         $query = new Query();
         $query->addAggregation($agg);
-        $results = $this->_getIndexForTest()->search($query)->getAggregation('range');
+        $response = $this->_getIndexForTest()->search($query)->getWaitHandle()->join();
+        $results = $response->getAggregation('range');
 
         $this->assertEquals(2, $results['buckets'][0]['doc_count']);
     }
@@ -44,7 +45,7 @@ class RangeTest extends BaseAggregationTest
     /**
      * @group unit
      */
-    public function testRangeAggregationWithKey()
+    public function testRangeAggregationWithKey() : void
     {
         $agg = new Range('range');
         $agg->setField('price');
@@ -53,7 +54,7 @@ class RangeTest extends BaseAggregationTest
         $agg->addRange(100, null, 'expensive');
 
         $expected = array(
-            'range' => array(
+            'range' => Map {
                 'field' => 'price',
                 'ranges' => array(
                     array(
@@ -70,7 +71,7 @@ class RangeTest extends BaseAggregationTest
                         'key' => 'expensive',
                     ),
                 ),
-            ),
+            },
         );
 
         $this->assertEquals($expected, $agg->toArray());

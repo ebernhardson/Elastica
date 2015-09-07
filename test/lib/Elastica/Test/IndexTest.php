@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Document;
@@ -18,21 +18,21 @@ class IndexTest extends BaseTest
     /**
      * @group functional
      */
-    public function testMapping()
+    public function testMapping() : void
     {
         $index = $this->_createIndex();
-        $doc = new Document(1, array('id' => 1, 'email' => 'test@test.com', 'username' => 'hanswurst', 'test' => array('2', '3', '5')));
+        $doc = new Document('1', array('id' => 1, 'email' => 'test@test.com', 'username' => 'hanswurst', 'test' => array('2', '3', '5')));
 
         $type = $index->getType('test');
 
         $mapping = array('id' => array('type' => 'integer', 'store' => true), 'email' => array('type' => 'string', 'store' => 'no'),
             'username' => array('type' => 'string', 'store' => 'no'), 'test' => array('type' => 'integer', 'store' => 'no'),);
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
-        $type->addDocument($doc);
-        $index->optimize();
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $index->optimize()->getWaitHandle()->join();
 
-        $storedMapping = $index->getMapping();
+        $storedMapping = $index->getMapping()->getWaitHandle()->join();
 
         $this->assertEquals($storedMapping['test']['properties']['id']['type'], 'integer');
         $this->assertEquals($storedMapping['test']['properties']['id']['store'], true);
@@ -40,33 +40,33 @@ class IndexTest extends BaseTest
         $this->assertEquals($storedMapping['test']['properties']['username']['type'], 'string');
         $this->assertEquals($storedMapping['test']['properties']['test']['type'], 'integer');
 
-        $result = $type->search('hanswurst');
+        $result = $type->search('hanswurst')->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testGetMappingAlias()
+    public function testGetMappingAlias() : void
     {
         $index = $this->_createIndex();
         $indexName = $index->getName();
 
         $aliasName = 'test-mapping-alias';
-        $index->addAlias($aliasName);
+        $index->addAlias($aliasName)->getWaitHandle()->join();
 
         $type = new Type($index, 'test');
         $mapping = new Mapping($type, array(
                 'id' => array('type' => 'integer', 'store' => 'yes'),
             ));
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
         $client = $index->getClient();
 
         // Index mapping
-        $mapping1 = $client->getIndex($indexName)->getMapping();
+        $mapping1 = $client->getIndex($indexName)->getMapping()->getWaitHandle()->join();
 
         // Alias mapping
-        $mapping2 = $client->getIndex($aliasName)->getMapping();
+        $mapping2 = $client->getIndex($aliasName)->getMapping()->getWaitHandle()->join();
 
         // Make sure, a mapping is set
         $this->assertNotEmpty($mapping1);
@@ -78,7 +78,7 @@ class IndexTest extends BaseTest
     /**
      * @group functional
      */
-    public function testParent()
+    public function testParent() : void
     {
         $index = $this->_createIndex();
 
@@ -88,29 +88,29 @@ class IndexTest extends BaseTest
 
         $mapping = new Mapping();
         $mapping->setParam('_parent', array('type' => 'blog'));
-        $typeComment->setMapping($mapping);
+        $typeComment->setMapping($mapping)->getWaitHandle()->join();
 
-        $entry1 = new Document(1);
+        $entry1 = new Document('1');
         $entry1->set('title', 'Hello world');
-        $typeBlog->addDocument($entry1);
+        $typeBlog->addDocument($entry1)->getWaitHandle()->join();
 
-        $entry2 = new Document(2);
+        $entry2 = new Document('2');
         $entry2->set('title', 'Foo bar');
-        $typeBlog->addDocument($entry2);
+        $typeBlog->addDocument($entry2)->getWaitHandle()->join();
 
-        $entry3 = new Document(3);
+        $entry3 = new Document('3');
         $entry3->set('title', 'Till dawn');
-        $typeBlog->addDocument($entry3);
+        $typeBlog->addDocument($entry3)->getWaitHandle()->join();
 
-        $comment = new Document(1);
+        $comment = new Document('1');
         $comment->set('author', 'Max');
         $comment->setParent(2); // Entry Foo bar
-        $typeComment->addDocument($comment);
+        $typeComment->addDocument($comment)->getWaitHandle()->join();
 
-        $index->optimize();
+        $index->optimize()->getWaitHandle()->join();
 
         $query = new HasChild('Max', 'comment');
-        $resultSet = $typeBlog->search($query);
+        $resultSet = $typeBlog->search($query)->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->count());
         $this->assertEquals(array('title' => 'Foo bar'), $resultSet->current()->getData());
     }
@@ -118,7 +118,7 @@ class IndexTest extends BaseTest
     /**
      * @group functional
      */
-    public function testAddPdfFile()
+    public function testAddPdfFile() : void
     {
         $this->_checkAttachmentsPlugin();
         $indexMapping = array('file' => array('type' => 'attachment', 'store' => 'no'), 'text' => array('type' => 'string', 'store' => 'no'));
@@ -128,39 +128,39 @@ class IndexTest extends BaseTest
         $index = $this->_createIndex();
         $type = new Type($index, 'test');
 
-        $index->create($indexParams, true);
-        $type->setMapping($indexMapping);
+        $index->create($indexParams, true)->getWaitHandle()->join();
+        $type->setMapping($indexMapping)->getWaitHandle()->join();
 
-        $doc1 = new Document(1);
+        $doc1 = new Document('1');
         $doc1->addFile('file', BASE_PATH.'/data/test.pdf', 'application/pdf');
         $doc1->set('text', 'basel world');
-        $type->addDocument($doc1);
+        $type->addDocument($doc1)->getWaitHandle()->join();
 
-        $doc2 = new Document(2);
+        $doc2 = new Document('2');
         $doc2->set('text', 'running in basel');
-        $type->addDocument($doc2);
+        $type->addDocument($doc2)->getWaitHandle()->join();
 
-        $index->optimize();
+        $index->optimize()->getWaitHandle()->join();
 
-        $resultSet = $type->search('xodoa');
+        $resultSet = $type->search('xodoa')->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->count());
 
-        $resultSet = $type->search('basel');
+        $resultSet = $type->search('basel')->getWaitHandle()->join();
         $this->assertEquals(2, $resultSet->count());
 
         // Author is ruflin
-        $resultSet = $type->search('ruflin');
+        $resultSet = $type->search('ruflin')->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->count());
 
         // String does not exist in file
-        $resultSet = $type->search('guschti');
+        $resultSet = $type->search('guschti')->getWaitHandle()->join();
         $this->assertEquals(0, $resultSet->count());
     }
 
     /**
      * @group functional
      */
-    public function testAddPdfFileContent()
+    public function testAddPdfFileContent() : void
     {
         $this->_checkAttachmentsPlugin();
         $indexMapping = array('file' => array('type' => 'attachment', 'store' => 'no'), 'text' => array('type' => 'string', 'store' => 'no'));
@@ -170,39 +170,39 @@ class IndexTest extends BaseTest
         $index = $this->_createIndex();
         $type = new Type($index, 'test');
 
-        $index->create($indexParams, true);
-        $type->setMapping($indexMapping);
+        $index->create($indexParams, true)->getWaitHandle()->join();
+        $type->setMapping($indexMapping)->getWaitHandle()->join();
 
-        $doc1 = new Document(1);
+        $doc1 = new Document('1');
         $doc1->addFileContent('file', file_get_contents(BASE_PATH.'/data/test.pdf'));
         $doc1->set('text', 'basel world');
-        $type->addDocument($doc1);
+        $type->addDocument($doc1)->getWaitHandle()->join();
 
-        $doc2 = new Document(2);
+        $doc2 = new Document('2');
         $doc2->set('text', 'running in basel');
-        $type->addDocument($doc2);
+        $type->addDocument($doc2)->getWaitHandle()->join();
 
-        $index->optimize();
+        $index->optimize()->getWaitHandle()->join();
 
-        $resultSet = $type->search('xodoa');
+        $resultSet = $type->search('xodoa')->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->count());
 
-        $resultSet = $type->search('basel');
+        $resultSet = $type->search('basel')->getWaitHandle()->join();
         $this->assertEquals(2, $resultSet->count());
 
         // Author is ruflin
-        $resultSet = $type->search('ruflin');
+        $resultSet = $type->search('ruflin')->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->count());
 
         // String does not exist in file
-        $resultSet = $type->search('guschti');
+        $resultSet = $type->search('guschti')->getWaitHandle()->join();
         $this->assertEquals(0, $resultSet->count());
     }
 
     /**
      * @group functional
      */
-    public function testAddWordxFile()
+    public function testAddWordxFile() : void
     {
         $this->_checkAttachmentsPlugin();
         $indexMapping = array('file' => array('type' => 'attachment'), 'text' => array('type' => 'string', 'store' => 'no'));
@@ -212,38 +212,38 @@ class IndexTest extends BaseTest
         $index = $this->_createIndex();
         $type = new Type($index, 'content');
 
-        $index->create($indexParams, true);
-        $type->setMapping($indexMapping);
+        $index->create($indexParams, true)->getWaitHandle()->join();
+        $type->setMapping($indexMapping)->getWaitHandle()->join();
 
-        $doc1 = new Document(1);
+        $doc1 = new Document('1');
         $doc1->addFile('file', BASE_PATH.'/data/test.docx');
         $doc1->set('text', 'basel world');
-        $type->addDocument($doc1);
+        $type->addDocument($doc1)->getWaitHandle()->join();
 
-        $index->optimize();
-        $index->refresh();
+        $index->optimize()->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $doc2 = new Document(2);
+        $doc2 = new Document('2');
         $doc2->set('text', 'running in basel');
-        $type->addDocument($doc2);
+        $type->addDocument($doc2)->getWaitHandle()->join();
 
-        $index->optimize();
-        $index->refresh();
+        $index->optimize()->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search('basel');
+        $resultSet = $type->search('basel')->getWaitHandle()->join();
         $this->assertEquals(2, $resultSet->count());
 
-        $resultSet = $type->search('ruflin');
+        $resultSet = $type->search('ruflin')->getWaitHandle()->join();
         $this->assertEquals(0, $resultSet->count());
 
-        $resultSet = $type->search('Xodoa');
+        $resultSet = $type->search('Xodoa')->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->count());
     }
 
     /**
      * @group functional
      */
-    public function testExcludeFileSource()
+    public function testExcludeFileSource() : void
     {
         $this->_checkAttachmentsPlugin();
         $indexMapping = array('file' => array('type' => 'attachment', 'store' => 'yes'), 'text' => array('type' => 'string', 'store' => 'yes'),
@@ -259,10 +259,10 @@ class IndexTest extends BaseTest
 
         $mapping->setType($type);
 
-        $index->create($indexParams, true);
-        $type->setMapping($mapping);
+        $index->create($indexParams, true)->getWaitHandle()->join();
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
-        $docId = 1;
+        $docId = '1';
         $text = 'Basel World';
         $title = 'No Title';
 
@@ -270,22 +270,22 @@ class IndexTest extends BaseTest
         $doc1->addFile('file', BASE_PATH.'/data/test.docx');
         $doc1->set('text', $text);
         $doc1->set('title', $title);
-        $type->addDocument($doc1);
+        $type->addDocument($doc1)->getWaitHandle()->join();
 
         // Optimization necessary, as otherwise source still in realtime get
-        $index->optimize();
+        $index->optimize()->getWaitHandle()->join();
 
-        $data = $type->getDocument($docId)->getData();
-        $this->assertEquals($data['title'], $title);
-        $this->assertEquals($data['text'], $text);
-        $this->assertFalse(isset($data['file']));
+        $data = $type->getDocument($docId)->getWaitHandle()->join()->getData();
+        $this->assertEquals(/* UNSAFE_EXPR */ $data['title'], $title);
+        $this->assertEquals(/* UNSAFE_EXPR */ $data['text'], $text);
+        $this->assertFalse(isset(/* UNSAFE_EXPR */ $data['file']));
     }
 
     /**
      * @group functional
      * @expectedException \Elastica\Exception\ResponseException
      */
-    public function testAddRemoveAlias()
+    public function testAddRemoveAlias() : void
     {
         $client = $this->_getClient();
 
@@ -294,37 +294,37 @@ class IndexTest extends BaseTest
         $typeName = 'test';
 
         $index = $client->getIndex($indexName1);
-        $index->create(array('index' => array('number_of_shards' => 1, 'number_of_replicas' => 0)), true);
+        $index->create(array('index' => array('number_of_shards' => 1, 'number_of_replicas' => 0)), true)->getWaitHandle()->join();
 
-        $doc = new Document(1, array('id' => 1, 'email' => 'test@test.com', 'username' => 'ruflin'));
+        $doc = new Document('1', array('id' => 1, 'email' => 'test@test.com', 'username' => 'ruflin'));
 
         $type = $index->getType($typeName);
-        $type->addDocument($doc);
-        $index->refresh();
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search('ruflin');
+        $resultSet = $type->search('ruflin')->getWaitHandle()->join();
 
         $this->assertEquals(1, $resultSet->count());
 
-        $data = $index->addAlias($aliasName, true)->getData();
-        $this->assertTrue($data['acknowledged']);
+        $data = $index->addAlias($aliasName, true)->getWaitHandle()->join()->getData();
+        $this->assertTrue(/* UNSAFE_EXPR */ $data['acknowledged']);
 
         $index2 = $client->getIndex($aliasName);
         $type2 = $index2->getType($typeName);
 
-        $resultSet2 = $type2->search('ruflin');
+        $resultSet2 = $type2->search('ruflin')->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet2->count());
 
-        $response = $index->removeAlias($aliasName)->getData();
-        $this->assertTrue($response['acknowledged']);
+        $response = $index->removeAlias($aliasName)->getWaitHandle()->join()->getData();
+        $this->assertTrue(/* UNSAFE_EXPR */ $response['acknowledged']);
 
-        $client->getIndex($aliasName)->getType($typeName)->search('ruflin');
+        $client->getIndex($aliasName)->getType($typeName)->search('ruflin')->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testCount()
+    public function testCount() : void
     {
         $index = $this->_createIndex();
 
@@ -333,139 +333,139 @@ class IndexTest extends BaseTest
         $doc2 = new Document(null, array('name' => 'nicolas'));
 
         $type = $index->getType('test');
-        $type->addDocument($doc1);
-        $type->addDocument($doc2);
+        $type->addDocument($doc1)->getWaitHandle()->join();
+        $type->addDocument($doc2)->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $this->assertEquals(2, $index->count());
+        $this->assertEquals(2, $index->count()->getWaitHandle()->join());
 
         $query = new Term();
         $key = 'name';
         $value = 'nicolas';
         $query->setTerm($key, $value);
 
-        $this->assertEquals(1, $index->count($query));
+        $this->assertEquals(1, $index->count($query)->getWaitHandle()->join());
     }
 
     /**
      * @group functional
      */
-    public function testDeleteByQueryWithQueryString()
+    public function testDeleteByQueryWithQueryString() : void
     {
         $index = $this->_createIndex();
         $type1 = new Type($index, 'test1');
-        $type1->addDocument(new Document(1, array('name' => 'ruflin nicolas')));
-        $type1->addDocument(new Document(2, array('name' => 'ruflin')));
+        $type1->addDocument(new Document('1', array('name' => 'ruflin nicolas')))->getWaitHandle()->join();
+        $type1->addDocument(new Document('2', array('name' => 'ruflin')))->getWaitHandle()->join();
         $type2 = new Type($index, 'test2');
-        $type2->addDocument(new Document(1, array('name' => 'ruflin nicolas')));
-        $type2->addDocument(new Document(2, array('name' => 'ruflin')));
-        $index->refresh();
+        $type2->addDocument(new Document('1', array('name' => 'ruflin nicolas')))->getWaitHandle()->join();
+        $type2->addDocument(new Document('2', array('name' => 'ruflin')))->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $response = $index->search('ruflin*');
+        $response = $index->search('ruflin*')->getWaitHandle()->join();
         $this->assertEquals(4, $response->count());
 
-        $response = $index->search('nicolas');
+        $response = $index->search('nicolas')->getWaitHandle()->join();
         $this->assertEquals(2, $response->count());
 
         // Delete first document
-        $response = $index->deleteByQuery('nicolas');
+        $response = $index->deleteByQuery('nicolas')->getWaitHandle()->join();
         $this->assertTrue($response->isOk());
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         // Makes sure, document is deleted
-        $response = $index->search('ruflin*');
+        $response = $index->search('ruflin*')->getWaitHandle()->join();
         $this->assertEquals(2, $response->count());
 
-        $response = $index->search('nicolas');
+        $response = $index->search('nicolas')->getWaitHandle()->join();
         $this->assertEquals(0, $response->count());
     }
 
     /**
      * @group functional
      */
-    public function testDeleteByQueryWithQuery()
+    public function testDeleteByQueryWithQuery() : void
     {
         $index = $this->_createIndex();
         $type1 = new Type($index, 'test1');
-        $type1->addDocument(new Document(1, array('name' => 'ruflin nicolas')));
-        $type1->addDocument(new Document(2, array('name' => 'ruflin')));
+        $type1->addDocument(new Document('1', array('name' => 'ruflin nicolas')))->getWaitHandle()->join();
+        $type1->addDocument(new Document('2', array('name' => 'ruflin')))->getWaitHandle()->join();
         $type2 = new Type($index, 'test2');
-        $type2->addDocument(new Document(1, array('name' => 'ruflin nicolas')));
-        $type2->addDocument(new Document(2, array('name' => 'ruflin')));
-        $index->refresh();
+        $type2->addDocument(new Document('1', array('name' => 'ruflin nicolas')))->getWaitHandle()->join();
+        $type2->addDocument(new Document('2', array('name' => 'ruflin')))->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $response = $index->search('ruflin*');
+        $response = $index->search('ruflin*')->getWaitHandle()->join();
         $this->assertEquals(4, $response->count());
 
-        $response = $index->search('nicolas');
+        $response = $index->search('nicolas')->getWaitHandle()->join();
         $this->assertEquals(2, $response->count());
 
         // Delete first document
-        $response = $index->deleteByQuery(new SimpleQueryString('nicolas'));
+        $response = $index->deleteByQuery(new SimpleQueryString('nicolas'))->getWaitHandle()->join();
         $this->assertTrue($response->isOk());
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         // Makes sure, document is deleted
-        $response = $index->search('ruflin*');
+        $response = $index->search('ruflin*')->getWaitHandle()->join();
         $this->assertEquals(2, $response->count());
 
-        $response = $index->search('nicolas');
+        $response = $index->search('nicolas')->getWaitHandle()->join();
         $this->assertEquals(0, $response->count());
     }
 
     /**
      * @group functional
      */
-    public function testDeleteByQueryWithQueryAndOptions()
+    public function testDeleteByQueryWithQueryAndOptions() : void
     {
         $index = $this->_createIndex(null, true, 2);
         $type1 = new Type($index, 'test1');
-        $type1->addDocument(new Document(1, array('name' => 'ruflin nicolas')));
-        $type1->addDocument(new Document(2, array('name' => 'ruflin')));
+        $type1->addDocument(new Document('1', array('name' => 'ruflin nicolas')))->getWaitHandle()->join();
+        $type1->addDocument(new Document('2', array('name' => 'ruflin')))->getWaitHandle()->join();
         $type2 = new Type($index, 'test2');
-        $type2->addDocument(new Document(1, array('name' => 'ruflin nicolas')));
-        $type2->addDocument(new Document(2, array('name' => 'ruflin')));
-        $index->refresh();
+        $type2->addDocument(new Document('1', array('name' => 'ruflin nicolas')))->getWaitHandle()->join();
+        $type2->addDocument(new Document('2', array('name' => 'ruflin')))->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $response = $index->search('ruflin*');
+        $response = $index->search('ruflin*')->getWaitHandle()->join();
         $this->assertEquals(4, $response->count());
 
-        $response = $index->search('nicolas');
+        $response = $index->search('nicolas')->getWaitHandle()->join();
         $this->assertEquals(2, $response->count());
 
         // Route to the wrong document id; should not delete
-        $response = $index->deleteByQuery(new SimpleQueryString('nicolas'), array('routing' => '2'));
+        $response = $index->deleteByQuery(new SimpleQueryString('nicolas'), array('routing' => '2'))->getWaitHandle()->join();
         $this->assertTrue($response->isOk());
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $response = $index->search('ruflin*');
+        $response = $index->search('ruflin*')->getWaitHandle()->join();
         $this->assertEquals(4, $response->count());
 
-        $response = $index->search('nicolas');
+        $response = $index->search('nicolas')->getWaitHandle()->join();
         $this->assertEquals(2, $response->count());
 
         // Delete first document
-        $response = $index->deleteByQuery(new SimpleQueryString('nicolas'), array('routing' => '1'));
+        $response = $index->deleteByQuery(new SimpleQueryString('nicolas'), array('routing' => '1'))->getWaitHandle()->join();
         $this->assertTrue($response->isOk());
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         // Makes sure, document is deleted
-        $response = $index->search('ruflin*');
+        $response = $index->search('ruflin*')->getWaitHandle()->join();
         $this->assertEquals(2, $response->count());
 
-        $response = $index->search('nicolas');
+        $response = $index->search('nicolas')->getWaitHandle()->join();
         $this->assertEquals(0, $response->count());
     }
 
     /**
      * @group functional
      */
-    public function testDeleteIndexDeleteAlias()
+    public function testDeleteIndexDeleteAlias() : void
     {
         $indexName = 'test';
         $aliasName = 'test-aliase';
@@ -473,25 +473,25 @@ class IndexTest extends BaseTest
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
 
-        $index->create(array(), true);
-        $index->addAlias($aliasName);
+        $index->create(array(), true)->getWaitHandle()->join();
+        $index->addAlias($aliasName)->getWaitHandle()->join();
 
-        $status = new Status($client);
+        $status = Status::create($client)->getWaitHandle()->join();
         $this->assertTrue($status->indexExists($indexName));
-        $this->assertTrue($status->aliasExists($aliasName));
+        $this->assertTrue($status->aliasExists($aliasName)->getWaitHandle()->join());
 
         // Deleting index should also remove alias
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
 
-        $status->refresh();
+        $status->refresh()->getWaitHandle()->join();
         $this->assertFalse($status->indexExists($indexName));
-        $this->assertFalse($status->aliasExists($aliasName));
+        $this->assertFalse($status->aliasExists($aliasName)->getWaitHandle()->join());
     }
 
     /**
      * @group functional
      */
-    public function testAddAliasTwoIndices()
+    public function testAddAliasTwoIndices() : void
     {
         $indexName1 = 'test1';
         $indexName2 = 'test2';
@@ -501,35 +501,35 @@ class IndexTest extends BaseTest
         $index1 = $client->getIndex($indexName1);
         $index2 = $client->getIndex($indexName2);
 
-        $index1->create(array(), true);
+        $index1->create(array(), true)->getWaitHandle()->join();
         $this->_waitForAllocation($index1);
-        $index1->addAlias($aliasName);
-        $index2->create(array(), true);
+        $index1->addAlias($aliasName)->getWaitHandle()->join();
+        $index2->create(array(), true)->getWaitHandle()->join();
         $this->_waitForAllocation($index2);
 
-        $index1->refresh();
-        $index2->refresh();
-        $index1->optimize();
-        $index2->optimize();
+        $index1->refresh()->getWaitHandle()->join();
+        $index2->refresh()->getWaitHandle()->join();
+        $index1->optimize()->getWaitHandle()->join();
+        $index2->optimize()->getWaitHandle()->join();
 
-        $status = new Status($client);
+        $status = Status::create($client)->getWaitHandle()->join();
 
         $this->assertTrue($status->indexExists($indexName1));
         $this->assertTrue($status->indexExists($indexName2));
 
-        $this->assertTrue($status->aliasExists($aliasName));
-        $this->assertTrue($index1->getStatus()->hasAlias($aliasName));
-        $this->assertFalse($index2->getStatus()->hasAlias($aliasName));
+        $this->assertTrue($status->aliasExists($aliasName)->getWaitHandle()->join());
+        $this->assertTrue($index1->getStatus()->getWaitHandle()->join()->hasAlias($aliasName)->getWaitHandle()->join());
+        $this->assertFalse($index2->getStatus()->getWaitHandle()->join()->hasAlias($aliasName)->getWaitHandle()->join());
 
-        $index2->addAlias($aliasName);
-        $this->assertTrue($index1->getStatus()->hasAlias($aliasName));
-        $this->assertTrue($index2->getStatus()->hasAlias($aliasName));
+        $index2->addAlias($aliasName)->getWaitHandle()->join();
+        $this->assertTrue($index1->getStatus()->getWaitHandle()->join()->hasAlias($aliasName)->getWaitHandle()->join());
+        $this->assertTrue($index2->getStatus()->getWaitHandle()->join()->hasAlias($aliasName)->getWaitHandle()->join());
     }
 
     /**
      * @group functional
      */
-    public function testReplaceAlias()
+    public function testReplaceAlias() : void
     {
         $indexName1 = 'test1';
         $indexName2 = 'test2';
@@ -539,80 +539,80 @@ class IndexTest extends BaseTest
         $index1 = $client->getIndex($indexName1);
         $index2 = $client->getIndex($indexName2);
 
-        $index1->create(array(), true);
-        $index1->addAlias($aliasName);
-        $index2->create(array(), true);
+        $index1->create(array(), true)->getWaitHandle()->join();
+        $index1->addAlias($aliasName)->getWaitHandle()->join();
+        $index2->create(array(), true)->getWaitHandle()->join();
 
-        $index1->refresh();
-        $index2->refresh();
+        $index1->refresh()->getWaitHandle()->join();
+        $index2->refresh()->getWaitHandle()->join();
 
-        $status = new Status($client);
+        $status = Status::create($client)->getWaitHandle()->join();
 
         $this->assertTrue($status->indexExists($indexName1));
         $this->assertTrue($status->indexExists($indexName2));
-        $this->assertTrue($status->aliasExists($aliasName));
-        $this->assertTrue($index1->getStatus()->hasAlias($aliasName));
-        $this->assertFalse($index2->getStatus()->hasAlias($aliasName));
+        $this->assertTrue($status->aliasExists($aliasName)->getWaitHandle()->join());
+        $this->assertTrue($index1->getStatus()->getWaitHandle()->join()->hasAlias($aliasName)->getWaitHandle()->join());
+        $this->assertFalse($index2->getStatus()->getWaitHandle()->join()->hasAlias($aliasName)->getWaitHandle()->join());
 
-        $index2->addAlias($aliasName, true);
-        $this->assertFalse($index1->getStatus()->hasAlias($aliasName));
-        $this->assertTrue($index2->getStatus()->hasAlias($aliasName));
+        $index2->addAlias($aliasName, true)->getWaitHandle()->join();
+        $this->assertFalse($index1->getStatus()->getWaitHandle()->join()->hasAlias($aliasName)->getWaitHandle()->join());
+        $this->assertTrue($index2->getStatus()->getWaitHandle()->join()->hasAlias($aliasName)->getWaitHandle()->join());
     }
 
     /**
      * @group functional
      */
-    public function testAddDocumentVersion()
+    public function testAddDocumentVersion() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = new Type($index, 'test');
 
-        $doc1 = new Document(1);
+        $doc1 = new Document('1');
         $doc1->set('title', 'Hello world');
 
-        $return = $type->addDocument($doc1);
+        $return = $type->addDocument($doc1)->getWaitHandle()->join();
         $data = $return->getData();
-        $this->assertEquals(1, $data['_version']);
+        $this->assertEquals(1, /* UNSAFE_EXPR */ $data['_version']);
 
-        $return = $type->addDocument($doc1);
+        $return = $type->addDocument($doc1)->getWaitHandle()->join();
         $data = $return->getData();
-        $this->assertEquals(2, $data['_version']);
+        $this->assertEquals(2, /* UNSAFE_EXPR */ $data['_version']);
     }
 
     /**
      * @group functional
      */
-    public function testClearCache()
+    public function testClearCache() : void
     {
         $index = $this->_createIndex();
-        $response = $index->clearCache();
+        $response = $index->clearCache()->getWaitHandle()->join();
         $this->assertFalse($response->hasError());
     }
 
     /**
      * @group functional
      */
-    public function testFlush()
+    public function testFlush() : void
     {
         $index = $this->_createIndex();
-        $response = $index->flush();
+        $response = $index->flush()->getWaitHandle()->join();
         $this->assertFalse($response->hasError());
     }
 
     /**
      * @group functional
      */
-    public function testExists()
+    public function testExists() : void
     {
         $index = $this->_createIndex();
 
-        $this->assertTrue($index->exists());
+        $this->assertTrue($index->exists()->getWaitHandle()->join());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
 
-        $this->assertFalse($index->exists());
+        $this->assertFalse($index->exists()->getWaitHandle()->join());
     }
 
     /**
@@ -624,13 +624,13 @@ class IndexTest extends BaseTest
      *
      * @group functional
      */
-    public function testDeleteMissingIndexHasError()
+    public function testDeleteMissingIndexHasError() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('index_does_not_exist');
 
         try {
-            $index->delete();
+            $index->delete()->getWaitHandle()->join();
             $this->fail('This should never be reached. Deleting an unknown index will throw an exception');
         } catch (ResponseException $error) {
             $response = $error->getResponse();
@@ -645,7 +645,7 @@ class IndexTest extends BaseTest
      *
      * @group functional
      */
-    public function testIndexGetMapping()
+    public function testIndexGetMapping() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
@@ -653,9 +653,9 @@ class IndexTest extends BaseTest
         $mapping = array('id' => array('type' => 'integer', 'store' => true), 'email' => array('type' => 'string', 'store' => 'no'),
             'username' => array('type' => 'string', 'store' => 'no'), 'test' => array('type' => 'integer', 'store' => 'no'),);
 
-        $type->setMapping($mapping);
-        $index->refresh();
-        $indexMappings = $index->getMapping();
+        $type->setMapping($mapping)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
+        $indexMappings = $index->getMapping()->getWaitHandle()->join();
 
         $this->assertEquals($indexMappings['test']['properties']['id']['type'], 'integer');
         $this->assertEquals($indexMappings['test']['properties']['id']['store'], true);
@@ -669,10 +669,10 @@ class IndexTest extends BaseTest
      *
      * @group functional
      */
-    public function testEmptyIndexGetMapping()
+    public function testEmptyIndexGetMapping() : void
     {
         $index = $this->_createIndex();
-        $indexMappings = $index->getMapping();
+        $indexMappings = $index->getMapping()->getWaitHandle()->join();
 
         $this->assertTrue(empty($indexMappings['elastica_test']));
     }
@@ -682,36 +682,36 @@ class IndexTest extends BaseTest
      *
      * @group functional
      */
-    public function testLimitDefaultIndex()
+    public function testLimitDefaultIndex() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('zero');
-        $index->create(array('index' => array('number_of_shards' => 1, 'number_of_replicas' => 0)), true);
+        $index->create(array('index' => array('number_of_shards' => 1, 'number_of_replicas' => 0)), true)->getWaitHandle()->join();
 
         $docs = array();
 
-        $docs[] = new Document(1, array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
-        $docs[] = new Document(2, array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
-        $docs[] = new Document(3, array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
-        $docs[] = new Document(4, array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
-        $docs[] = new Document(5, array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
-        $docs[] = new Document(6, array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
-        $docs[] = new Document(7, array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
-        $docs[] = new Document(8, array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
-        $docs[] = new Document(9, array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
-        $docs[] = new Document(10, array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
-        $docs[] = new Document(11, array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
+        $docs[] = new Document('1', array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
+        $docs[] = new Document('2', array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
+        $docs[] = new Document('3', array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
+        $docs[] = new Document('4', array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
+        $docs[] = new Document('5', array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
+        $docs[] = new Document('6', array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
+        $docs[] = new Document('7', array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
+        $docs[] = new Document('8', array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
+        $docs[] = new Document('9', array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
+        $docs[] = new Document('10', array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
+        $docs[] = new Document('11', array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
 
         $type = $index->getType('zeroType');
-        $type->addDocuments($docs);
-        $index->refresh();
+        $type->addDocuments($docs)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         // default limit results  (default limit is 10)
-        $resultSet = $index->search('farrelley');
+        $resultSet = $index->search('farrelley')->getWaitHandle()->join();
         $this->assertEquals(10, $resultSet->count());
 
         // limit = 1
-        $resultSet = $index->search('farrelley', 1);
+        $resultSet = $index->search('farrelley', 1)->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->count());
     }
 
@@ -720,37 +720,37 @@ class IndexTest extends BaseTest
      *
      * @group functional
      */
-    public function testCreateArray()
+    public function testCreateArray() : void
     {
         $client = $this->_getClient();
         $indexName = 'test';
 
         //Testing recreate (backward compatibility)
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $this->_waitForAllocation($index);
-        $status = new Status($client);
+        $status = Status::create($client)->getWaitHandle()->join();
         $this->assertTrue($status->indexExists($indexName));
 
         //Testing create index with array options
         $opts = array('recreate' => true, 'routing' => 'r1,r2');
-        $index->create(array(), $opts);
+        $index->create(array(), $opts)->getWaitHandle()->join();
         $this->_waitForAllocation($index);
-        $status = new Status($client);
+        $status = Status::create($client)->getWaitHandle()->join();
         $this->assertTrue($status->indexExists($indexName));
 
         //Testing invalid options
         $opts = array('recreate' => true, 'routing' => 'r1,r2', 'testing_invalid_option' => true);
-        $index->create(array(), $opts);
+        $index->create(array(), $opts)->getWaitHandle()->join();
         $this->_waitForAllocation($index);
-        $status = new Status($client);
+        $status = Status::create($client)->getWaitHandle()->join();
         $this->assertTrue($status->indexExists($indexName));
     }
 
     /**
      * @group functional
      */
-    public function testCreateSearch()
+    public function testCreateSearch() : void
     {
         $client = $this->_getClient();
         $index = new Index($client, 'test');
@@ -760,14 +760,14 @@ class IndexTest extends BaseTest
 
         $search = $index->createSearch($query, $options);
 
-        $expected = array(
-            'query' => array(
-                'query_string' => array(
+        $expected = Map {
+            'query' => Map {
+                'query_string' => Map {
                     'query' => 'test',
-                ),
-            ),
+                },
+            },
             'size' => 5,
-        );
+        };
         $this->assertEquals($expected, $search->getQuery()->toArray());
         $this->assertEquals(array('test'), $search->getIndices());
         $this->assertTrue($search->hasIndices());
@@ -784,23 +784,23 @@ class IndexTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSearch()
+    public function testSearch() : void
     {
         $index = $this->_createIndex();
 
         $type = new Type($index, 'user');
 
         $docs = array();
-        $docs[] = new Document(1, array('username' => 'hans', 'test' => array('2', '3', '5')));
-        $docs[] = new Document(2, array('username' => 'john', 'test' => array('1', '3', '6')));
-        $docs[] = new Document(3, array('username' => 'rolf', 'test' => array('2', '3', '7')));
-        $type->addDocuments($docs);
-        $index->refresh();
+        $docs[] = new Document('1', array('username' => 'hans', 'test' => array('2', '3', '5')));
+        $docs[] = new Document('2', array('username' => 'john', 'test' => array('1', '3', '6')));
+        $docs[] = new Document('3', array('username' => 'rolf', 'test' => array('2', '3', '7')));
+        $type->addDocuments($docs)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $index->search('rolf');
+        $resultSet = $index->search('rolf')->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->count());
 
-        $count = $index->count('rolf');
+        $count = $index->count('rolf')->getWaitHandle()->join();
         $this->assertEquals(1, $count);
 
         // Test if source is returned
@@ -809,49 +809,49 @@ class IndexTest extends BaseTest
         $data = $result->getData();
         $this->assertEquals('rolf', $data['username']);
 
-        $count = $index->count();
+        $count = $index->count()->getWaitHandle()->join();
         $this->assertEquals(3, $count);
     }
 
     /**
      * @group functional
      */
-    public function testOptimize()
+    public function testOptimize() : void
     {
         $index = $this->_createIndex();
 
         $type = new Type($index, 'optimize');
 
         $docs = array();
-        $docs[] = new Document(1, array('foo' => 'bar'));
-        $docs[] = new Document(2, array('foo' => 'bar'));
-        $type->addDocuments($docs);
-        $index->refresh();
+        $docs[] = new Document('1', array('foo' => 'bar'));
+        $docs[] = new Document('2', array('foo' => 'bar'));
+        $type->addDocuments($docs)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $stats = $index->getStats()->getData();
-        $this->assertEquals(0, $stats['_all']['primaries']['docs']['deleted']);
+        $stats = $index->getStats()->getWaitHandle()->join()->getData();
+        $this->assertEquals(0, /* UNSAFE_EXPR */ $stats['_all']['primaries']['docs']['deleted']);
 
-        $type->deleteById(1);
-        $index->refresh();
+        $type->deleteById(1)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
-        $stats = $index->getStats()->getData();
-        $this->assertEquals(1, $stats['_all']['primaries']['docs']['deleted']);
+        $stats = $index->getStats()->getWaitHandle()->join()->getData();
+        $this->assertEquals(1, /* UNSAFE_EXPR */ $stats['_all']['primaries']['docs']['deleted']);
 
-        $index->optimize(array('max_num_segments' => 1));
+        $index->optimize(array('max_num_segments' => 1))->getWaitHandle()->join();
 
-        $stats = $index->getStats()->getData();
-        $this->assertEquals(0, $stats['_all']['primaries']['docs']['deleted']);
+        $stats = $index->getStats()->getWaitHandle()->join()->getData();
+        $this->assertEquals(0, /* UNSAFE_EXPR */ $stats['_all']['primaries']['docs']['deleted']);
     }
 
     /**
      * @group functional
      */
-    public function testAnalyze()
+    public function testAnalyze() : void
     {
         $index = $this->_createIndex();
-        $index->optimize();
+        $index->optimize()->getWaitHandle()->join();
         sleep(2);
-        $returnedTokens = $index->analyze('foo');
+        $returnedTokens = $index->analyze('foo')->getWaitHandle()->join();
 
         $tokens = array(
             array(
@@ -867,34 +867,12 @@ class IndexTest extends BaseTest
     }
 
     /**
-     * @group unit
-     * @expectedException \Elastica\Exception\InvalidException
-     */
-    public function testThrowExceptionIfNotScalar()
-    {
-        $client = $this->_getClient();
-        $client->getIndex(new \stdClass());
-    }
-
-    /**
-     * @group unit
-     */
-    public function testConvertScalarsToString()
-    {
-        $client = $this->_getClient();
-        $index = $client->getIndex(1);
-
-        $this->assertEquals('1', $index->getName());
-        $this->assertInternalType('string', $index->getName());
-    }
-
-    /**
      * Check for the presence of the mapper-attachments plugin and skip the current test if it is not found.
      */
-    protected function _checkAttachmentsPlugin()
+    protected function _checkAttachmentsPlugin() : void
     {
-        $nodes = $this->_getClient()->getCluster()->getNodes();
-        if (!$nodes[0]->getInfo()->hasPlugin('mapper-attachments')) {
+        $nodes = $this->_getClient()->getCluster()->getWaitHandle()->join()->getNodes();
+        if (!$nodes[0]->getInfo()->getWaitHandle()->join()->hasPlugin('mapper-attachments')->getWaitHandle()->join()) {
             $this->markTestSkipped('mapper-attachments plugin not installed');
         }
     }

@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Elastica search object.
@@ -42,31 +43,31 @@ class Search
      *
      * @var array
      */
-    protected $_indices = array();
+    protected array<string> $_indices = array();
 
     /**
      * Array of types.
      *
      * @var array
      */
-    protected $_types = array();
+    protected array $_types = array();
 
     /**
      * @var \Elastica\Query
      */
-    protected $_query;
+    protected ?Query $_query = null;
 
     /**
      * @var array
      */
-    protected $_options = array();
+    protected array $_options = array();
 
     /**
      * Client object.
      *
      * @var \Elastica\Client
      */
-    protected $_client;
+    protected Client $_client;
 
     /**
      * Constructs search object.
@@ -87,7 +88,7 @@ class Search
      *
      * @return $this
      */
-    public function addIndex($index)
+    public function addIndex(mixed $index) : Search
     {
         if ($index instanceof Index) {
             $index = $index->getName();
@@ -109,7 +110,7 @@ class Search
      *
      * @return $this
      */
-    public function addIndices(array $indices = array())
+    public function addIndices(array $indices = array()) : Search
     {
         foreach ($indices as $index) {
             $this->addIndex($index);
@@ -127,7 +128,7 @@ class Search
      *
      * @return $this
      */
-    public function addType($type)
+    public function addType(mixed $type) : Search
     {
         if ($type instanceof Type) {
             $type = $type->getName();
@@ -149,7 +150,7 @@ class Search
      *
      * @return $this
      */
-    public function addTypes(array $types = array())
+    public function addTypes(array $types = array()) : Search
     {
         foreach ($types as $type) {
             $this->addType($type);
@@ -163,7 +164,7 @@ class Search
      *
      * @return $this
      */
-    public function setQuery($query)
+    public function setQuery(mixed $query) : Search
     {
         $this->_query = Query::create($query);
 
@@ -176,7 +177,7 @@ class Search
      *
      * @return $this
      */
-    public function setOption($key, $value)
+    public function setOption(string $key, mixed $value) : Search
     {
         $this->_validateOption($key);
 
@@ -190,7 +191,7 @@ class Search
      *
      * @return $this
      */
-    public function setOptions(array $options)
+    public function setOptions(Indexish<string, mixed> $options) : Search
     {
         $this->clearOptions();
 
@@ -204,7 +205,7 @@ class Search
     /**
      * @return $this
      */
-    public function clearOptions()
+    public function clearOptions() : Search
     {
         $this->_options = array();
 
@@ -217,7 +218,7 @@ class Search
      *
      * @return $this
      */
-    public function addOption($key, $value)
+    public function addOption(string $key, mixed $value) : Search
     {
         $this->_validateOption($key);
 
@@ -235,7 +236,7 @@ class Search
      *
      * @return bool
      */
-    public function hasOption($key)
+    public function hasOption(string $key) : bool
     {
         return isset($this->_options[$key]);
     }
@@ -247,7 +248,7 @@ class Search
      *
      * @return mixed
      */
-    public function getOption($key)
+    public function getOption(string $key) : mixed
     {
         if (!$this->hasOption($key)) {
             throw new InvalidException('Option '.$key.' does not exist');
@@ -259,7 +260,7 @@ class Search
     /**
      * @return array
      */
-    public function getOptions()
+    public function getOptions() : array
     {
         return $this->_options;
     }
@@ -271,7 +272,7 @@ class Search
      *
      * @return bool
      */
-    protected function _validateOption($key)
+    protected function _validateOption(string $key) : bool
     {
         switch ($key) {
             case self::OPTION_SEARCH_TYPE:
@@ -297,7 +298,7 @@ class Search
      *
      * @return \Elastica\Client Client object
      */
-    public function getClient()
+    public function getClient() : Client
     {
         return $this->_client;
     }
@@ -307,7 +308,7 @@ class Search
      *
      * @return array List of index names
      */
-    public function getIndices()
+    public function getIndices() : array<string>
     {
         return $this->_indices;
     }
@@ -315,7 +316,7 @@ class Search
     /**
      * @return bool
      */
-    public function hasIndices()
+    public function hasIndices() : bool
     {
         return count($this->_indices) > 0;
     }
@@ -325,7 +326,7 @@ class Search
      *
      * @return bool
      */
-    public function hasIndex($index)
+    public function hasIndex(mixed $index) : bool
     {
         if ($index instanceof Index) {
             $index = $index->getName();
@@ -339,7 +340,7 @@ class Search
      *
      * @return array List of types
      */
-    public function getTypes()
+    public function getTypes() : array
     {
         return $this->_types;
     }
@@ -347,7 +348,7 @@ class Search
     /**
      * @return bool
      */
-    public function hasTypes()
+    public function hasTypes() : bool
     {
         return count($this->_types) > 0;
     }
@@ -357,7 +358,7 @@ class Search
      *
      * @return bool
      */
-    public function hasType($type)
+    public function hasType(mixed $type) : bool
     {
         if ($type instanceof Type) {
             $type = $type->getName();
@@ -369,7 +370,7 @@ class Search
     /**
      * @return \Elastica\Query
      */
-    public function getQuery()
+    public function getQuery() : Query
     {
         if (null === $this->_query) {
             $this->_query = Query::create('');
@@ -385,7 +386,7 @@ class Search
      *
      * @return Search
      */
-    public static function create(SearchableInterface $searchObject)
+    public static function create(SearchableInterface $searchObject) : Search
     {
         return $searchObject->createSearch();
     }
@@ -395,7 +396,7 @@ class Search
      *
      * @return string Search path
      */
-    public function getPath()
+    public function getPath() : string
     {
         if (isset($this->_options[self::OPTION_SCROLL_ID])) {
             return '_search/scroll';
@@ -430,9 +431,9 @@ class Search
      *
      * @throws \Elastica\Exception\InvalidException
      *
-     * @return \Elastica\ResultSet
+     * @return Awaitable<\Elastica\ResultSet>
      */
-    public function search($query = '', $options = null)
+    public async function search(mixed $query = '', mixed $options = null) : Awaitable<ResultSet>
     {
         $this->setOptionsAndQuery($options, $query);
 
@@ -449,7 +450,7 @@ class Search
             $data = $query->toArray();
         }
 
-        $response = $this->getClient()->request(
+        $response = await $this->getClient()->request(
             $path,
             Request::GET,
             $data,
@@ -463,16 +464,16 @@ class Search
      * @param mixed $query
      * @param $fullResult (default = false) By default only the total hit count is returned. If set to true, the full ResultSet including aggregations is returned.
      *
-     * @return int|ResultSet
+     * @return Awaitable<int|ResultSet>
      */
-    public function count($query = '', $fullResult = false)
+    public async function count(mixed $query = '', bool $fullResult = false) : Awaitable<mixed>
     {
         $this->setOptionsAndQuery(null, $query);
 
         $query = $this->getQuery();
         $path = $this->getPath();
 
-        $response = $this->getClient()->request(
+        $response = await $this->getClient()->request(
             $path,
             Request::GET,
             $query->toArray(),
@@ -489,7 +490,7 @@ class Search
      *
      * @return $this
      */
-    public function setOptionsAndQuery($options = null, $query = '')
+    public function setOptionsAndQuery(mixed $options = null, mixed $query = '') : Search
     {
         if ('' != $query) {
             $this->setQuery($query);
@@ -497,7 +498,7 @@ class Search
 
         if (is_int($options)) {
             $this->getQuery()->setSize($options);
-        } elseif (is_array($options)) {
+        } elseif ($options instanceof Indexish) {
             if (isset($options['limit'])) {
                 $this->getQuery()->setSize($options['limit']);
                 unset($options['limit']);
@@ -517,7 +518,7 @@ class Search
      *
      * @return $this
      */
-    public function setSuggest(Suggest $suggest)
+    public function setSuggest(Suggest $suggest) : Search
     {
         return $this->setOptionsAndQuery(array(self::OPTION_SEARCH_TYPE_SUGGEST => 'suggest'), $suggest);
     }
@@ -531,7 +532,7 @@ class Search
      *
      * @return Scroll
      */
-    public function scroll($expiryTime = '1m')
+    public function scroll(string $expiryTime = '1m') : Scroll
     {
         return new Scroll($this, $expiryTime);
     }
@@ -546,7 +547,7 @@ class Search
      *
      * @return ScanAndScroll
      */
-    public function scanAndScroll($expiryTime = '1m', $sizePerShard = 1000)
+    public function scanAndScroll(string $expiryTime = '1m', int $sizePerShard = 1000) : ScanAndScroll
     {
         return new ScanAndScroll($this, $expiryTime, $sizePerShard);
     }

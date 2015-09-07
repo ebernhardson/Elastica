@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -13,23 +13,23 @@ class EscapeStringTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSearch()
+    public function testSearch() : void
     {
         $index = $this->_createIndex();
-        $index->getSettings()->setNumberOfReplicas(0);
+        $index->getSettings()->setNumberOfReplicas(0)->getWaitHandle()->join();
 
         $type = new Type($index, 'helloworld');
 
-        $doc = new Document(1, array(
+        $doc = new Document('1', array(
             'email' => 'test@test.com', 'username' => 'test 7/6 123', 'test' => array('2', '3', '5'), )
         );
-        $type->addDocument($doc);
+        $type->addDocument($doc)->getWaitHandle()->join();
 
         // Refresh index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $queryString = new QueryString(Util::escapeTerm('test 7/6'));
-        $resultSet = $type->search($queryString);
+        $resultSet = $type->search($queryString)->getWaitHandle()->join();
 
         $this->assertEquals(1, $resultSet->count());
     }

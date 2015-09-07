@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -13,13 +13,13 @@ class FuzzyLikeThisTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSearch()
+    public function testSearch() : void
     {
         $client = $this->_getClient();
         $index = new Index($client, 'test');
-        $index->create(array(), true);
-        $index->getSettings()->setNumberOfReplicas(0);
-        //$index->getSettings()->setNumberOfShards(1);
+        $index->create(array(), true)->getWaitHandle()->join();
+        $index->getSettings()->setNumberOfReplicas(0)->getWaitHandle()->join();
+        //$index->getSettings()->setNumberOfShards(1)->getWaitHandle()->join();
 
         $type = new Type($index, 'helloworldfuzzy');
         $mapping = new Mapping($type, array(
@@ -28,27 +28,27 @@ class FuzzyLikeThisTest extends BaseTest
           ));
 
         $mapping->setSource(array('enabled' => false));
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
-        $doc = new Document(1000, array('email' => 'testemail@gmail.com', 'content' => 'This is a sample post. Hello World Fuzzy Like This!'));
-        $type->addDocument($doc);
+        $doc = new Document('1000', array('email' => 'testemail@gmail.com', 'content' => 'This is a sample post. Hello World Fuzzy Like This!'));
+        $type->addDocument($doc)->getWaitHandle()->join();
 
         // Refresh index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $fltQuery = new FuzzyLikeThis();
         $fltQuery->setLikeText('sample gmail');
         $fltQuery->addFields(array('email', 'content'));
         $fltQuery->setMinSimilarity(0.3);
         $fltQuery->setMaxQueryTerms(3);
-        $resultSet = $type->search($fltQuery);
+        $resultSet = $type->search($fltQuery)->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->count());
     }
 
     /**
      * @group unit
      */
-    public function testSetPrefixLength()
+    public function testSetPrefixLength() : void
     {
         $query = new FuzzyLikeThis();
 
@@ -57,13 +57,13 @@ class FuzzyLikeThisTest extends BaseTest
 
         $data = $query->toArray();
 
-        $this->assertEquals($length, $data['fuzzy_like_this']['prefix_length']);
+        $this->assertEquals($length, /* UNSAFE_EXPR */ $data['fuzzy_like_this']['prefix_length']);
     }
 
     /**
      * @group unit
      */
-    public function testAddFields()
+    public function testAddFields() : void
     {
         $query = new FuzzyLikeThis();
 
@@ -72,13 +72,13 @@ class FuzzyLikeThisTest extends BaseTest
 
         $data = $query->toArray();
 
-        $this->assertEquals($fields, $data['fuzzy_like_this']['fields']);
+        $this->assertEquals($fields, /* UNSAFE_EXPR */ $data['fuzzy_like_this']['fields']);
     }
 
     /**
      * @group unit
      */
-    public function testSetLikeText()
+    public function testSetLikeText() : void
     {
         $query = new FuzzyLikeThis();
 
@@ -87,59 +87,59 @@ class FuzzyLikeThisTest extends BaseTest
 
         $data = $query->toArray();
 
-        $this->assertEquals(trim($text), $data['fuzzy_like_this']['like_text']);
+        $this->assertEquals(trim($text), /* UNSAFE_EXPR */ $data['fuzzy_like_this']['like_text']);
     }
 
     /**
      * @group unit
      */
-    public function testSetIgnoreTF()
+    public function testSetIgnoreTF() : void
     {
         $query = new FuzzyLikeThis();
 
         $ignoreTF = false;
         $query->setIgnoreTF($ignoreTF);
         $data = $query->toArray();
-        $this->assertEquals($ignoreTF, $data['fuzzy_like_this']['ignore_tf']);
+        $this->assertEquals($ignoreTF, /* UNSAFE_EXPR */ $data['fuzzy_like_this']['ignore_tf']);
 
         $ignoreTF = true;
         $query->setIgnoreTF($ignoreTF);
         $data = $query->toArray();
-        $this->assertEquals($ignoreTF, $data['fuzzy_like_this']['ignore_tf']);
+        $this->assertEquals($ignoreTF, /* UNSAFE_EXPR */ $data['fuzzy_like_this']['ignore_tf']);
     }
 
     /**
      * @group unit
      */
-    public function testSetIgnoreTFDefault()
+    public function testSetIgnoreTFDefault() : void
     {
         $query = new FuzzyLikeThis();
 
         $data = $query->toArray();
 
         $defaultIgnoreTF = false;
-        $this->assertEquals($defaultIgnoreTF, $data['fuzzy_like_this']['ignore_tf']);
+        $this->assertEquals($defaultIgnoreTF, /* UNSAFE_EXPR */ $data['fuzzy_like_this']['ignore_tf']);
     }
 
     /**
      * @group unit
      */
-    public function testSetMinSimilarity()
+    public function testSetMinSimilarity() : void
     {
         $query = new FuzzyLikeThis();
 
-        $similarity = 2;
+        $similarity = 2.0;
         $query->setMinSimilarity($similarity);
 
         $data = $query->toArray();
 
-        $this->assertEquals($similarity, $data['fuzzy_like_this']['min_similarity']);
+        $this->assertEquals($similarity, /* UNSAFE_EXPR */ $data['fuzzy_like_this']['min_similarity']);
     }
 
     /**
      * @group unit
      */
-    public function testSetBoost()
+    public function testSetBoost() : void
     {
         $query = new FuzzyLikeThis();
 
@@ -148,13 +148,13 @@ class FuzzyLikeThisTest extends BaseTest
 
         $data = $query->toArray();
 
-        $this->assertEquals($boost, $data['fuzzy_like_this']['boost']);
+        $this->assertEquals($boost, /* UNSAFE_EXPR */ $data['fuzzy_like_this']['boost']);
     }
 
     /**
      * @group unit
      */
-    public function testAddAnalyzerViasetParam()
+    public function testAddAnalyzerViasetParam() : void
     {
         $analyzer = 'snowball';
 
@@ -162,13 +162,13 @@ class FuzzyLikeThisTest extends BaseTest
         $query->setParam('analyzer', $analyzer);
 
         $data = $query->toArray();
-        $this->assertEquals($analyzer, $data['fuzzy_like_this']['analyzer']);
+        $this->assertEquals($analyzer, /* UNSAFE_EXPR */ $data['fuzzy_like_this']['analyzer']);
     }
 
     /**
      * @group unit
      */
-    public function testSetAnalyzer()
+    public function testSetAnalyzer() : void
     {
         $analyzer = 'snowball';
 
@@ -176,13 +176,13 @@ class FuzzyLikeThisTest extends BaseTest
         $query->setAnalyzer($analyzer);
 
         $data = $query->toArray();
-        $this->assertEquals($analyzer, $data['fuzzy_like_this']['analyzer']);
+        $this->assertEquals($analyzer, /* UNSAFE_EXPR */ $data['fuzzy_like_this']['analyzer']);
     }
 
     /**
      * @group unit
      */
-    public function testAnalyzerNotPresentInArrayToMaintainDefaultOfField()
+    public function testAnalyzerNotPresentInArrayToMaintainDefaultOfField() : void
     {
         $query = new FuzzyLikeThis();
 
@@ -193,20 +193,20 @@ class FuzzyLikeThisTest extends BaseTest
     /**
      * @group unit
      */
-    public function testArgArrayFieldsOverwrittenBySetParams()
+    public function testArgArrayFieldsOverwrittenBySetParams() : void
     {
         $query = new FuzzyLikeThis();
         $query->setMaxQueryTerms(100);
         $query->setParam('max_query_terms', 200);
 
         $data = $query->toArray();
-        $this->assertEquals(200, $data['fuzzy_like_this']['max_query_terms']);
+		$this->assertEquals(200, /* UNSAFE_EXPR */ $data['fuzzy_like_this']['max_query_terms']);
     }
 
     /**
      * @group functional
      */
-    public function testSearchSetAnalyzer()
+    public function testSearchSetAnalyzer() : void
     {
         $client = $this->_getClient();
         $index = new Index($client, 'test');
@@ -224,10 +224,10 @@ class FuzzyLikeThisTest extends BaseTest
                     'stopwords' => array('The'),
                 ),
             ),
-        )), true);
+        )), true)->getWaitHandle()->join();
 
-        $index->getSettings()->setNumberOfReplicas(0);
-        //$index->getSettings()->setNumberOfShards(1);
+        $index->getSettings()->setNumberOfReplicas(0)->getWaitHandle()->join();
+        //$index->getSettings()->setNumberOfShards(1)->getWaitHandle()->join();
 
         $type = new Type($index, 'helloworldfuzzy');
         $mapping = new Mapping($type, array(
@@ -236,15 +236,15 @@ class FuzzyLikeThisTest extends BaseTest
           ));
 
         $mapping->setSource(array('enabled' => false));
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
         $type->addDocuments(array(
-            new Document(1000, array('email' => 'testemail@gmail.com', 'content' => 'The Fuzzy Test!')),
-            new Document(1001, array('email' => 'testemail@gmail.com', 'content' => 'Elastica Fuzzy Test')),
-        ));
+            new Document('1000', array('email' => 'testemail@gmail.com', 'content' => 'The Fuzzy Test!')),
+            new Document('1001', array('email' => 'testemail@gmail.com', 'content' => 'Elastica Fuzzy Test')),
+        ))->getWaitHandle()->join();
 
         // Refresh index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $fltQuery = new FuzzyLikeThis();
         $fltQuery->addFields(array('email', 'content'));
@@ -254,24 +254,24 @@ class FuzzyLikeThisTest extends BaseTest
         $fltQuery->setMaxQueryTerms(3);
 
         // Test before analyzer applied, should return 1 result
-        $resultSet = $type->search($fltQuery);
+        $resultSet = $type->search($fltQuery)->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->count());
 
         $fltQuery->setParam('analyzer', 'searchAnalyzer');
 
-        $resultSet = $type->search($fltQuery);
+        $resultSet = $type->search($fltQuery)->getWaitHandle()->join();
         $this->assertEquals(0, $resultSet->count());
     }
 
     /**
      * @group functional
      */
-    public function testNoLikeTextProvidedShouldReturnNoResults()
+    public function testNoLikeTextProvidedShouldReturnNoResults() : void
     {
         $client = $this->_getClient();
         $index = new Index($client, 'test');
-        $index->create(array(), true);
-        $index->getSettings()->setNumberOfReplicas(0);
+        $index->create(array(), true)->getWaitHandle()->join();
+        $index->getSettings()->setNumberOfReplicas(0)->getWaitHandle()->join();
 
         $type = new Type($index, 'helloworldfuzzy');
         $mapping = new Mapping($type, array(
@@ -280,20 +280,20 @@ class FuzzyLikeThisTest extends BaseTest
         ));
 
         $mapping->setSource(array('enabled' => false));
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
-        $doc = new Document(1000, array('email' => 'testemail@gmail.com', 'content' => 'This is a sample post. Hello World Fuzzy Like This!'));
-        $type->addDocument($doc);
+        $doc = new Document('1000', array('email' => 'testemail@gmail.com', 'content' => 'This is a sample post. Hello World Fuzzy Like This!'));
+        $type->addDocument($doc)->getWaitHandle()->join();
 
         // Refresh index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $fltQuery = new FuzzyLikeThis();
         $fltQuery->setLikeText('');
         $fltQuery->addFields(array('email', 'content'));
         $fltQuery->setMinSimilarity(0.3);
         $fltQuery->setMaxQueryTerms(3);
-        $resultSet = $type->search($fltQuery);
+        $resultSet = $type->search($fltQuery)->getWaitHandle()->join();
 
         $this->assertEquals(0, $resultSet->count());
     }

@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Document;
@@ -14,13 +14,13 @@ class ScrollTest extends Base
      *
      * @group functional
      */
-    public function testForeach()
+    public function testForeach() : void
     {
         $scroll = new Scroll($this->_prepareSearch());
         $count = 1;
 
         /** @var ResultSet $resultSet */
-        foreach ($scroll as $scrollId => $resultSet) {
+        foreach (/* UNSAFE_EXPR */ $scroll as $scrollId => $resultSet) {
             $this->assertNotEmpty($scrollId);
 
             $results = $resultSet->getResults();
@@ -58,7 +58,7 @@ class ScrollTest extends Base
      *
      * @group functional
      */
-    public function testSearchRevert()
+    public function testSearchRevert() : void
     {
         $search = $this->_prepareSearch();
 
@@ -82,19 +82,19 @@ class ScrollTest extends Base
      *
      * @return Search
      */
-    private function _prepareSearch()
+    private function _prepareSearch() : Search
     {
         $index = $this->_createIndex();
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $docs = array();
         for ($x = 1; $x <= 11; ++$x) {
-            $docs[] = new Document($x, array('id' => $x, 'key' => 'value'));
+            $docs[] = new Document((string) $x, array('id' => $x, 'key' => 'value'));
         }
 
         $type = $index->getType('scrollTest');
-        $type->addDocuments($docs);
-        $index->refresh();
+        $type->addDocuments($docs)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         $search = new Search($this->_getClient());
         $search->addIndex($index)->addType($type);

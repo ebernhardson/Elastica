@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\QueryBuilder\Version;
 
 use Elastica\QueryBuilder\Version;
@@ -12,7 +12,7 @@ use Elastica\QueryBuilder\Version;
  */
 class Version120 extends Version
 {
-    protected $queries = array(
+    protected array<string> $queries = array(
         'match',
         'multi_match',
         'bool',
@@ -62,7 +62,7 @@ class Version120 extends Version
         'template',
     );
 
-    protected $filters = array(
+    protected array<string> $filters = array(
         'bool_and', // original: bool
         'bool',
         'exists',
@@ -96,7 +96,7 @@ class Version120 extends Version
         // 'numeric_range'
     );
 
-    protected $aggregations = array(
+    protected array<string> $aggregations = array(
         'min',
         'max',
         'sum',
@@ -126,7 +126,7 @@ class Version120 extends Version
         'reverse_nested',
     );
 
-    protected $suggesters = array(
+    protected array<string> $suggesters = array(
         'term',
         'phrase',
         'completion',

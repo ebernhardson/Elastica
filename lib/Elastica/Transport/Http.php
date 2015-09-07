@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Transport;
 
 use Elastica\Exception\Connection\HttpException;
@@ -7,6 +7,7 @@ use Elastica\Exception\ResponseException;
 use Elastica\JSON;
 use Elastica\Request;
 use Elastica\Response;
+use Indexish;
 
 /**
  * Elastica Http Transport object.
@@ -20,7 +21,7 @@ class Http extends AbstractTransport
      *
      * @var string Http scheme
      */
-    protected $_scheme = 'http';
+    protected string $_scheme = 'http';
 
     /**
      * Curl resource to reuse.
@@ -41,16 +42,16 @@ class Http extends AbstractTransport
      * @throws \Elastica\Exception\ResponseException
      * @throws \Elastica\Exception\Connection\HttpException
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function exec(Request $request, array $params)
+    public async function exec(Request $request, Indexish<string, mixed> $params) : Awaitable<Response>
     {
         $connection = $this->getConnection();
 
         $conn = $this->_getConnection($connection->isPersistent());
 
         // If url is set, url is taken. Otherwise port, host and path
-        $url = $connection->hasConfig('url') ? $connection->getConfig('url') : '';
+        $url = $connection->hasConfig('url') ? (string) $connection->getConfig('url') : '';
 
         if (!empty($url)) {
             $baseUri = $url;
@@ -109,7 +110,7 @@ class Http extends AbstractTransport
                 $httpMethod = Request::POST;
             }
 
-            if (is_array($data)) {
+            if ($data instanceof Indexish) {
                 $content = JSON::stringify($data, 'JSON_ELASTICSEARCH');
             } else {
                 $content = $data;
@@ -124,20 +125,20 @@ class Http extends AbstractTransport
         }
 
         curl_setopt($conn, CURLOPT_NOBODY, $httpMethod == 'HEAD');
-
         curl_setopt($conn, CURLOPT_CUSTOMREQUEST, $httpMethod);
+        curl_setopt($conn, CURLOPT_RETURNTRANSFER, true);
 
         $start = microtime(true);
 
-        // cURL opt returntransfer leaks memory, therefore OB instead.
-        ob_start();
-        curl_exec($conn);
-        $responseString = ob_get_clean();
+        $responsePair = await $this->curl_exec($conn);
+		$errorNumber = $responsePair[0];
+		$responseString = $responsePair[1];
+		//$responseString = curl_exec($conn);
 
         $end = microtime(true);
 
         // Checks if error exists
-        $errorNumber = curl_errno($conn);
+        //$errorNumber = curl_errno($conn);
 
         $response = new Response($responseString, curl_getinfo($conn, CURLINFO_HTTP_CODE));
         $response->setQueryTime($end - $start);
@@ -152,7 +153,7 @@ class Http extends AbstractTransport
         }
 
         if ($errorNumber > 0) {
-            throw new HttpException($errorNumber, $request, $response);
+            throw new HttpException((string) $errorNumber, $request, $response);
         }
 
         return $response;
@@ -163,11 +164,14 @@ class Http extends AbstractTransport
      *
      * @param resource $curlConnection Curl connection
      */
-    protected function _setupCurl($curlConnection)
+    protected function _setupCurl(resource $curlConnection) : void
     {
         if ($this->getConnection()->hasConfig('curl')) {
-            foreach ($this->getConnection()->getConfig('curl') as $key => $param) {
-                curl_setopt($curlConnection, $key, $param);
+            $opts = $this->getConnection()->getConfig('curl');
+            if ($opts instanceof Indexish) {
+                foreach ($opts as $key => $param) {
+                    curl_setopt($curlConnection, $key, $param);
+                }
             }
         }
     }
@@ -179,12 +183,54 @@ class Http extends AbstractTransport
      *
      * @return resource Connection resource
      */
-    protected function _getConnection($persistent = true)
+    protected function _getConnection(bool $persistent = true) : resource
     {
         if (!$persistent || !self::$_curlConnection) {
             self::$_curlConnection = curl_init();
         }
 
         return self::$_curlConnection;
-    }
+	}
+
+	protected async function curl_exec(mixed $urlOrHandle): Awaitable<Pair<int, string>> {
+	  if (is_string($urlOrHandle)) {
+	    $ch = curl_init($urlOrHandle);
+	  } else if (is_resource($urlOrHandle) &&
+	             (get_resource_type($urlOrHandle) == "curl")) {
+	    $ch = $urlOrHandle;
+	  } else {
+	    throw new Exception(__FUNCTION__." expects string of cURL handle");
+	  }
+	  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	
+	  $mh = curl_multi_init();
+	  curl_multi_add_handle($mh, $ch);
+	  $sleep_ms = 10;
+	  do {
+	    $active = 1;
+	    do {
+	      $status = curl_multi_exec($mh, $active);
+	    } while ($status == CURLM_CALL_MULTI_PERFORM);
+	    if (!$active) break;
+	    $select = await curl_multi_await($mh);
+	    /* If cURL is built without ares support, DNS queries don't have a socket
+	     * to wait on, so curl_multi_await() (and curl_select() in PHP5) will return
+	     * -1, and polling is required.
+	     */
+	    if ($select == -1) {
+	      await SleepWaitHandle::create($sleep_ms * 1000);
+	      if ($sleep_ms < 1000) {
+	        $sleep_ms *= 2;
+	      }
+	    } else {
+	      $sleep_ms = 10;
+	    }
+	  } while ($status === CURLM_OK);
+	  $content = (string)curl_multi_getcontent($ch);
+      $info = curl_multi_info_read($mh);
+	  curl_multi_remove_handle($mh, $ch);
+	  curl_multi_close($mh);
+	  return Pair {$info['result'], $content};
+	}
 }
+

@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Filter\Term;
@@ -9,7 +9,7 @@ class TermTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $query = new Term();
         $key = 'name';
@@ -18,7 +18,6 @@ class TermTest extends BaseTest
 
         $data = $query->toArray();
 
-        $this->assertInternalType('array', $data['term']);
-        $this->assertEquals(array($key => $value), $data['term']);
+        $this->assertEquals(Map {$key => $value}, $data['term']);
     }
 }

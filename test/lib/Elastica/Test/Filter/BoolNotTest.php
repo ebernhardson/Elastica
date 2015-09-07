@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Filter\BoolNot;
@@ -10,16 +10,16 @@ class BoolNotTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $idsFilter = new Ids();
         $idsFilter->setIds(12);
         $filter = new BoolNot($idsFilter);
 
         $expectedArray = array(
-            'not' => array(
+            'not' => Map {
                 'filter' => $idsFilter->toArray(),
-            ),
+            },
         );
 
         $this->assertEquals($expectedArray, $filter->toArray());

@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -12,15 +12,15 @@ class FilteredTest extends BaseTest
     /**
      * @group functional
      */
-    public function testFilteredSearch()
+    public function testFilteredSearch() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('helloworld');
 
         $type->addDocuments(array(
-            new Document(1, array('id' => 1, 'email' => 'test@test.com', 'username' => 'hanswurst', 'test' => array('2', '3', '5'))),
-            new Document(2, array('id' => 2, 'email' => 'test@test.com', 'username' => 'peter', 'test' => array('2', '3', '5'))),
-        ));
+            new Document('1', array('id' => 1, 'email' => 'test@test.com', 'username' => 'hanswurst', 'test' => array('2', '3', '5'))),
+            new Document('2', array('id' => 2, 'email' => 'test@test.com', 'username' => 'peter', 'test' => array('2', '3', '5'))),
+        ))->getWaitHandle()->join();
 
         $queryString = new QueryString('test*');
 
@@ -32,22 +32,22 @@ class FilteredTest extends BaseTest
 
         $query1 = new Filtered($queryString, $filter1);
         $query2 = new Filtered($queryString, $filter2);
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search($queryString);
+        $resultSet = $type->search($queryString)->getWaitHandle()->join();
         $this->assertEquals(2, $resultSet->count());
 
-        $resultSet = $type->search($query1);
+        $resultSet = $type->search($query1)->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->count());
 
-        $resultSet = $type->search($query2);
+        $resultSet = $type->search($query2)->getWaitHandle()->join();
         $this->assertEquals(0, $resultSet->count());
     }
 
     /**
      * @group unit
      */
-    public function testFilteredGetter()
+    public function testFilteredGetter() : void
     {
         $queryString = new QueryString('test*');
 
@@ -70,7 +70,7 @@ class FilteredTest extends BaseTest
      * @group unit
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testFilteredWithoutArgumentsShouldRaiseException()
+    public function testFilteredWithoutArgumentsShouldRaiseException() : void
     {
         $query = new Filtered();
         $query->toArray();
@@ -79,46 +79,46 @@ class FilteredTest extends BaseTest
     /**
      * @group functional
      */
-    public function testFilteredSearchNoQuery()
+    public function testFilteredSearchNoQuery() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('helloworld');
 
         $type->addDocuments(array(
-            new Document(1, array('id' => 1, 'email' => 'test@test.com', 'username' => 'hanswurst', 'test' => array('2', '3', '5'))),
-            new Document(2, array('id' => 2, 'email' => 'test@test.com', 'username' => 'peter', 'test' => array('2', '3', '5'))),
-        ));
+            new Document('1', array('id' => 1, 'email' => 'test@test.com', 'username' => 'hanswurst', 'test' => array('2', '3', '5'))),
+            new Document('2', array('id' => 2, 'email' => 'test@test.com', 'username' => 'peter', 'test' => array('2', '3', '5'))),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $filter = new Term();
         $filter->setTerm('username', 'peter');
 
         $query = new Filtered(null, $filter);
 
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->count());
     }
 
     /**
      * @group functional
      */
-    public function testFilteredSearchNoFilter()
+    public function testFilteredSearchNoFilter() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('helloworld');
 
-        $doc = new Document(1, array('id' => 1, 'email' => 'test@test.com', 'username' => 'hanswurst', 'test' => array('2', '3', '5')));
-        $type->addDocument($doc);
-        $doc = new Document(2, array('id' => 2, 'email' => 'test@test.com', 'username' => 'peter', 'test' => array('2', '3', '5')));
-        $type->addDocument($doc);
+        $doc = new Document('1', array('id' => 1, 'email' => 'test@test.com', 'username' => 'hanswurst', 'test' => array('2', '3', '5')));
+        $type->addDocument($doc)->getWaitHandle()->join();
+        $doc = new Document('2', array('id' => 2, 'email' => 'test@test.com', 'username' => 'peter', 'test' => array('2', '3', '5')));
+        $type->addDocument($doc)->getWaitHandle()->join();
 
         $queryString = new QueryString('hans*');
 
         $query = new Filtered($queryString);
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
         $this->assertEquals(1, $resultSet->count());
     }
 }

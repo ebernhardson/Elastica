@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica;
 
 /**
@@ -13,7 +13,7 @@ class ScanAndScroll extends Scroll
     /**
      * @var int
      */
-    public $sizePerShard;
+    public int $sizePerShard;
 
     /**
      * Constructor.
@@ -22,7 +22,7 @@ class ScanAndScroll extends Scroll
      * @param string $expiryTime
      * @param int    $sizePerShard
      */
-    public function __construct(Search $search, $expiryTime = '1m', $sizePerShard = 1000)
+    public function __construct(Search $search, string $expiryTime = '1m', int $sizePerShard = 1000)
     {
         $this->sizePerShard = $sizePerShard;
 
@@ -34,7 +34,7 @@ class ScanAndScroll extends Scroll
      *
      * @link http://php.net/manual/en/iterator.rewind.php
      */
-    public function rewind()
+    public function rewind() : void
     {
         // reset state
         $this->_nextScrollId = null;
@@ -47,7 +47,8 @@ class ScanAndScroll extends Scroll
         $this->_search->setOption(Search::OPTION_SCROLL, $this->expiryTime);
         $this->_search->setOption(Search::OPTION_SCROLL_ID, null);
         $this->_search->setOption(Search::OPTION_SEARCH_TYPE, Search::OPTION_SEARCH_TYPE_SCAN);
-        $this->_setScrollId($this->_search->search());
+        // FIXME explicitly resolves wait handle ... cant return Awaitable from iterator
+        $this->_setScrollId($this->_search->search()->getWaitHandle()->join());
 
         $this->_revertOptions();
 
@@ -58,7 +59,7 @@ class ScanAndScroll extends Scroll
     /**
      * Save all search options manipulated by Scroll.
      */
-    protected function _saveOptions()
+    protected function _saveOptions() : void
     {
         $query = $this->_search->getQuery();
         if ($query->hasParam('size')) {
@@ -71,9 +72,9 @@ class ScanAndScroll extends Scroll
     /**
      * Revert search options to previously saved state.
      */
-    protected function _revertOptions()
+    protected function _revertOptions() : void
     {
-        $this->_search->getQuery()->setSize($this->_options[3]);
+        $this->_search->getQuery()->setSize((int) $this->_options[3]);
 
         parent::_revertOptions();
     }

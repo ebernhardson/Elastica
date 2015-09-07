@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Filter;
 
 use Elastica\Exception\InvalidException;
+use Indexish;
 
 /**
  * Bool Filter.
@@ -12,26 +13,11 @@ use Elastica\Exception\InvalidException;
  */
 class BoolFilter extends AbstractFilter
 {
-    /**
-     * Must.
-     *
-     * @var array
-     */
-    protected $_must = array();
-
-    /**
-     * Should.
-     *
-     * @var array
-     */
-    protected $_should = array();
-
-    /**
-     * Must not.
-     *
-     * @var array
-     */
-    protected $_mustNot = array();
+    protected array<string, array> $_filters = array(
+        'must' => array(),
+        'should' => array(),
+        'mustNot' => array()
+    );
 
     /**
      * Adds should filter.
@@ -40,7 +26,7 @@ class BoolFilter extends AbstractFilter
      *
      * @return $this
      */
-    public function addShould($args)
+    public function addShould(mixed $args) : this
     {
         return $this->_addFilter('should', $args);
     }
@@ -52,7 +38,7 @@ class BoolFilter extends AbstractFilter
      *
      * @return $this
      */
-    public function addMust($args)
+    public function addMust(mixed $args) : this
     {
         return $this->_addFilter('must', $args);
     }
@@ -64,7 +50,7 @@ class BoolFilter extends AbstractFilter
      *
      * @return $this
      */
-    public function addMustNot($args)
+    public function addMustNot(mixed $args) : this
     {
         return $this->_addFilter('mustNot', $args);
     }
@@ -79,13 +65,13 @@ class BoolFilter extends AbstractFilter
      *
      * @return $this
      */
-    protected function _addFilter($type, $args)
+    protected function _addFilter(string $type, mixed $args) : this
     {
-        if (!is_array($args) && !($args instanceof AbstractFilter)) {
+        if (!$args instanceof Indexish && !($args instanceof AbstractFilter)) {
             throw new InvalidException('Invalid parameter. Has to be array or instance of Elastica\Filter');
         }
 
-        if (is_array($args)) {
+        if ($args instanceof Indexish) {
             $parsedArgs = array();
 
             foreach ($args as $filter) {
@@ -97,8 +83,7 @@ class BoolFilter extends AbstractFilter
             $args = $parsedArgs;
         }
 
-        $varName = '_'.$type;
-        $this->{$varName}[] = $args;
+        $this->_filters[$type][] = $args;
 
         return $this;
     }
@@ -110,24 +95,30 @@ class BoolFilter extends AbstractFilter
      *
      * @return array Filter array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $args = array();
 
-        if (!empty($this->_must)) {
-            $args['bool']['must'] = $this->_must;
+        if (!empty($this->_filters['must'])) {
+            $args['bool']['must'] = $this->_filters['must'];
         }
 
-        if (!empty($this->_should)) {
-            $args['bool']['should'] = $this->_should;
+        if (!empty($this->_filters['should'])) {
+            $args['bool']['should'] = $this->_filters['should'];
         }
 
-        if (!empty($this->_mustNot)) {
-            $args['bool']['must_not'] = $this->_mustNot;
+        if (!empty($this->_filters['mustNot'])) {
+            $args['bool']['must_not'] = $this->_filters['mustNot'];
         }
 
         if (isset($args['bool'])) {
-            $args['bool'] = array_merge($args['bool'], $this->getParams());
+            $params = clone $this->getParams();
+            foreach ($args['bool'] as $k => $v) {
+                if (!$params->contains($k)) {
+                    $params->set($k, $v);
+                }
+            }
+            $args['bool'] = $params;
         }
 
         return $this->_convertArrayable($args);

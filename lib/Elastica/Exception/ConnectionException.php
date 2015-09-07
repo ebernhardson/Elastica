@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Exception;
 
 use Elastica\Request;
@@ -14,12 +14,12 @@ class ConnectionException extends \RuntimeException implements ExceptionInterfac
     /**
      * @var \Elastica\Request Request object
      */
-    protected $_request;
+    protected ?Request $_request;
 
     /**
      * @var \Elastica\Response Response object
      */
-    protected $_response;
+    protected ?Response $_response;
 
     /**
      * Construct Exception.
@@ -28,7 +28,7 @@ class ConnectionException extends \RuntimeException implements ExceptionInterfac
      * @param \Elastica\Request  $request
      * @param \Elastica\Response $response
      */
-    public function __construct($message, Request $request = null, Response $response = null)
+    public function __construct(string $message, ?Request $request = null, ?Response $response = null)
     {
         $this->_request = $request;
         $this->_response = $response;
@@ -41,7 +41,7 @@ class ConnectionException extends \RuntimeException implements ExceptionInterfac
      *
      * @return \Elastica\Request Request object
      */
-    public function getRequest()
+    public function getRequest() : ?Request
     {
         return $this->_request;
     }
@@ -51,7 +51,7 @@ class ConnectionException extends \RuntimeException implements ExceptionInterfac
      *
      * @return \Elastica\Response Response object
      */
-    public function getResponse()
+    public function getResponse() : ?Response
     {
         return $this->_response;
     }

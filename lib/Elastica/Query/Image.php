@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 /**
@@ -18,7 +18,7 @@ namespace Elastica\Query;
  */
 class Image extends AbstractQuery
 {
-    public function __construct(array $image = array())
+    public function __construct(Map<string, mixed> $image = Map {})
     {
         $this->setParams($image);
     }
@@ -28,16 +28,17 @@ class Image extends AbstractQuery
      *
      * @param string $field
      * @param string $key
-     * @param string $value
+     * @param string|float $value
      *
      * @return $this
      */
-    public function setFieldParam($field, $key, $value)
+    public function setFieldParam(string $field, string $key, mixed $value) : this
     {
         if (!isset($this->_params[$field])) {
             $this->_params[$field] = array();
         }
 
+        /* UNSAFE_EXPR */
         $this->_params[$field][$key] = $value;
 
         return $this;
@@ -53,9 +54,9 @@ class Image extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldBoost($field, $boost = 1.0)
+    public function setFieldBoost(string $field, float $boost = 1.0) : this
     {
-        return $this->setFieldParam($field, 'boost', (float) $boost);
+        return $this->setFieldParam($field, 'boost', $boost);
     }
 
     /**
@@ -68,7 +69,7 @@ class Image extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldFeature($field, $feature = 'CEDD')
+    public function setFieldFeature(string $field, string $feature = 'CEDD') : this
     {
         return $this->setFieldParam($field, 'feature', $feature);
     }
@@ -83,7 +84,7 @@ class Image extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldHash($field, $hash = 'BIT_SAMPLING')
+    public function setFieldHash(string $field, string $hash = 'BIT_SAMPLING') : this
     {
         return $this->setFieldParam($field, 'hash', $hash);
     }
@@ -98,7 +99,7 @@ class Image extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldImage($field, $path)
+    public function setFieldImage(string $field, string $path) : this
     {
         if (!file_exists($path) || !is_readable($path)) {
             throw new \Exception(sprintf("File %s can't be open", $path));
@@ -115,7 +116,7 @@ class Image extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldIndex($field, $index)
+    public function setFieldIndex(string $field, string $index) : this
     {
         return $this->setFieldParam($field, 'index', $index);
     }
@@ -128,7 +129,7 @@ class Image extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldType($field, $type)
+    public function setFieldType(string $field, string $type) : this
     {
         return $this->setFieldParam($field, 'type', $type);
     }
@@ -141,7 +142,7 @@ class Image extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldId($field, $id)
+    public function setFieldId(string $field, string $id) : this
     {
         return $this->setFieldParam($field, 'id', $id);
     }
@@ -154,7 +155,7 @@ class Image extends AbstractQuery
      *
      * @return $this
      */
-    public function setFieldPath($field, $path)
+    public function setFieldPath(string $field, string $path) : this
     {
         return $this->setFieldParam($field, 'path', $path);
     }
@@ -172,7 +173,7 @@ class Image extends AbstractQuery
      *
      * @return $this
      */
-    public function setImageByReference($field, $index, $type, $id, $path = null)
+    public function setImageByReference(string $field, string $index, string $type, string $id, ?string $path = null) : this
     {
         if (null === $path) {
             $path = $field;

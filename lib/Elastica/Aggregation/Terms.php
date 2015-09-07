@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Aggregation;
 
 /**
@@ -16,7 +16,7 @@ class Terms extends AbstractTermsAggregation
      *
      * @return $this
      */
-    public function setOrder($order, $direction)
+    public function setOrder(string $order, string $direction) : this
     {
         return $this->setParam('order', array($order => $direction));
     }

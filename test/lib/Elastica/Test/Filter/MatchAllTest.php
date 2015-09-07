@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Filter\MatchAll;
@@ -9,11 +9,11 @@ class MatchAllTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $filter = new MatchAll();
 
-        $expectedArray = array('match_all' => new \stdClass());
+        $expectedArray = array('match_all' => Map {});
 
         $this->assertEquals($expectedArray, $filter->toArray());
     }

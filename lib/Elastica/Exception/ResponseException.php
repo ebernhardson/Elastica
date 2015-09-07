@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Exception;
 
 use Elastica\Request;
@@ -14,12 +14,12 @@ class ResponseException extends \RuntimeException implements ExceptionInterface
     /**
      * @var \Elastica\Request Request object
      */
-    protected $_request = null;
+    protected Request $_request;
 
     /**
      * @var \Elastica\Response Response object
      */
-    protected $_response = null;
+    protected Response $_response;
 
     /**
      * Construct Exception.
@@ -39,7 +39,7 @@ class ResponseException extends \RuntimeException implements ExceptionInterface
      *
      * @return \Elastica\Request Request object
      */
-    public function getRequest()
+    public function getRequest() : Request
     {
         return $this->_request;
     }
@@ -49,7 +49,7 @@ class ResponseException extends \RuntimeException implements ExceptionInterface
      *
      * @return \Elastica\Response Response object
      */
-    public function getResponse()
+    public function getResponse() : Response
     {
         return $this->_response;
     }
@@ -59,7 +59,7 @@ class ResponseException extends \RuntimeException implements ExceptionInterface
      *
      * @return ElasticsearchException
      */
-    public function getElasticsearchException()
+    public function getElasticsearchException() : ElasticsearchException
     {
         $response = $this->getResponse();
         $transfer = $response->getTransferInfo();

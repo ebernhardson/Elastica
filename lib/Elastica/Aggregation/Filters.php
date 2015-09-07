@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Aggregation;
 
 use Elastica\Filter\AbstractFilter;
+use Indexish;
 
 /**
  * Class Filters.
@@ -20,7 +21,7 @@ class Filters extends AbstractAggregation
      *
      * @return $this
      */
-    public function addFilter(AbstractFilter $filter, $name = '')
+    public function addFilter(AbstractFilter $filter, string $name = '') : this
     {
         $filterArray = array();
 
@@ -36,11 +37,12 @@ class Filters extends AbstractAggregation
     /**
      * @return array
      */
-    public function toArray()
-    {
+    public function toArray() : array {
         $array = array();
         $filters = $this->getParam('filters');
-
+        if (!$filters instanceof Indexish) {
+            throw new \RuntimeException('Expected array');
+        }
         foreach ($filters as $filter) {
             // Detect between anonymous filters and named ones
             $key = key($filter);

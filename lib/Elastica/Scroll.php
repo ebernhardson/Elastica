@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica;
 
 /**
@@ -8,27 +8,27 @@ namespace Elastica;
  *
  * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html
  */
-class Scroll implements \Iterator
+class Scroll implements \Iterator<ResultSet>
 {
     /**
      * @var string
      */
-    public $expiryTime;
+    public string $expiryTime;
 
     /**
      * @var Search
      */
-    protected $_search;
+    protected Search $_search;
 
     /**
      * @var null|string
      */
-    protected $_nextScrollId = null;
+    protected ?string $_nextScrollId = null;
 
     /**
      * @var null|ResultSet
      */
-    protected $_currentResultSet = null;
+    protected ?ResultSet $_currentResultSet = null;
 
     /**
      * 0: scroll<br>
@@ -37,7 +37,7 @@ class Scroll implements \Iterator
      *
      * @var array
      */
-    protected $_options = array(null, null, null);
+    protected array $_options = array(null, null, null);
 
     /**
      * Constructor.
@@ -45,7 +45,7 @@ class Scroll implements \Iterator
      * @param Search $search
      * @param string $expiryTime
      */
-    public function __construct(Search $search, $expiryTime = '1m')
+    public function __construct(Search $search, string $expiryTime = '1m')
     {
         $this->_search = $search;
         $this->expiryTime = $expiryTime;
@@ -58,9 +58,12 @@ class Scroll implements \Iterator
      *
      * @return ResultSet
      */
-    public function current()
+    public function current() : ResultSet
     {
-        return $this->_currentResultSet;
+        if ($this->_currentResultSet !== null) {
+            return $this->_currentResultSet;
+        }
+        throw new \OutOfBoundsException();
     }
 
     /**
@@ -68,14 +71,15 @@ class Scroll implements \Iterator
      *
      * @link http://php.net/manual/en/iterator.next.php
      */
-    public function next()
+    public function next() : void
     {
         $this->_saveOptions();
 
         $this->_search->setOption(Search::OPTION_SCROLL, $this->expiryTime);
         $this->_search->setOption(Search::OPTION_SCROLL_ID, $this->_nextScrollId);
         $this->_search->setOption(Search::OPTION_SEARCH_TYPE, Search::OPTION_SEARCH_TYPE_SCROLL);
-        $this->_setScrollId($this->_search->search());
+        // FIXME: explicitly resolves wait handle, can't make interface Awaitable
+        $this->_setScrollId($this->_search->search()->getWaitHandle()->join());
 
         $this->_revertOptions();
     }
@@ -87,9 +91,12 @@ class Scroll implements \Iterator
      *
      * @return string
      */
-    public function key()
+    public function key() : string
     {
-        return $this->_nextScrollId;
+        if ($this->_nextScrollId !== null) {
+            return $this->_nextScrollId;
+        }
+        throw new \OutOfBoundsException();
     }
 
     /**
@@ -99,7 +106,7 @@ class Scroll implements \Iterator
      *
      * @return bool
      */
-    public function valid()
+    public function valid() : bool
     {
         return
             $this->_nextScrollId !== null
@@ -112,7 +119,7 @@ class Scroll implements \Iterator
      *
      * @link http://php.net/manual/en/iterator.rewind.php
      */
-    public function rewind()
+    public function rewind() : void
     {
         // reset state
         $this->_nextScrollId = null;
@@ -124,7 +131,8 @@ class Scroll implements \Iterator
         $this->_search->setOption(Search::OPTION_SCROLL, $this->expiryTime);
         $this->_search->setOption(Search::OPTION_SCROLL_ID, null);
         $this->_search->setOption(Search::OPTION_SEARCH_TYPE, null);
-        $this->_setScrollId($this->_search->search());
+        // FIXME: explicitly resolves wait handle, can't make interface Awaitable
+        $this->_setScrollId($this->_search->search()->getWaitHandle()->join());
 
         $this->_revertOptions();
     }
@@ -134,7 +142,7 @@ class Scroll implements \Iterator
      *
      * @param ResultSet $resultSet
      */
-    protected function _setScrollId(ResultSet $resultSet)
+    protected function _setScrollId(ResultSet $resultSet) : void
     {
         $this->_currentResultSet = $resultSet;
 
@@ -147,7 +155,7 @@ class Scroll implements \Iterator
     /**
      * Save all search options manipulated by Scroll.
      */
-    protected function _saveOptions()
+    protected function _saveOptions() : void
     {
         if ($this->_search->hasOption(Search::OPTION_SCROLL)) {
             $this->_options[0] = $this->_search->getOption(Search::OPTION_SCROLL);
@@ -165,7 +173,7 @@ class Scroll implements \Iterator
     /**
      * Revert search options to previously saved state.
      */
-    protected function _revertOptions()
+    protected function _revertOptions() : void
     {
         $this->_search->setOption(Search::OPTION_SCROLL, $this->_options[0]);
         $this->_search->setOption(Search::OPTION_SCROLL_ID, $this->_options[1]);

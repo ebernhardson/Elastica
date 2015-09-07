@@ -1,10 +1,11 @@
-<?php
+<?hh
 namespace Elastica\Facet;
 
 use Elastica\Exception\InvalidException;
 use Elastica\Filter\AbstractFilter;
 use Elastica\NameableInterface;
 use Elastica\Param;
+use Indexish;
 
 /**
  * Abstract facet object. Should be extended by all facet types.
@@ -19,19 +20,19 @@ abstract class AbstractFacet extends Param implements NameableInterface
     /**
      * @var string Holds the name of the facet.
      */
-    protected $_name = '';
+    protected string $_name = '';
 
     /**
      * @var array Holds all facet parameters.
      */
-    protected $_facet = array();
+    protected array $_facet = array();
 
     /**
      * Constructs a Facet object.
      *
      * @param string $name The name of the facet.
      */
-    public function __construct($name)
+    public function __construct(string $name)
     {
         $this->setName($name);
     }
@@ -46,7 +47,7 @@ abstract class AbstractFacet extends Param implements NameableInterface
      *
      * @return $this
      */
-    public function setName($name)
+    public function setName(string $name) : this
     {
         if (empty($name)) {
             throw new InvalidException('Facet name has to be set');
@@ -61,7 +62,7 @@ abstract class AbstractFacet extends Param implements NameableInterface
      *
      * @return string
      */
-    public function getName()
+    public function getName() : string
     {
         return $this->_name;
     }
@@ -73,7 +74,7 @@ abstract class AbstractFacet extends Param implements NameableInterface
      *
      * @return $this
      */
-    public function setFilter(AbstractFilter $filter)
+    public function setFilter(AbstractFilter $filter) : this
     {
         return $this->_setFacetParam('facet_filter', $filter);
     }
@@ -87,7 +88,7 @@ abstract class AbstractFacet extends Param implements NameableInterface
      *
      * @return $this
      */
-    public function setGlobal($global = true)
+    public function setGlobal(bool $global = true) : this
     {
         return $this->_setFacetParam('global', (bool) $global);
     }
@@ -99,7 +100,7 @@ abstract class AbstractFacet extends Param implements NameableInterface
      *
      * @return $this
      */
-    public function setNested($nestedPath)
+    public function setNested(string $nestedPath) : this
     {
         return $this->_setFacetParam('nested', $nestedPath);
     }
@@ -111,7 +112,7 @@ abstract class AbstractFacet extends Param implements NameableInterface
      *
      * @return $this
      */
-    public function setScope($scope)
+    public function setScope(string $scope) : this
     {
         return $this->_setFacetParam('scope', $scope);
     }
@@ -123,7 +124,7 @@ abstract class AbstractFacet extends Param implements NameableInterface
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         return $this->_convertArrayable($this->_facet);
     }
@@ -137,7 +138,7 @@ abstract class AbstractFacet extends Param implements NameableInterface
      *
      * @return $this
      */
-    protected function _setFacetParam($key, $value)
+    protected function _setFacetParam(string $key, mixed $value) : this
     {
         $this->_facet[$key] = $value;
 

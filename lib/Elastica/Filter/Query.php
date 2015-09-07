@@ -1,8 +1,9 @@
-<?php
+<?hh
 namespace Elastica\Filter;
 
 use Elastica\Exception\InvalidException;
 use Elastica\Query\AbstractQuery;
+use Indexish;
 
 /**
  * Query filter.
@@ -18,14 +19,14 @@ class Query extends AbstractFilter
      *
      * @var array
      */
-    protected $_query;
+    protected mixed $_query;
 
     /**
      * Construct query filter.
      *
      * @param array|\Elastica\Query\AbstractQuery $query
      */
-    public function __construct($query = null)
+    public function __construct(mixed $query = null)
     {
         if (!is_null($query)) {
             $this->setQuery($query);
@@ -41,9 +42,9 @@ class Query extends AbstractFilter
      *
      * @return $this
      */
-    public function setQuery($query)
+    public function setQuery(mixed $query) : this
     {
-        if (!$query instanceof AbstractQuery && !is_array($query)) {
+        if (!$query instanceof AbstractQuery && !$query instanceof Indexish) {
             throw new InvalidException('expected an array or instance of Elastica\Query\AbstractQuery');
         }
 
@@ -55,7 +56,7 @@ class Query extends AbstractFilter
     /**
      * @see \Elastica\Param::_getBaseName()
      */
-    protected function _getBaseName()
+    protected function _getBaseName() : string
     {
         if (empty($this->_params)) {
             return 'query';
@@ -67,7 +68,7 @@ class Query extends AbstractFilter
     /**
      * @see \Elastica\Param::toArray()
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $data = parent::toArray();
 
@@ -77,6 +78,7 @@ class Query extends AbstractFilter
         if (empty($filterData)) {
             $filterData = $this->_query;
         } else {
+            /* UNSAFE_EXPR */
             $filterData['query'] = $this->_query;
         }
 

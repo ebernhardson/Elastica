@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
@@ -10,38 +10,38 @@ class RangeTest extends BaseTest
     /**
      * @group functional
      */
-    public function testQuery()
+    public function testQuery() : void
     {
         $client = $this->_getClient();
         $index = $client->getIndex('test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('test');
 
         $type->addDocuments(array(
-            new Document(1, array('age' => 16, 'height' => 140)),
-            new Document(2, array('age' => 21, 'height' => 155)),
-            new Document(3, array('age' => 33, 'height' => 160)),
-            new Document(4, array('age' => 68, 'height' => 160)),
-        ));
+            new Document('1', array('age' => 16, 'height' => 140)),
+            new Document('2', array('age' => 21, 'height' => 155)),
+            new Document('3', array('age' => 33, 'height' => 160)),
+            new Document('4', array('age' => 68, 'height' => 160)),
+        ))->getWaitHandle()->join();
 
-        $index->optimize();
-        $index->refresh();
+        $index->optimize()->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         $query = new Range('age', array('from' => 10, 'to' => 20));
-        $result = $type->search($query)->count();
+        $result = $type->search($query)->getWaitHandle()->join()->count();
         $this->assertEquals(1, $result);
 
         $query = new Range();
         $query->addField('height', array('gte' => 160));
 
-        $result = $type->search($query)->count();
+        $result = $type->search($query)->getWaitHandle()->join()->count();
         $this->assertEquals(2, $result);
     }
 
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $range = new Range();
 
@@ -49,9 +49,9 @@ class RangeTest extends BaseTest
         $range->addField('age', $field);
 
         $expectedArray = array(
-            'range' => array(
+            'range' => Map {
                 'age' => $field,
-            ),
+            },
         );
 
         $this->assertEquals($expectedArray, $range->toArray());
@@ -60,7 +60,7 @@ class RangeTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConstruct()
+    public function testConstruct() : void
     {
         $ranges = array('from' => 20, 'to' => 40);
         $range = new Range(
@@ -69,9 +69,9 @@ class RangeTest extends BaseTest
         );
 
         $expectedArray = array(
-            'range' => array(
+            'range' => Map {
                 'age' => $ranges,
-            ),
+            },
         );
 
         $this->assertEquals($expectedArray, $range->toArray());

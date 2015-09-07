@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Filter;
 
 use Elastica;
+use Indexish;
 
 /**
  * Script filter.
@@ -17,14 +18,14 @@ class Script extends AbstractFilter
      *
      * @var array|\Elastica\Query\AbstractQuery
      */
-    protected $_query = null;
+    protected mixed $_query = null;
 
     /**
      * Construct script filter.
      *
      * @param array|string|\Elastica\Script $script OPTIONAL Script
      */
-    public function __construct($script = null)
+    public function __construct(mixed $script = null)
     {
         if ($script) {
             $this->setScript($script);
@@ -38,7 +39,7 @@ class Script extends AbstractFilter
      *
      * @return $this
      */
-    public function setScript($script)
+    public function setScript(mixed $script) : this
     {
         return $this->setParam('script', Elastica\Script::create($script));
     }
@@ -46,11 +47,12 @@ class Script extends AbstractFilter
     /**
      * {@inheritdoc}
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $array = parent::toArray();
 
         if (isset($array['script'])) {
+            /* UNSAFE_EXPR */
             $array['script'] = $array['script']['script'];
         }
 

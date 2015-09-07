@@ -1,8 +1,9 @@
-<?php
+<?hh
 namespace Elastica\Aggregation;
 
 use Elastica\Script;
 use Elastica\ScriptFields;
+use Indexish;
 
 /**
  * Class TopHits.
@@ -14,7 +15,7 @@ class TopHits extends AbstractAggregation
     /**
      * @return array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         $array = parent::toArray();
 
@@ -34,7 +35,7 @@ class TopHits extends AbstractAggregation
      *
      * @return $this
      */
-    public function setSize($size)
+    public function setSize(int $size) : this
     {
         return $this->setParam('size', (int) $size);
     }
@@ -46,7 +47,7 @@ class TopHits extends AbstractAggregation
      *
      * @return $this
      */
-    public function setFrom($from)
+    public function setFrom(int $from) : this
     {
         return $this->setParam('from', (int) $from);
     }
@@ -58,7 +59,7 @@ class TopHits extends AbstractAggregation
      *
      * @return $this
      */
-    public function setSort(array $sortArgs)
+    public function setSort(array $sortArgs) : this
     {
         return $this->setParam('sort', $sortArgs);
     }
@@ -70,7 +71,7 @@ class TopHits extends AbstractAggregation
      *
      * @return $this
      */
-    public function setSource(array $fields)
+    public function setSource(array $fields) : this
     {
         return $this->setParam('_source', $fields);
     }
@@ -82,7 +83,7 @@ class TopHits extends AbstractAggregation
      *
      * @return $this
      */
-    public function setVersion($version)
+    public function setVersion(bool $version) : this
     {
         return $this->setParam('version', (bool) $version);
     }
@@ -94,7 +95,7 @@ class TopHits extends AbstractAggregation
      *
      * @return $this
      */
-    public function setExplain($explain)
+    public function setExplain(bool $explain) : this
     {
         return $this->setParam('explain', (bool) $explain);
     }
@@ -106,9 +107,9 @@ class TopHits extends AbstractAggregation
      *
      * @return $this
      */
-    public function setScriptFields($scriptFields)
+    public function setScriptFields(mixed $scriptFields) : this
     {
-        if (is_array($scriptFields)) {
+        if ($scriptFields instanceof Indexish) {
             $scriptFields = new ScriptFields($scriptFields);
         }
 
@@ -123,12 +124,13 @@ class TopHits extends AbstractAggregation
      *
      * @return $this
      */
-    public function addScriptField($name, Script $script)
+    public function addScriptField(string $name, Script $script) : this
     {
         if (!isset($this->_params['script_fields'])) {
             $this->_params['script_fields'] = new ScriptFields();
         }
 
+        /* UNSAFE_EXPR */
         $this->_params['script_fields']->addScript($name, $script);
 
         return $this;
@@ -141,7 +143,7 @@ class TopHits extends AbstractAggregation
      *
      * @return $this
      */
-    public function setHighlight(array $highlightArgs)
+    public function setHighlight(array $highlightArgs) : this
     {
         return $this->setParam('highlight', $highlightArgs);
     }
@@ -153,7 +155,7 @@ class TopHits extends AbstractAggregation
      *
      * @return $this
      */
-    public function setFieldDataFields(array $fields)
+    public function setFieldDataFields(array $fields) : this
     {
         return $this->setParam('fielddata_fields', $fields);
     }

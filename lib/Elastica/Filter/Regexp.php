@@ -1,5 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Filter;
+
+use Indexish;
 
 /**
  * Regexp filter.
@@ -15,21 +17,21 @@ class Regexp extends AbstractFilter
      *
      * @var string
      */
-    protected $_field = '';
+    protected string $_field = '';
 
     /**
      * Holds the regexp string.
      *
      * @var string
      */
-    protected $_regexp = '';
+    protected string $_regexp = '';
 
     /**
      * Holds the regexp options.
      *
      * @var array
      */
-    protected $_options = array();
+    protected array $_options = array();
 
     /**
      * Create Regexp object.
@@ -40,7 +42,7 @@ class Regexp extends AbstractFilter
      *
      * @throws \Elastica\Exception\InvalidException
      */
-    public function __construct($field = '', $regexp = '', $options = array())
+    public function __construct(string $field = '', string $regexp = '', array $options = array())
     {
         $this->setField($field);
         $this->setRegexp($regexp);
@@ -54,7 +56,7 @@ class Regexp extends AbstractFilter
      *
      * @return $this
      */
-    public function setField($field)
+    public function setField(string $field) : this
     {
         $this->_field = $field;
 
@@ -68,7 +70,7 @@ class Regexp extends AbstractFilter
      *
      * @return $this
      */
-    public function setRegexp($regexp)
+    public function setRegexp(string $regexp) : this
     {
         $this->_regexp = $regexp;
 
@@ -82,7 +84,7 @@ class Regexp extends AbstractFilter
      *
      * @return $this
      */
-    public function setOptions($options)
+    public function setOptions(array $options) : this
     {
         $this->_options = $options;
 
@@ -96,7 +98,7 @@ class Regexp extends AbstractFilter
      *
      * @return array data array
      */
-    public function toArray()
+    public function toArray() : Indexish<string, mixed>
     {
         if (count($this->_options) > 0) {
             $options = array('value' => $this->_regexp);

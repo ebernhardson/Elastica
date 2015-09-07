@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Filter\Type;
@@ -9,7 +9,7 @@ class TypeTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetType()
+    public function testSetType() : void
     {
         $typeFilter = new Type();
         $returnValue = $typeFilter->setType('type_name');
@@ -19,7 +19,7 @@ class TypeTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $typeFilter = new Type('type_name');
 

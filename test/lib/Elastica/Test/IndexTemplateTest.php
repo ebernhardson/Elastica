@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Client;
@@ -17,7 +17,7 @@ class IndexTemplateTest extends BaseTest
     /**
      * @group unit
      */
-    public function testInstantiate()
+    public function testInstantiate() : void
     {
         $name = 'index_template1';
         $client = $this->_getClient();
@@ -28,19 +28,9 @@ class IndexTemplateTest extends BaseTest
     }
 
     /**
-     * @expectedException \Elastica\Exception\InvalidException
      * @group unit
      */
-    public function testIncorrectInstantiate()
-    {
-        $client = $this->_getClient();
-        new IndexTemplate($client, null);
-    }
-
-    /**
-     * @group unit
-     */
-    public function testDelete()
+    public function testDelete() : void
     {
         $name = 'index_template1';
         $response = new Response('');
@@ -48,16 +38,21 @@ class IndexTemplateTest extends BaseTest
         $clientMock = $this->getMock('\Elastica\Client', array('request'));
         $clientMock->expects($this->once())
             ->method('request')
-            ->with('/_template/'.$name, Request::DELETE, array(), array())
-            ->willReturn($response);
+            ->with('/_template/'.$name, Request::DELETE, array(), null)
+            ->willReturn($this->asAwaitable($response));
         $indexTemplate = new IndexTemplate($clientMock, $name);
-        $this->assertSame($response, $indexTemplate->delete());
+        $this->assertSame($response, $indexTemplate->delete()->getWaitHandle()->join());
+    }
+
+    private async function asAwaitable(@\Elastica\Response $value) : Awaitable<\Elastica\Response>
+    {
+        return $value;
     }
 
     /**
      * @group unit
      */
-    public function testCreate()
+    public function testCreate() : void
     {
         $args = array(1);
         $response = new Response('');
@@ -66,16 +61,16 @@ class IndexTemplateTest extends BaseTest
         $clientMock = $this->getMock('\Elastica\Client', array('request'));
         $clientMock->expects($this->once())
             ->method('request')
-            ->with('/_template/'.$name, Request::PUT, $args, array())
-            ->willReturn($response);
+            ->with('/_template/'.$name, Request::PUT, $args, null)
+            ->willReturn($this->asAwaitable($response));
         $indexTemplate = new IndexTemplate($clientMock, $name);
-        $this->assertSame($response, $indexTemplate->create($args));
+        $this->assertSame($response, $indexTemplate->create($args)->getWaitHandle()->join());
     }
 
     /**
      * @group unit
      */
-    public function testExists()
+    public function testExists() : void
     {
         $name = 'index_template1';
         $response = new Response('');
@@ -84,16 +79,16 @@ class IndexTemplateTest extends BaseTest
         $clientMock = $this->getMock('\Elastica\Client', array('request'));
         $clientMock->expects($this->once())
             ->method('request')
-            ->with('/_template/'.$name, Request::HEAD, array(), array())
-            ->willReturn($response);
+            ->with('/_template/'.$name, Request::HEAD, array(), null)
+            ->willReturn($this->asAwaitable($response));
         $indexTemplate = new IndexTemplate($clientMock, $name);
-        $this->assertTrue($indexTemplate->exists());
+        $this->assertTrue($indexTemplate->exists()->getWaitHandle()->join());
     }
 
     /**
      * @group functional
      */
-    public function testCreateTemplate()
+    public function testCreateTemplate() : void
     {
         $template = array(
             'template' => 'te*',
@@ -103,9 +98,9 @@ class IndexTemplateTest extends BaseTest
         );
         $name = 'index_template1';
         $indexTemplate = new IndexTemplate($this->_getClient(), $name);
-        $indexTemplate->create($template);
-        $this->assertTrue($indexTemplate->exists());
-        $indexTemplate->delete();
-        $this->assertFalse($indexTemplate->exists());
+        $indexTemplate->create($template)->getWaitHandle()->join();
+        $this->assertTrue($indexTemplate->exists()->getWaitHandle()->join());
+        $indexTemplate->delete()->getWaitHandle()->join();
+        $this->assertFalse($indexTemplate->exists()->getWaitHandle()->join());
     }
 }

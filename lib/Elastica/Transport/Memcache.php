@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Transport;
 
 use Elastica\Exception\Connection\MemcacheException;
@@ -8,6 +8,7 @@ use Elastica\Exception\ResponseException;
 use Elastica\JSON;
 use Elastica\Request;
 use Elastica\Response;
+use Indexish;
 
 /**
  * Elastica Memcache Transport object.
@@ -29,9 +30,9 @@ class Memcache extends AbstractTransport
      * @throws \Elastica\Exception\ResponseException
      * @throws \Elastica\Exception\InvalidException
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function exec(Request $request, array $params)
+    public async function exec(Request $request, Indexish<string, mixed> $params) : Awaitable<Response>
     {
         $memcache = new \Memcache();
         $memcache->connect($this->getConnection()->getHost(), $this->getConnection()->getPort());
@@ -41,7 +42,7 @@ class Memcache extends AbstractTransport
         $content = '';
 
         if (!empty($data) || '0' === $data) {
-            if (is_array($data)) {
+            if ($data instanceof Indexish) {
                 $content = JSON::stringify($data);
             } else {
                 $content = $data;
@@ -100,7 +101,7 @@ class Memcache extends AbstractTransport
      *
      * @throws Elastica\Exception\Connection\MemcacheException If key is too long
      */
-    private function _checkKeyLength($key)
+    private function _checkKeyLength(string $key) : void
     {
         if (strlen($key) >= self::MAX_KEY_LENGTH) {
             throw new MemcacheException('Memcache key is too long');

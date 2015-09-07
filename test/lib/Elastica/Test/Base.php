@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Client;
@@ -13,7 +13,7 @@ class Base extends \PHPUnit_Framework_TestCase
      *
      * @return Client
      */
-    protected function _getClient(array $params = array(), $callback = null)
+    protected function _getClient(array $params = array(), $callback = null) : Client
     {
         $config = array(
             'host' => $this->_getHost(),
@@ -28,7 +28,7 @@ class Base extends \PHPUnit_Framework_TestCase
     /**
      * @return string Host to es for elastica tests
      */
-    protected function _getHost()
+    protected function _getHost() : string
     {
         return getenv('ES_HOST') ?: Connection::DEFAULT_HOST;
     }
@@ -36,15 +36,15 @@ class Base extends \PHPUnit_Framework_TestCase
     /**
      * @return int Port to es for elastica tests
      */
-    protected function _getPort()
+    protected function _getPort() : int
     {
-        return getenv('ES_PORT') ?: Connection::DEFAULT_PORT;
+        return (int)getenv('ES_PORT') ?: Connection::DEFAULT_PORT;
     }
 
     /**
      * @return string Proxy url string
      */
-    protected function _getProxyUrl()
+    protected function _getProxyUrl() : string
     {
         $proxyHost = getenv('PROXY_HOST') ?: Connection::DEFAULT_HOST;
 
@@ -54,7 +54,7 @@ class Base extends \PHPUnit_Framework_TestCase
     /**
      * @return string Proxy url string to proxy which returns 403
      */
-    protected function _getProxyUrl403()
+    protected function _getProxyUrl403() : string
     {
         $proxyHost = getenv('PROXY_HOST') ?: Connection::DEFAULT_HOST;
 
@@ -68,7 +68,7 @@ class Base extends \PHPUnit_Framework_TestCase
      *
      * @return \Elastica\Index
      */
-    protected function _createIndex($name = null, $delete = true, $shards = 1)
+    protected function _createIndex(?string $name = null, bool $delete = true, int $shards = 1) : Index
     {
         if (is_null($name)) {
             $name = preg_replace('/[^a-z]/i', '', strtolower(get_called_class())).uniqid();
@@ -76,15 +76,15 @@ class Base extends \PHPUnit_Framework_TestCase
 
         $client = $this->_getClient();
         $index = $client->getIndex('elastica_'.$name);
-        $index->create(array('index' => array('number_of_shards' => $shards, 'number_of_replicas' => 0)), $delete);
+        $index->create(array('index' => array('number_of_shards' => $shards, 'number_of_replicas' => 0)), $delete)->getWaitHandle()->join();
 
         return $index;
     }
 
-    protected function _waitForAllocation(Index $index)
+    protected function _waitForAllocation(Index $index) : void
     {
         do {
-            $settings = $index->getStatus()->get();
+            $settings = (array)$index->getStatus()->getWaitHandle()->join()->get();
             $allocated = true;
             foreach ($settings['shards'] as $shard) {
                 if ($shard[0]['routing']['state'] != 'STARTED') {
@@ -94,7 +94,7 @@ class Base extends \PHPUnit_Framework_TestCase
         } while (!$allocated);
     }
 
-    protected function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
 
@@ -102,38 +102,38 @@ class Base extends \PHPUnit_Framework_TestCase
         $this->assertTrue($hasGroup, 'Every test must have one of "unit", "functional", "shutdown" or "benchmark" group');
     }
 
-    protected function tearDown()
+    protected function tearDown() : void
     {
         if ($this->_isFunctionalGroup()) {
-            $this->_getClient()->getIndex('_all')->delete();
-            $this->_getClient()->getIndex('_all')->clearCache();
+            $this->_getClient()->getIndex('_all')->delete()->getWaitHandle()->join();
+            $this->_getClient()->getIndex('_all')->clearCache()->getWaitHandle()->join();
         }
 
         parent::tearDown();
     }
 
-    protected function _isUnitGroup()
+    protected function _isUnitGroup() : bool
     {
         $groups = \PHPUnit_Util_Test::getGroups(get_class($this), $this->getName(false));
 
         return in_array('unit', $groups);
     }
 
-    protected function _isFunctionalGroup()
+    protected function _isFunctionalGroup() : bool
     {
         $groups = \PHPUnit_Util_Test::getGroups(get_class($this), $this->getName(false));
 
         return in_array('functional', $groups);
     }
 
-    protected function _isShutdownGroup()
+    protected function _isShutdownGroup() : bool
     {
         $groups = \PHPUnit_Util_Test::getGroups(get_class($this), $this->getName(false));
 
         return in_array('shutdown', $groups);
     }
 
-    protected function _isBenchmarkGroup()
+    protected function _isBenchmarkGroup() : bool
     {
         $groups = \PHPUnit_Util_Test::getGroups(get_class($this), $this->getName(false));
 

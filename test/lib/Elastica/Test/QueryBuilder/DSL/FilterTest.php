@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\QueryBuilder\DSL;
 
 use Elastica\Filter\Exists;
@@ -10,7 +10,7 @@ class FilterTest extends AbstractDSLTest
     /**
      * @group unit
      */
-    public function testType()
+    public function testType() : void
     {
         $filterDSL = new DSL\Filter();
 
@@ -21,7 +21,7 @@ class FilterTest extends AbstractDSLTest
     /**
      * @group unit
      */
-    public function testInterface()
+    public function testInterface() : void
     {
         $filterDSL = new DSL\Filter();
 

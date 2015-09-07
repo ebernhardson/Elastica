@@ -1,6 +1,7 @@
-<?php
+<?hh
 namespace Elastica\Exception\Bulk\Response;
 
+use Elastica\Bulk\Action;
 use Elastica\Bulk\Response;
 use Elastica\Exception\BulkException;
 
@@ -9,7 +10,7 @@ class ActionException extends BulkException
     /**
      * @var \Elastica\Response
      */
-    protected $_response;
+    protected Response $_response;
 
     /**
      * @param \Elastica\Bulk\Response $response
@@ -18,13 +19,13 @@ class ActionException extends BulkException
     {
         $this->_response = $response;
 
-        parent::__construct($this->getErrorMessage($response));
+        parent::__construct($this->_getErrorMessage($response));
     }
 
     /**
      * @return \Elastica\Bulk\Action
      */
-    public function getAction()
+    public function getAction() : Action
     {
         return $this->getResponse()->getAction();
     }
@@ -32,7 +33,7 @@ class ActionException extends BulkException
     /**
      * @return \Elastica\Bulk\Response
      */
-    public function getResponse()
+    public function getResponse() : Response
     {
         return $this->_response;
     }
@@ -42,21 +43,31 @@ class ActionException extends BulkException
      *
      * @return string
      */
-    public function getErrorMessage(Response $response)
+    public function getErrorMessage(Response $response) : string
+    {
+        return $this->_getErrorMessage($response);
+    }
+
+    /**
+     * @param \Elastica\Bulk\Response $response
+     *
+     * @return string
+     */
+    private function _getErrorMessage(Response $response) : string
     {
         $error = $response->getError();
         $opType = $response->getOpType();
         $data = $response->getData();
 
         $path = '';
-        if (isset($data['_index'])) {
-            $path .= '/'.$data['_index'];
+        if (isset(/* UNSAFE_EXPR */ $data['_index'])) {
+            $path .= '/'./* UNSAFE_EXPR */ $data['_index'];
         }
-        if (isset($data['_type'])) {
-            $path .= '/'.$data['_type'];
+        if (isset(/* UNSAFE_EXPR */ $data['_type'])) {
+            $path .= '/'./* UNSAFE_EXPR */ $data['_type'];
         }
-        if (isset($data['_id'])) {
-            $path .= '/'.$data['_id'];
+        if (isset(/* UNSAFE_EXPR */ $data['_id'])) {
+            $path .= '/'./* UNSAFE_EXPR */ $data['_id'];
         }
         $message = "$opType: $path caused $error";
 

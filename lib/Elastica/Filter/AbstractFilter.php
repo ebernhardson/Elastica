@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Filter;
 
 use Elastica\Exception\InvalidException;
@@ -20,7 +20,7 @@ abstract class AbstractFilter extends Param
      *
      * @return $this
      */
-    public function setCached($cached = true)
+    public function setCached(bool $cached = true) : this
     {
         return $this->setParam('_cache', (bool) $cached);
     }
@@ -34,7 +34,7 @@ abstract class AbstractFilter extends Param
      *
      * @return $this
      */
-    public function setCacheKey($cacheKey)
+    public function setCacheKey(string $cacheKey) : this
     {
         $cacheKey = (string) $cacheKey;
 
@@ -52,7 +52,7 @@ abstract class AbstractFilter extends Param
      *
      * @return $this
      */
-    public function setName($name)
+    public function setName(string $name) : this
     {
         return $this->setParam('_name', $name);
     }

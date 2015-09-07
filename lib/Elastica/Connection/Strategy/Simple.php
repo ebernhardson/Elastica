@@ -1,6 +1,7 @@
-<?php
+<?hh // strict
 namespace Elastica\Connection\Strategy;
 
+use Elastica\Connection;
 use Elastica\Exception\ClientException;
 
 /**
@@ -17,7 +18,7 @@ class Simple implements StrategyInterface
      *
      * @return \Elastica\Connection
      */
-    public function getConnection($connections)
+    public function getConnection(array<Connection> $connections) : Connection
     {
         foreach ($connections as $connection) {
             if ($connection->isEnabled()) {

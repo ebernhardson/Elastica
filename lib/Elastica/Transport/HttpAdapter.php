@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Transport;
 
 use Elastica\Connection;
@@ -11,23 +11,24 @@ use Ivory\HttpAdapter\HttpAdapterInterface;
 use Ivory\HttpAdapter\Message\Request as HttpAdapterRequest;
 use Ivory\HttpAdapter\Message\Response as HttpAdapterResponse;
 use Ivory\HttpAdapter\Message\Stream\StringStream;
+use Indexish;
 
 class HttpAdapter extends AbstractTransport
 {
     /**
      * @var HttpAdapterInterface
      */
-    private $httpAdapter;
+    private HttpAdapterInterface $httpAdapter;
 
     /**
      * @var string
      */
-    private $_scheme = 'http';
+    private string $_scheme = 'http';
 
     /**
      * Construct transport.
      */
-    public function __construct(Connection $connection = null, HttpAdapterInterface $httpAdapter)
+    public function __construct(?Connection $connection, HttpAdapterInterface $httpAdapter)
     {
         parent::__construct($connection);
         $this->httpAdapter = $httpAdapter;
@@ -45,9 +46,9 @@ class HttpAdapter extends AbstractTransport
      * @throws \Elastica\Exception\ResponseException
      * @throws \Elastica\Exception\Connection\HttpException
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    public function exec(ElasticaRequest $elasticaRequest, array $params)
+    public async function exec(ElasticaRequest $elasticaRequest, Indexish<string, mixed> $params) : Awaitable<ElasticaResponse>
     {
         $connection = $this->getConnection();
 
@@ -61,7 +62,7 @@ class HttpAdapter extends AbstractTransport
         $httpAdapterResponse = $this->httpAdapter->sendRequest($httpAdapterRequest);
         $end = microtime(true);
 
-        $elasticaResponse = $this->_createElasticaResponse($httpAdapterResponse, $connection);
+        $elasticaResponse = $this->_createElasticaResponse($httpAdapterResponse);
         $elasticaResponse->setQueryTime($end - $start);
 
         $elasticaResponse->setTransferInfo(
@@ -87,7 +88,7 @@ class HttpAdapter extends AbstractTransport
      *
      * @return ElasticaResponse
      */
-    protected function _createElasticaResponse(HttpAdapterResponse $httpAdapterResponse)
+    protected function _createElasticaResponse(HttpAdapterResponse $httpAdapterResponse) : ElasticaResponse
     {
         return new ElasticaResponse((string) $httpAdapterResponse->getBody(), $httpAdapterResponse->getStatusCode());
     }
@@ -98,7 +99,7 @@ class HttpAdapter extends AbstractTransport
      *
      * @return HttpAdapterRequest
      */
-    protected function _createHttpAdapterRequest(ElasticaRequest $elasticaRequest, Connection $connection)
+    protected function _createHttpAdapterRequest(ElasticaRequest $elasticaRequest, Connection $connection) : HttpAdapterRequest
     {
         $data = $elasticaRequest->getData();
         $body = null;
@@ -114,7 +115,7 @@ class HttpAdapter extends AbstractTransport
                 $method = ElasticaRequest::POST;
             }
 
-            if (is_array($data)) {
+            if ($data instanceof Indexish) {
                 $body = JSON::stringify($data, 'JSON_ELASTICSEARCH');
             } else {
                 $body = $data;
@@ -133,9 +134,9 @@ class HttpAdapter extends AbstractTransport
      *
      * @return string
      */
-    protected function _getUri(ElasticaRequest $request, Connection $connection)
+    protected function _getUri(ElasticaRequest $request, Connection $connection) : string
     {
-        $url = $connection->hasConfig('url') ? $connection->getConfig('url') : '';
+        $url = $connection->hasConfig('url') ? (string) $connection->getConfig('url') : '';
 
         if (!empty($url)) {
             $baseUri = $url;

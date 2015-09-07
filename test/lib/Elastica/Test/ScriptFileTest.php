@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Document;
@@ -13,28 +13,28 @@ class ScriptFileTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSearch()
+    public function testSearch() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
 
         $type->setMapping(new Mapping(null, array(
             'location' => array('type' => 'geo_point'),
-        )));
+        )))->getWaitHandle()->join();
 
         $type->addDocuments(array(
-            new Document(1, array('location' => array('lat' => 48.8825968, 'lon' => 2.3706111))),
-            new Document(2, array('location' => array('lat' => 48.9057932, 'lon' => 2.2739735))),
-        ));
+            new Document('1', array('location' => array('lat' => 48.8825968, 'lon' => 2.3706111))),
+            new Document('2', array('location' => array('lat' => 48.9057932, 'lon' => 2.2739735))),
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $scriptFile = new ScriptFile('calculate-distance', array('lat' => 48.858859, 'lon' => 2.3470599));
+        $scriptFile = new ScriptFile('calculate-distance', Map {'lat' => 48.858859, 'lon' => 2.3470599});
 
         $query = new Query();
         $query->addScriptField('distance', $scriptFile);
 
-        $resultSet = $type->search($query);
+        $resultSet = $type->search($query)->getWaitHandle()->join();
         $results = $resultSet->getResults();
 
         $this->assertEquals(2, $resultSet->count());
@@ -45,7 +45,7 @@ class ScriptFileTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConstructor()
+    public function testConstructor() : void
     {
         $value = 'calculate-distance.groovy';
         $scriptFile = new ScriptFile($value);
@@ -56,10 +56,10 @@ class ScriptFileTest extends BaseTest
         $this->assertEquals($value, $scriptFile->getScriptFile());
         $this->assertEquals($expected, $scriptFile->toArray());
 
-        $params = array(
+        $params = Map {
             'param1' => 'one',
             'param2' => 10,
-        );
+        };
 
         $scriptFile = new ScriptFile($value, $params);
 
@@ -76,7 +76,7 @@ class ScriptFileTest extends BaseTest
     /**
      * @group unit
      */
-    public function testCreateString()
+    public function testCreateString() : void
     {
         $string = 'calculate-distance.groovy';
         $scriptFile = ScriptFile::create($string);
@@ -94,7 +94,7 @@ class ScriptFileTest extends BaseTest
     /**
      * @group unit
      */
-    public function testCreateScriptFile()
+    public function testCreateScriptFile() : void
     {
         $data = new ScriptFile('calculate-distance.groovy');
 
@@ -107,13 +107,13 @@ class ScriptFileTest extends BaseTest
     /**
      * @group unit
      */
-    public function testCreateArray()
+    public function testCreateArray() : void
     {
         $string = 'calculate-distance.groovy';
-        $params = array(
+        $params = Map {
             'param1' => 'one',
             'param2' => 1,
-        );
+        };
         $array = array(
             'script_file' => $string,
             'params' => $params,
@@ -134,7 +134,7 @@ class ScriptFileTest extends BaseTest
      * @dataProvider dataProviderCreateInvalid
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testCreateInvalid($data)
+    public function testCreateInvalid($data) : void
     {
         ScriptFile::create($data);
     }
@@ -142,7 +142,7 @@ class ScriptFileTest extends BaseTest
     /**
      * @return array
      */
-    public function dataProviderCreateInvalid()
+    public function dataProviderCreateInvalid() : array<array>
     {
         return array(
             array(
@@ -160,7 +160,7 @@ class ScriptFileTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetScriptFile()
+    public function testSetScriptFile() : void
     {
         $scriptFile = new ScriptFile('foo');
         $this->assertEquals('foo', $scriptFile->getScriptFile());

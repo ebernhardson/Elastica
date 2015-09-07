@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Suggest;
 
 use Elastica\Document;
@@ -12,7 +12,7 @@ class CompletionTest extends BaseTest
     /**
      * @return Index
      */
-    protected function _getIndexForTest()
+    protected function _getIndexForTest() : \Elastica\Index
     {
         $index = $this->_createIndex();
         $type = $index->getType('song');
@@ -22,10 +22,10 @@ class CompletionTest extends BaseTest
                 'type' => 'completion',
                 'payloads' => true,
             ),
-        ));
+        ))->getWaitHandle()->join();
 
         $type->addDocuments(array(
-            new Document(1, array(
+            new Document('1', array(
                 'fieldName' => array(
                     'input' => array('Nevermind', 'Nirvana'),
                     'output' => 'Nevermind - Nirvana',
@@ -34,7 +34,7 @@ class CompletionTest extends BaseTest
                     ),
                 ),
             )),
-            new Document(2, array(
+            new Document('2', array(
                 'fieldName' => array(
                     'input' => array('Bleach', 'Nirvana'),
                     'output' => 'Bleach - Nirvana',
@@ -43,7 +43,7 @@ class CompletionTest extends BaseTest
                     ),
                 ),
             )),
-            new Document(3, array(
+            new Document('3', array(
                 'fieldName' => array(
                     'input' => array('Incesticide', 'Nirvana'),
                     'output' => 'Incesticide - Nirvana',
@@ -52,9 +52,9 @@ class CompletionTest extends BaseTest
                     ),
                 ),
             )),
-        ));
+        ))->getWaitHandle()->join();
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         return $index;
     }
@@ -62,17 +62,17 @@ class CompletionTest extends BaseTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $suggest = new Completion('suggestName', 'fieldName');
         $suggest->setText('foo');
         $suggest->setSize(10);
         $expected = array(
             'text' => 'foo',
-            'completion' => array(
+            'completion' => Map {
                 'size' => 10,
                 'field' => 'fieldName',
-            ),
+            },
         );
         $this->assertEquals($expected, $suggest->toArray());
     }
@@ -80,13 +80,13 @@ class CompletionTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSuggestWorks()
+    public function testSuggestWorks() : void
     {
         $suggest = new Completion('suggestName', 'fieldName');
         $suggest->setText('Never');
 
         $index = $this->_getIndexForTest();
-        $resultSet = $index->search(Query::create($suggest));
+        $resultSet = $index->search(Query::create($suggest))->getWaitHandle()->join();
 
         $this->assertTrue($resultSet->hasSuggests());
 
@@ -101,14 +101,14 @@ class CompletionTest extends BaseTest
     /**
      * @group functional
      */
-    public function testFuzzySuggestWorks()
+    public function testFuzzySuggestWorks() : void
     {
         $suggest = new Completion('suggestName', 'fieldName');
         $suggest->setFuzzy(array('fuzziness' => 2));
         $suggest->setText('Neavermint');
 
         $index = $this->_getIndexForTest();
-        $resultSet = $index->search(Query::create($suggest));
+        $resultSet = $index->search(Query::create($suggest))->getWaitHandle()->join();
 
         $this->assertTrue($resultSet->hasSuggests());
 
@@ -122,7 +122,7 @@ class CompletionTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetFuzzy()
+    public function testSetFuzzy() : void
     {
         $suggest = new Completion('suggestName', 'fieldName');
 

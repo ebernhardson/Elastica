@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Suggest;
 
 /**
@@ -19,7 +19,7 @@ class Completion extends AbstractSuggest
      *
      * @return $this
      */
-    public function setFuzzy(array $fuzzy)
+    public function setFuzzy(array $fuzzy) : this
     {
         return $this->setParam('fuzzy', $fuzzy);
     }

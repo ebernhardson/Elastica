@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Filter;
 
 /**
@@ -10,11 +10,4 @@ namespace Elastica\Filter;
  */
 class MatchAll extends AbstractFilter
 {
-    /**
-     * Creates match all filter.
-     */
-    public function __construct()
-    {
-        $this->_params = new \stdClass();
-    }
 }

@@ -1,4 +1,4 @@
-<?php
+<?hh // strict
 namespace Elastica\Query;
 
 /**
@@ -15,7 +15,7 @@ class Term extends AbstractQuery
      *
      * @param array $term OPTIONAL Calls setTerm with the given $term array
      */
-    public function __construct(array $term = array())
+    public function __construct(Map<string, mixed> $term = Map {})
     {
         $this->setRawTerm($term);
     }
@@ -28,7 +28,7 @@ class Term extends AbstractQuery
      *
      * @return $this
      */
-    public function setRawTerm(array $term)
+    public function setRawTerm(Map<string, mixed> $term) : this
     {
         return $this->setParams($term);
     }
@@ -42,8 +42,8 @@ class Term extends AbstractQuery
      *
      * @return $this
      */
-    public function setTerm($key, $value, $boost = 1.0)
+    public function setTerm(string $key, mixed $value, float $boost = 1.0) : this
     {
-        return $this->setRawTerm(array($key => array('value' => $value, 'boost' => $boost)));
+        return $this->setRawTerm(Map {$key => Map {'value' => $value, 'boost' => $boost}});
     }
 }

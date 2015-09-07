@@ -45,9 +45,9 @@ dependencies:
 		${SOURCE}
 .PHONY: phpunit
 phpunit:
-	-phpunit -c test/ --coverage-clover build/coverage/unit-coverage.xml --group unit
-	-phpunit -c test/ --coverage-clover build/coverage/functional-coverage.xml --group functional
-	-phpunit -c test/ --coverage-clover build/coverage/shutdown-coverage.xml --group shutdown
+	-hhvm ./phpunit -c test/ --coverage-clover build/coverage/unit-coverage.xml --group unit
+	-hhvm ./phpunit -c test/ --coverage-clover build/coverage/functional-coverage.xml --group functional
+	-hhvm ./phpunit -c test/ --coverage-clover build/coverage/shutdown-coverage.xml --group shutdown
 	
 .PHONY: tests
 tests:

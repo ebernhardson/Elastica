@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test;
 
 use Elastica\Connection;
@@ -16,7 +16,7 @@ class ClientTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConstruct()
+    public function testConstruct() : void
     {
         $client = $this->_getClient();
         $this->assertCount(1, $client->getConnections());
@@ -25,33 +25,33 @@ class ClientTest extends BaseTest
     /**
      * @group functional
      */
-    public function testConnectionsArray()
+    public function testConnectionsArray() : void
     {
         // Creates a new index 'xodoa' and a type 'user' inside this index
         $client = $this->_getClient(array('connections' => array(array('host' => $this->_getHost(), 'port' => 9200))));
         $index = $client->getIndex('elastica_test1');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
         $type = $index->getType('user');
 
         // Adds 1 document to the index
-        $doc1 = new Document(1,
+        $doc1 = new Document('1',
             array('username' => 'hans', 'test' => array('2', '3', '5'))
         );
-        $type->addDocument($doc1);
+        $type->addDocument($doc1)->getWaitHandle()->join();
 
         // Adds a list of documents with _bulk upload to the index
         $docs = array();
-        $docs[] = new Document(2,
+        $docs[] = new Document('2',
             array('username' => 'john', 'test' => array('1', '3', '6'))
         );
-        $docs[] = new Document(3,
+        $docs[] = new Document('3',
             array('username' => 'rolf', 'test' => array('2', '3', '7'))
         );
-        $type->addDocuments($docs);
+        $type->addDocuments($docs)->getWaitHandle()->join();
 
         // Refresh index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $resultSet = $type->search('rolf');
     }
@@ -59,7 +59,7 @@ class ClientTest extends BaseTest
     /**
      * @group functional
      */
-    public function testTwoServersSame()
+    public function testTwoServersSame() : void
     {
         // Creates a new index 'xodoa' and a type 'user' inside this index
         $client = $this->_getClient(array('connections' => array(
@@ -67,28 +67,28 @@ class ClientTest extends BaseTest
             array('host' => $this->_getHost(), 'port' => 9200),
         )));
         $index = $client->getIndex('elastica_test1');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
 
         $type = $index->getType('user');
 
         // Adds 1 document to the index
-        $doc1 = new Document(1,
+        $doc1 = new Document('1',
             array('username' => 'hans', 'test' => array('2', '3', '5'))
         );
-        $type->addDocument($doc1);
+        $type->addDocument($doc1)->getWaitHandle()->join();
 
         // Adds a list of documents with _bulk upload to the index
         $docs = array();
-        $docs[] = new Document(2,
+        $docs[] = new Document('2',
             array('username' => 'john', 'test' => array('1', '3', '6'))
         );
-        $docs[] = new Document(3,
+        $docs[] = new Document('3',
             array('username' => 'rolf', 'test' => array('2', '3', '7'))
         );
-        $type->addDocuments($docs);
+        $type->addDocuments($docs)->getWaitHandle()->join();
 
         // Refresh index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $resultSet = $type->search('rolf');
     }
@@ -96,7 +96,7 @@ class ClientTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConnectionParamsArePreparedForConnectionsOption()
+    public function testConnectionParamsArePreparedForConnectionsOption() : void
     {
         $url = 'https://'.$this->_getHost().':9200';
         $client = $this->_getClient(array('connections' => array(array('url' => $url))));
@@ -108,7 +108,7 @@ class ClientTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConnectionParamsArePreparedForServersOption()
+    public function testConnectionParamsArePreparedForServersOption() : void
     {
         $url = 'https://'.$this->_getHost().':9200';
         $client = $this->_getClient(array('servers' => array(array('url' => $url))));
@@ -120,7 +120,7 @@ class ClientTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConnectionParamsArePreparedForDefaultOptions()
+    public function testConnectionParamsArePreparedForDefaultOptions() : void
     {
         $url = 'https://'.$this->_getHost().':9200';
         $client = $this->_getClient(array('url' => $url));
@@ -132,7 +132,7 @@ class ClientTest extends BaseTest
     /**
      * @group functional
      */
-    public function testBulk()
+    public function testBulk() : void
     {
         $client = $this->_getClient();
 
@@ -143,16 +143,16 @@ class ClientTest extends BaseTest
             array('user' => array('name' => 'peter')),
         );
 
-        $client->bulk($params);
+        $client->bulk($params)->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testOptimizeAll()
+    public function testOptimizeAll() : void
     {
         $client = $this->_getClient();
-        $response = $client->optimizeAll();
+        $response = $client->optimizeAll()->getWaitHandle()->join();
 
         $this->assertFalse($response->hasError());
     }
@@ -161,10 +161,10 @@ class ClientTest extends BaseTest
      * @group unit
      * @expectedException \Elastica\Exception\InvalidException
      */
-    public function testAddDocumentsEmpty()
+    public function testAddDocumentsEmpty() : void
     {
         $client = $this->_getClient();
-        $client->addDocuments(array());
+        $client->addDocuments(array())->getWaitHandle()->join();
     }
 
     /**
@@ -172,32 +172,32 @@ class ClientTest extends BaseTest
      *
      * @group functional
      */
-    public function testBulkIndex()
+    public function testBulkIndex() : void
     {
         $index = $this->_getClient()->getIndex('cryptocurrencies');
 
-        $anonCoin = new Document(1, array('name' => 'anoncoin'), 'altcoin');
-        $ixCoin = new Document(2, array('name' => 'ixcoin'), 'altcoin');
+        $anonCoin = new Document('1', array('name' => 'anoncoin'), 'altcoin');
+        $ixCoin = new Document('2', array('name' => 'ixcoin'), 'altcoin');
 
-        $index->addDocuments(array($anonCoin, $ixCoin));
+        $index->addDocuments(array($anonCoin, $ixCoin))->getWaitHandle()->join();
 
-        $this->assertEquals('anoncoin', $index->getType('altcoin')->getDocument(1)->get('name'));
-        $this->assertEquals('ixcoin', $index->getType('altcoin')->getDocument(2)->get('name'));
+        $this->assertEquals('anoncoin', $index->getType('altcoin')->getDocument('1')->getWaitHandle()->join()->get('name'));
+        $this->assertEquals('ixcoin', $index->getType('altcoin')->getDocument('2')->getWaitHandle()->join()->get('name'));
 
         $index->updateDocuments(array(
-            new Document(1, array('name' => 'AnonCoin'), 'altcoin'),
-            new Document(2, array('name' => 'iXcoin'), 'altcoin'),
-        ));
+            new Document('1', array('name' => 'AnonCoin'), 'altcoin'),
+            new Document('2', array('name' => 'iXcoin'), 'altcoin'),
+        ))->getWaitHandle()->join();
 
-        $this->assertEquals('AnonCoin', $index->getType('altcoin')->getDocument(1)->get('name'));
-        $this->assertEquals('iXcoin', $index->getType('altcoin')->getDocument(2)->get('name'));
+        $this->assertEquals('AnonCoin', $index->getType('altcoin')->getDocument('1')->getWaitHandle()->join()->get('name'));
+        $this->assertEquals('iXcoin', $index->getType('altcoin')->getDocument('2')->getWaitHandle()->join()->get('name'));
 
         $ixCoin->setIndex(null);  // Make sure the index gets set properly if missing
-        $index->deleteDocuments(array($anonCoin, $ixCoin));
+        $index->deleteDocuments(array($anonCoin, $ixCoin))->getWaitHandle()->join();
 
         $this->setExpectedException('Elastica\Exception\NotFoundException');
-        $index->getType('altcoin')->getDocument(1);
-        $index->getType('altcoin')->getDocument(2);
+        $index->getType('altcoin')->getDocument('1')->getWaitHandle()->join();
+        $index->getType('altcoin')->getDocument('2')->getWaitHandle()->join();
     }
 
     /**
@@ -205,38 +205,38 @@ class ClientTest extends BaseTest
      *
      * @group functional
      */
-    public function testBulkType()
+    public function testBulkType() : void
     {
         $type = $this->_getClient()->getIndex('cryptocurrencies')->getType('altcoin');
 
-        $liteCoin = new Document(1, array('name' => 'litecoin'));
-        $nameCoin = new Document(2, array('name' => 'namecoin'));
+        $liteCoin = new Document('1', array('name' => 'litecoin'));
+        $nameCoin = new Document('2', array('name' => 'namecoin'));
 
-        $type->addDocuments(array($liteCoin, $nameCoin));
+        $type->addDocuments(array($liteCoin, $nameCoin))->getWaitHandle()->join();
 
-        $this->assertEquals('litecoin', $type->getDocument(1)->get('name'));
-        $this->assertEquals('namecoin', $type->getDocument(2)->get('name'));
+        $this->assertEquals('litecoin', $type->getDocument('1')->getWaitHandle()->join()->get('name'));
+        $this->assertEquals('namecoin', $type->getDocument('2')->getWaitHandle()->join()->get('name'));
 
         $type->updateDocuments(array(
-            new Document(1, array('name' => 'LiteCoin')),
-            new Document(2, array('name' => 'NameCoin')),
-        ));
+            new Document('1', array('name' => 'LiteCoin')),
+            new Document('2', array('name' => 'NameCoin')),
+        ))->getWaitHandle()->join();
 
-        $this->assertEquals('LiteCoin', $type->getDocument(1)->get('name'));
-        $this->assertEquals('NameCoin', $type->getDocument(2)->get('name'));
+        $this->assertEquals('LiteCoin', $type->getDocument('1')->getWaitHandle()->join()->get('name'));
+        $this->assertEquals('NameCoin', $type->getDocument('2')->getWaitHandle()->join()->get('name'));
 
         $nameCoin->setType(null);  // Make sure the type gets set properly if missing
-        $type->deleteDocuments(array($liteCoin, $nameCoin));
+        $type->deleteDocuments(array($liteCoin, $nameCoin))->getWaitHandle()->join();
 
         $this->setExpectedException('Elastica\Exception\NotFoundException');
-        $type->getDocument(1);
-        $type->getDocument(2);
+        $type->getDocument('1')->getWaitHandle()->join();
+        $type->getDocument('2')->getWaitHandle()->join();
     }
 
     /**
      * @group functional
      */
-    public function testUpdateDocuments()
+    public function testUpdateDocuments() : void
     {
         $indexName = 'test';
         $typeName = 'people';
@@ -248,30 +248,30 @@ class ClientTest extends BaseTest
         $modifiedValue = 27;
 
         $doc1 = new Document(
-            1,
+            '1',
             array('name' => 'hans', 'age' => $initialValue),
             $typeName,
             $indexName
         );
         $doc2 = new Document(
-            2,
+            '2',
             array('name' => 'anna', 'age' => $initialValue),
             $typeName,
             $indexName
         );
         $data = array($doc1, $doc2);
-        $client->addDocuments($data);
+        $client->addDocuments($data)->getWaitHandle()->join();
 
         foreach ($data as $i => $doc) {
-            $data[$i]->age = $modifiedValue;
+            $data[$i]->set('age', $modifiedValue);
         }
-        $client->updateDocuments($data);
+        $client->updateDocuments($data)->getWaitHandle()->join();
 
-        $docData1 = $type->getDocument(1)->getData();
-        $docData2 = $type->getDocument(2)->getData();
+        $docData1 = $type->getDocument('1')->getWaitHandle()->join()->getData();
+        $docData2 = $type->getDocument('2')->getWaitHandle()->join()->getData();
 
-        $this->assertEquals($modifiedValue, $docData1['age']);
-        $this->assertEquals($modifiedValue, $docData2['age']);
+        $this->assertEquals($modifiedValue, /* UNSAFE_EXPR */ $docData1['age']);
+        $this->assertEquals($modifiedValue, /* UNSAFE_EXPR */ $docData2['age']);
     }
 
     /**
@@ -292,7 +292,7 @@ class ClientTest extends BaseTest
      *
      * @group functional
      */
-    public function testDeleteIdsIdxStringTypeString()
+    public function testDeleteIdsIdxStringTypeString() : void
     {
         $data = array('username' => 'hans');
         $userSearch = 'username:hans';
@@ -300,22 +300,22 @@ class ClientTest extends BaseTest
         $index = $this->_createIndex(null, true, 2);
 
         // Create the index, deleting it first if it already exists
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('user');
 
         // Adds 1 document to the index
         $doc = new Document(null, $data);
-        $doc->setRouting(1);
-        $result = $type->addDocument($doc);
+        $doc->setRouting('1');
+        $result = $type->addDocument($doc)->getWaitHandle()->join();
 
         // Refresh index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $resultData = $result->getData();
-        $ids = array($resultData['_id']);
+        $ids = array(/* UNSAFE_EXPR */ $resultData['_id']);
 
         // Check to make sure the document is in the index
-        $resultSet = $type->search($userSearch);
+        $resultSet = $type->search($userSearch)->getWaitHandle()->join();
         $totalHits = $resultSet->getTotalHits();
         $this->assertEquals(1, $totalHits);
 
@@ -331,22 +331,22 @@ class ClientTest extends BaseTest
         $resp = $index->getClient()->deleteIds($ids, $index, $type, 2);
 
         // Refresh the index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         // Research the index to verify that the items are still there
-        $resultSet = $type->search($userSearch);
+        $resultSet = $type->search($userSearch)->getWaitHandle()->join();
         $totalHits = $resultSet->getTotalHits();
         $this->assertEquals(1, $totalHits);
 
         // Using the existing $index and $type variables which
         // are \Elastica\Index and \Elastica\Type objects respectively
-        $resp = $index->getClient()->deleteIds($ids, $index, $type, 1);
+        $resp = $index->getClient()->deleteIds($ids, $index, $type, 1)->getWaitHandle()->join();
 
         // Refresh the index to clear out deleted ID information
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         // Research the index to verify that the items have been deleted
-        $resultSet = $type->search($userSearch);
+        $resultSet = $type->search($userSearch)->getWaitHandle()->join();
         $totalHits = $resultSet->getTotalHits();
         $this->assertEquals(0, $totalHits);
     }
@@ -370,7 +370,7 @@ class ClientTest extends BaseTest
      *
      * @group functional
      */
-    public function testDeleteIdsIdxStringTypeObject()
+    public function testDeleteIdsIdxStringTypeObject() : void
     {
         $data = array('username' => 'hans');
         $userSearch = 'username:hans';
@@ -378,21 +378,21 @@ class ClientTest extends BaseTest
         $index = $this->_createIndex();
 
         // Create the index, deleting it first if it already exists
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('user');
 
         // Adds 1 document to the index
         $doc = new Document(null, $data);
-        $result = $type->addDocument($doc);
+        $result = $type->addDocument($doc)->getWaitHandle()->join();
 
         // Refresh index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $resultData = $result->getData();
-        $ids = array($resultData['_id']);
+        $ids = array(/* UNSAFE_EXPR */ $resultData['_id']);
 
         // Check to make sure the document is in the index
-        $resultSet = $type->search($userSearch);
+        $resultSet = $type->search($userSearch)->getWaitHandle()->join();
         $totalHits = $resultSet->getTotalHits();
         $this->assertEquals(1, $totalHits);
 
@@ -404,13 +404,13 @@ class ClientTest extends BaseTest
 
         // Using the existing $index and $type variables which
         // are \Elastica\Index and \Elastica\Type objects respectively
-        $resp = $index->getClient()->deleteIds($ids, $index, $type);
+        $resp = $index->getClient()->deleteIds($ids, $index, $type)->getWaitHandle()->join();
 
         // Refresh the index to clear out deleted ID information
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         // Research the index to verify that the items have been deleted
-        $resultSet = $type->search($userSearch);
+        $resultSet = $type->search($userSearch)->getWaitHandle()->join();
         $totalHits = $resultSet->getTotalHits();
         $this->assertEquals(0, $totalHits);
     }
@@ -434,7 +434,7 @@ class ClientTest extends BaseTest
      *
      * @group functional
      */
-    public function testDeleteIdsIdxObjectTypeString()
+    public function testDeleteIdsIdxObjectTypeString() : void
     {
         $data = array('username' => 'hans');
         $userSearch = 'username:hans';
@@ -442,21 +442,21 @@ class ClientTest extends BaseTest
         $index = $this->_createIndex();
 
         // Create the index, deleting it first if it already exists
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('user');
 
         // Adds 1 document to the index
         $doc = new Document(null, $data);
-        $result = $type->addDocument($doc);
+        $result = $type->addDocument($doc)->getWaitHandle()->join();
 
         // Refresh index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $resultData = $result->getData();
-        $ids = array($resultData['_id']);
+        $ids = array(/* UNSAFE_EXPR */ $resultData['_id']);
 
         // Check to make sure the document is in the index
-        $resultSet = $type->search($userSearch);
+        $resultSet = $type->search($userSearch)->getWaitHandle()->join();
         $totalHits = $resultSet->getTotalHits();
         $this->assertEquals(1, $totalHits);
 
@@ -468,13 +468,13 @@ class ClientTest extends BaseTest
 
         // Using the existing $index and $type variables which
         // are \Elastica\Index and \Elastica\Type objects respectively
-        $resp = $index->getClient()->deleteIds($ids, $index, $type);
+        $resp = $index->getClient()->deleteIds($ids, $index, $type)->getWaitHandle()->join();
 
         // Refresh the index to clear out deleted ID information
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         // Research the index to verify that the items have been deleted
-        $resultSet = $type->search($userSearch);
+        $resultSet = $type->search($userSearch)->getWaitHandle()->join();
         $totalHits = $resultSet->getTotalHits();
         $this->assertEquals(0, $totalHits);
     }
@@ -498,7 +498,7 @@ class ClientTest extends BaseTest
      *
      * @group functional
      */
-    public function testDeleteIdsIdxObjectTypeObject()
+    public function testDeleteIdsIdxObjectTypeObject() : void
     {
         $data = array('username' => 'hans');
         $userSearch = 'username:hans';
@@ -506,21 +506,21 @@ class ClientTest extends BaseTest
         $index = $this->_createIndex();
 
         // Create the index, deleting it first if it already exists
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('user');
 
         // Adds 1 document to the index
         $doc = new Document(null, $data);
-        $result = $type->addDocument($doc);
+        $result = $type->addDocument($doc)->getWaitHandle()->join();
 
         // Refresh index
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         $resultData = $result->getData();
-        $ids = array($resultData['_id']);
+        $ids = array(/* UNSAFE_EXPR */ $resultData['_id']);
 
         // Check to make sure the document is in the index
-        $resultSet = $type->search($userSearch);
+        $resultSet = $type->search($userSearch)->getWaitHandle()->join();
         $totalHits = $resultSet->getTotalHits();
         $this->assertEquals(1, $totalHits);
 
@@ -531,13 +531,13 @@ class ClientTest extends BaseTest
 
         // Using the existing $index and $type variables which
         // are \Elastica\Index and \Elastica\Type objects respectively
-        $resp = $index->getClient()->deleteIds($ids, $index, $type);
+        $resp = $index->getClient()->deleteIds($ids, $index, $type)->getWaitHandle()->join();
 
         // Refresh the index to clear out deleted ID information
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
         // Research the index to verify that the items have been deleted
-        $resultSet = $type->search($userSearch);
+        $resultSet = $type->search($userSearch)->getWaitHandle()->join();
         $totalHits = $resultSet->getTotalHits();
         $this->assertEquals(0, $totalHits);
     }
@@ -545,17 +545,17 @@ class ClientTest extends BaseTest
     /**
      * @group functional
      */
-    public function testOneInvalidConnection()
+    public function testOneInvalidConnection() : void
     {
         $client = $this->_getClient();
 
         // First connection work, second should not work
-        $connection1 = new Connection(array('port' => '9100', 'timeout' => 2, 'host' => $this->_getHost()));
-        $connection2 = new Connection(array('port' => '9200', 'timeout' => 2, 'host' => $this->_getHost()));
+        $connection1 = new Connection(Map {'port' => '9100', 'timeout' => 2, 'host' => $this->_getHost()});
+        $connection2 = new Connection(Map {'port' => '9200', 'timeout' => 2, 'host' => $this->_getHost()});
 
         $client->setConnections(array($connection1, $connection2));
 
-        $client->request('_status', Request::GET);
+        $client->request('_status', Request::GET)->getWaitHandle()->join();
 
         $connections = $client->getConnections();
 
@@ -569,18 +569,18 @@ class ClientTest extends BaseTest
     /**
      * @group functional
      */
-    public function testTwoInvalidConnection()
+    public function testTwoInvalidConnection() : void
     {
         $client = $this->_getClient();
 
         // First connection work, second should not work
-        $connection1 = new Connection(array('port' => '9101', 'timeout' => 2));
-        $connection2 = new Connection(array('port' => '9102', 'timeout' => 2));
+        $connection1 = new Connection(Map {'port' => '9101', 'timeout' => 2});
+        $connection2 = new Connection(Map {'port' => '9102', 'timeout' => 2});
 
         $client->setConnections(array($connection1, $connection2));
 
         try {
-            $client->request('_status', Request::GET);
+            $client->request('_status', Request::GET)->getWaitHandle()->join();
             $this->fail('Should throw exception as no connection valid');
         } catch (HttpException $e) {
         }
@@ -599,7 +599,7 @@ class ClientTest extends BaseTest
      *
      * @group functional
      */
-    public function testCallback()
+    public function testCallback() : void
     {
         $count = 0;
         $object = $this;
@@ -616,15 +616,15 @@ class ClientTest extends BaseTest
         $client = $this->_getClient(array(), $callback);
 
         // First connection work, second should not work
-        $connection1 = new Connection(array('port' => '9101', 'timeout' => 2));
-        $connection2 = new Connection(array('port' => '9102', 'timeout' => 2));
+        $connection1 = new Connection(Map {'port' => '9101', 'timeout' => 2});
+        $connection2 = new Connection(Map {'port' => '9102', 'timeout' => 2});
 
         $client->setConnections(array($connection1, $connection2));
 
         $this->assertEquals(0, $count);
 
         try {
-            $client->request('_status', Request::GET);
+            $client->request('_status', Request::GET)->getWaitHandle()->join();
             $this->fail('Should throw exception as no connection valid');
         } catch (HttpException $e) {
             $this->assertTrue(true);
@@ -637,76 +637,76 @@ class ClientTest extends BaseTest
     /**
      * @group functional
      */
-    public function testUrlConstructor()
+    public function testUrlConstructor() : void
     {
         $url = 'http://'.$this->_getHost().':9200/';
 
         // Url should overwrite invalid host
         $client = $this->_getClient(array('url' => $url, 'port' => '9101', 'timeout' => 2));
 
-        $response = $client->request('_status');
+        $response = $client->request('_status')->getWaitHandle()->join();
         $this->assertInstanceOf('Elastica\Response', $response);
     }
 
     /**
      * @group functional
      */
-    public function testUpdateDocumentByDocument()
+    public function testUpdateDocumentByDocument() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
         $client = $index->getClient();
 
-        $newDocument = new Document(1, array('field1' => 'value1', 'field2' => 'value2'));
-        $type->addDocument($newDocument);
+        $newDocument = new Document('1', array('field1' => 'value1', 'field2' => 'value2'));
+        $type->addDocument($newDocument)->getWaitHandle()->join();
 
-        $updateDocument = new Document(1, array('field2' => 'value2changed', 'field3' => 'value3added'));
-        $client->updateDocument(1, $updateDocument, $index->getName(), $type->getName());
+        $updateDocument = new Document('1', array('field2' => 'value2changed', 'field3' => 'value3added'));
+        $client->updateDocument('1', $updateDocument, $index->getName(), $type->getName())->getWaitHandle()->join();
 
-        $document = $type->getDocument(1);
+        $document = $type->getDocument('1')->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Document', $document);
         $data = $document->getData();
         $this->assertArrayHasKey('field1', $data);
-        $this->assertEquals('value1', $data['field1']);
+        $this->assertEquals('value1', /* UNSAFE_EXPR */ $data['field1']);
         $this->assertArrayHasKey('field2', $data);
-        $this->assertEquals('value2changed', $data['field2']);
+        $this->assertEquals('value2changed', /* UNSAFE_EXPR */ $data['field2']);
         $this->assertArrayHasKey('field3', $data);
-        $this->assertEquals('value3added', $data['field3']);
+        $this->assertEquals('value3added', /* UNSAFE_EXPR */ $data['field3']);
     }
 
     /**
      * @group functional
      */
-    public function testUpdateDocumentByScript()
+    public function testUpdateDocumentByScript() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
         $client = $index->getClient();
 
-        $newDocument = new Document(1, array('field1' => 'value1', 'field2' => 10, 'field3' => 'should be removed', 'field4' => 'should be changed'));
-        $type->addDocument($newDocument);
+        $newDocument = new Document('1', array('field1' => 'value1', 'field2' => 10, 'field3' => 'should be removed', 'field4' => 'should be changed'));
+        $type->addDocument($newDocument)->getWaitHandle()->join();
 
         $script = new Script('ctx._source.field2 += 5; ctx._source.remove("field3"); ctx._source.field4 = "changed"');
-        $client->updateDocument(1, $script, $index->getName(), $type->getName());
+        $client->updateDocument('1', $script, $index->getName(), $type->getName())->getWaitHandle()->join();
 
-        $document = $type->getDocument(1);
+        $document = $type->getDocument('1')->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Document', $document);
         $data = $document->getData();
         $this->assertArrayHasKey('field1', $data);
-        $this->assertEquals('value1', $data['field1']);
+        $this->assertEquals('value1', /* UNSAFE_EXPR */ $data['field1']);
         $this->assertArrayHasKey('field2', $data);
-        $this->assertEquals(15, $data['field2']);
+        $this->assertEquals(15, /* UNSAFE_EXPR */ $data['field2']);
         $this->assertArrayHasKey('field2', $data);
-        $this->assertEquals('changed', $data['field4']);
+        $this->assertEquals('changed', /* UNSAFE_EXPR */ $data['field4']);
         $this->assertArrayNotHasKey('field3', $data);
     }
 
     /**
      * @group functional
      */
-    public function testUpdateDocumentByScriptWithUpsert()
+    public function testUpdateDocumentByScriptWithUpsert() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
@@ -717,48 +717,48 @@ class ClientTest extends BaseTest
         $script->setUpsert(array('field1' => 'value1', 'field2' => 10, 'field3' => 'should be removed', 'field4' => 'value4'));
 
         // should use document fields because document does not exist, script is avoided
-        $client->updateDocument(1, $script, $index->getName(), $type->getName(), array('fields' => '_source'));
+        $client->updateDocument('1', $script, $index->getName(), $type->getName(), array('fields' => '_source'))->getWaitHandle()->join();
 
-        $document = $type->getDocument(1);
+        $document = $type->getDocument('1')->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Document', $document);
         $data = $document->getData();
         $this->assertArrayHasKey('field1', $data);
-        $this->assertEquals('value1', $data['field1']);
+        $this->assertEquals('value1', /* UNSAFE_EXPR */ $data['field1']);
         $this->assertArrayHasKey('field2', $data);
-        $this->assertEquals(10, $data['field2']);
+        $this->assertEquals(10, /* UNSAFE_EXPR */ $data['field2']);
         $this->assertArrayHasKey('field3', $data);
-        $this->assertEquals('should be removed', $data['field3']);
+        $this->assertEquals('should be removed', /* UNSAFE_EXPR */ $data['field3']);
         $this->assertArrayHasKey('field4', $data);
-        $this->assertEquals('value4', $data['field4']);
+        $this->assertEquals('value4', /* UNSAFE_EXPR */ $data['field4']);
 
         // should use script because document exists, document values are ignored
-        $client->updateDocument(1, $script, $index->getName(), $type->getName(), array('fields' => '_source'));
+        $client->updateDocument('1', $script, $index->getName(), $type->getName(), array('fields' => '_source'))->getWaitHandle()->join();
 
-        $document = $type->getDocument(1);
+        $document = $type->getDocument('1')->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Document', $document);
         $data = $document->getData();
         $this->assertArrayHasKey('field1', $data);
-        $this->assertEquals('value1', $data['field1']);
+        $this->assertEquals('value1', /* UNSAFE_EXPR */ $data['field1']);
         $this->assertArrayHasKey('field2', $data);
-        $this->assertEquals(15, $data['field2']);
+        $this->assertEquals(15, /* UNSAFE_EXPR */ $data['field2']);
         $this->assertArrayHasKey('field4', $data);
-        $this->assertEquals('changed', $data['field4']);
+        $this->assertEquals('changed', /* UNSAFE_EXPR */ $data['field4']);
         $this->assertArrayNotHasKey('field3', $data);
     }
 
     /**
      * @group functional
      */
-    public function testUpdateDocumentByRawData()
+    public function testUpdateDocumentByRawData() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
         $client = $index->getClient();
 
-        $newDocument = new Document(1, array('field1' => 'value1'));
-        $type->addDocument($newDocument);
+        $newDocument = new Document('1', array('field1' => 'value1'));
+        $type->addDocument($newDocument)->getWaitHandle()->join();
 
         $rawData = array(
             'doc' => array(
@@ -766,57 +766,57 @@ class ClientTest extends BaseTest
             ),
         );
 
-        $response = $client->updateDocument(1, $rawData, $index->getName(), $type->getName(), array('retry_on_conflict' => 1));
+        $response = $client->updateDocument('1', $rawData, $index->getName(), $type->getName(), array('retry_on_conflict' => 1))->getWaitHandle()->join();
         $this->assertTrue($response->isOk());
 
-        $document = $type->getDocument(1);
+        $document = $type->getDocument('1')->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Document', $document);
         $data = $document->getData();
         $this->assertArrayHasKey('field1', $data);
-        $this->assertEquals('value1', $data['field1']);
+        $this->assertEquals('value1', /* UNSAFE_EXPR */ $data['field1']);
         $this->assertArrayHasKey('field2', $data);
-        $this->assertEquals('value2', $data['field2']);
+        $this->assertEquals('value2', /* UNSAFE_EXPR */ $data['field2']);
     }
 
     /**
      * @group functional
      */
-    public function testUpdateDocumentByDocumentWithUpsert()
+    public function testUpdateDocumentByDocumentWithUpsert() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
         $client = $index->getClient();
 
-        $newDocument = new Document(1, array('field1' => 'value1updated', 'field2' => 'value2updated'));
-        $upsert = new Document(1, array('field1' => 'value1', 'field2' => 'value2'));
+        $newDocument = new Document('1', array('field1' => 'value1updated', 'field2' => 'value2updated'));
+        $upsert = new Document('1', array('field1' => 'value1', 'field2' => 'value2'));
         $newDocument->setUpsert($upsert);
-        $client->updateDocument(1, $newDocument, $index->getName(), $type->getName(), array('fields' => '_source'));
+        $client->updateDocument('1', $newDocument, $index->getName(), $type->getName(), array('fields' => '_source'))->getWaitHandle()->join();
 
-        $document = $type->getDocument(1);
+        $document = $type->getDocument('1')->getWaitHandle()->join();
         $this->assertInstanceOf('Elastica\Document', $document);
         $data = $document->getData();
         $this->assertArrayHasKey('field1', $data);
-        $this->assertEquals('value1', $data['field1']);
+        $this->assertEquals('value1', /* UNSAFE_EXPR */ $data['field1']);
         $this->assertArrayHasKey('field2', $data);
-        $this->assertEquals('value2', $data['field2']);
+        $this->assertEquals('value2', /* UNSAFE_EXPR */ $data['field2']);
 
         // should use update document because document exists, upsert document values are ignored
-        $client->updateDocument(1, $newDocument, $index->getName(), $type->getName(), array('fields' => '_source'));
+        $client->updateDocument('1', $newDocument, $index->getName(), $type->getName(), array('fields' => '_source'))->getWaitHandle()->join();
 
-        $document = $type->getDocument(1);
+        $document = $type->getDocument('1')->getWaitHandle()->join();
         $this->assertInstanceOf('Elastica\Document', $document);
         $data = $document->getData();
         $this->assertArrayHasKey('field1', $data);
-        $this->assertEquals('value1updated', $data['field1']);
+        $this->assertEquals('value1updated', /* UNSAFE_EXPR */ $data['field1']);
         $this->assertArrayHasKey('field2', $data);
-        $this->assertEquals('value2updated', $data['field2']);
+        $this->assertEquals('value2updated', /* UNSAFE_EXPR */ $data['field2']);
     }
 
     /**
      * @group functional
      */
-    public function testDocAsUpsert()
+    public function testDocAsUpsert() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
@@ -824,29 +824,29 @@ class ClientTest extends BaseTest
 
         //Confirm document one does not exist
         try {
-            $document = $type->getDocument(1);
+            $document = $type->getDocument('1')->getWaitHandle()->join();
             $this->fail('Exception was not thrown. Maybe the document exists?');
         } catch (\Exception $e) {
             //Ignore the exception because we expect the document to not exist.
         }
 
-        $newDocument = new Document(1, array('field1' => 'value1', 'field2' => 'value2'));
+        $newDocument = new Document('1', array('field1' => 'value1', 'field2' => 'value2'));
         $newDocument->setDocAsUpsert(true);
-        $client->updateDocument(1, $newDocument, $index->getName(), $type->getName(), array('fields' => '_source'));
+        $client->updateDocument('1', $newDocument, $index->getName(), $type->getName(), array('fields' => '_source'))->getWaitHandle()->join();
 
-        $document = $type->getDocument(1);
+        $document = $type->getDocument('1')->getWaitHandle()->join();
         $this->assertInstanceOf('Elastica\Document', $document);
         $data = $document->getData();
         $this->assertArrayHasKey('field1', $data);
-        $this->assertEquals('value1', $data['field1']);
+        $this->assertEquals('value1', /* UNSAFE_EXPR */ $data['field1']);
         $this->assertArrayHasKey('field2', $data);
-        $this->assertEquals('value2', $data['field2']);
+        $this->assertEquals('value2', /* UNSAFE_EXPR */ $data['field2']);
     }
 
     /**
      * @group functional
      */
-    public function testUpdateWithInvalidType()
+    public function testUpdateWithInvalidType() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
@@ -856,7 +856,7 @@ class ClientTest extends BaseTest
         $badDocument = new \stdClass();
 
         try {
-            $client->updateDocument(1, $badDocument, $index->getName(), $type->getName());
+            $client->updateDocument('1', $badDocument, $index->getName(), $type->getName())->getWaitHandle()->join();
             $this->fail('Tried to update using an object that is not a Document or a Script but no exception was thrown');
         } catch (\Exception $e) {
             //Good. An exception was thrown.
@@ -866,19 +866,19 @@ class ClientTest extends BaseTest
     /**
      * @group functional
      */
-    public function testDeleteDocuments()
+    public function testDeleteDocuments() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
         $client = $index->getClient();
 
         $docs = array(
-            new Document(1, array('field' => 'value1'), $type, $index),
-            new Document(2, array('field' => 'value2'), $type, $index),
-            new Document(3, array('field' => 'value3'), $type, $index),
+            new Document('1', array('field' => 'value1'), $type, $index),
+            new Document('2', array('field' => 'value2'), $type, $index),
+            new Document('3', array('field' => 'value3'), $type, $index),
         );
 
-        $response = $client->addDocuments($docs);
+        $response = $client->addDocuments($docs)->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Bulk\ResponseSet', $response);
         $this->assertEquals(3, count($response));
@@ -886,16 +886,16 @@ class ClientTest extends BaseTest
         $this->assertFalse($response->hasError());
         $this->assertEquals('', $response->getError());
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $this->assertEquals(3, $type->count());
+        $this->assertEquals(3, $type->count()->getWaitHandle()->join());
 
         $deleteDocs = array(
             $docs[0],
             $docs[2],
         );
 
-        $response = $client->deleteDocuments($deleteDocs);
+        $response = $client->deleteDocuments($deleteDocs)->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Bulk\ResponseSet', $response);
         $this->assertEquals(2, count($response));
@@ -903,26 +903,30 @@ class ClientTest extends BaseTest
         $this->assertFalse($response->hasError());
         $this->assertEquals('', $response->getError());
 
-        $index->refresh();
+        $index->refresh()->getWaitHandle()->join();
 
-        $this->assertEquals(1, $type->count());
+        $this->assertEquals(1, $type->count()->getWaitHandle()->join());
     }
 
     /**
      * @group functional
      */
-    public function testLastRequestResponse()
+    public function testLastRequestResponse() : void
     {
         $client = $this->_getClient();
-        $response = $client->request('_status');
+        $response = $client->request('_status')->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Response', $response);
 
+        
         $lastRequest = $client->getLastRequest();
-
-        $this->assertInstanceOf('Elastica\Request', $lastRequest);
-        $this->assertEquals('_status', $lastRequest->getPath());
-
+        if ($lastRequest === null) {
+            $this->fail('$lastRequest === null');
+        } else {
+            $this->assertInstanceOf('Elastica\Request', $lastRequest);
+            $this->assertEquals('_status', $lastRequest->getPath());
+        }
+    
         $lastResponse = $client->getLastResponse();
         $this->assertInstanceOf('Elastica\Response', $lastResponse);
         $this->assertSame($response, $lastResponse);
@@ -931,35 +935,35 @@ class ClientTest extends BaseTest
     /**
      * @group functional
      */
-    public function testUpdateDocumentPopulateFields()
+    public function testUpdateDocumentPopulateFields() : void
     {
         $index = $this->_createIndex();
         $type = $index->getType('test');
         $client = $index->getClient();
 
-        $newDocument = new Document(1, array('field1' => 'value1', 'field2' => 10, 'field3' => 'should be removed', 'field4' => 'value4'));
+        $newDocument = new Document('1', array('field1' => 'value1', 'field2' => 10, 'field3' => 'should be removed', 'field4' => 'value4'));
         $newDocument->setAutoPopulate();
-        $type->addDocument($newDocument);
+        $type->addDocument($newDocument)->getWaitHandle()->join();
 
         $script = new Script('ctx._source.field2 += count; ctx._source.remove("field3"); ctx._source.field4 = "changed"');
         $script->setParam('count', 5);
         $script->setUpsert($newDocument);
 
         $client->updateDocument(
-            1,
+            '1',
             $script,
             $index->getName(),
             $type->getName(),
             array('fields' => '_source')
-        );
+        )->getWaitHandle()->join();
 
-        $data = $type->getDocument(1)->getData();
+        $data = $type->getDocument('1')->getWaitHandle()->join()->getData();
         $this->assertArrayHasKey('field1', $data);
-        $this->assertEquals('value1', $data['field1']);
+        $this->assertEquals('value1', /* UNSAFE_EXPR */ $data['field1']);
         $this->assertArrayHasKey('field2', $data);
-        $this->assertEquals(15, $data['field2']);
+        $this->assertEquals(15, /* UNSAFE_EXPR */ $data['field2']);
         $this->assertArrayHasKey('field4', $data);
-        $this->assertEquals('changed', $data['field4']);
+        $this->assertEquals('changed', /* UNSAFE_EXPR */ $data['field4']);
         $this->assertArrayNotHasKey('field3', $data);
 
         $script = new Script('ctx._source.field2 += count; ctx._source.remove("field4"); ctx._source.field1 = field1;');
@@ -968,21 +972,21 @@ class ClientTest extends BaseTest
         $script->setUpsert($newDocument);
 
         $client->updateDocument(
-            1,
+            '1',
             $script,
             $index->getName(),
             $type->getName(),
             array('fields' => 'field2,field4')
-        );
+        )->getWaitHandle()->join();
 
-        $document = $type->getDocument(1);
+        $document = $type->getDocument('1')->getWaitHandle()->join();
 
         $data = $document->getData();
 
         $this->assertArrayHasKey('field1', $data);
-        $this->assertEquals('updated', $data['field1']);
+        $this->assertEquals('updated', /* UNSAFE_EXPR */ $data['field1']);
         $this->assertArrayHasKey('field2', $data);
-        $this->assertEquals(20, $data['field2']);
+        $this->assertEquals(20, /* UNSAFE_EXPR */ $data['field2']);
         $this->assertArrayNotHasKey('field3', $data);
         $this->assertArrayNotHasKey('field4', $data);
     }
@@ -990,7 +994,7 @@ class ClientTest extends BaseTest
     /**
      * @group functional
      */
-    public function testAddDocumentsWithoutIds()
+    public function testAddDocumentsWithoutIds() : void
     {
         $docs = array();
         for ($i = 0; $i < 10; ++$i) {
@@ -1007,7 +1011,7 @@ class ClientTest extends BaseTest
         $client->setConfigValue('document', array('autoPopulate' => true));
 
         $type = $index->getType('pos');
-        $type->addDocuments($docs);
+        $type->addDocuments($docs)->getWaitHandle()->join();
 
         foreach ($docs as $doc) {
             $this->assertTrue($doc->hasId());
@@ -1019,7 +1023,7 @@ class ClientTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConfigValue()
+    public function testConfigValue() : void
     {
         $config = array(
             'level1' => array(
@@ -1048,15 +1052,15 @@ class ClientTest extends BaseTest
     /**
      * @group functional
      */
-    public function testArrayQuery()
+    public function testArrayQuery() : void
     {
         $client = $this->_getClient();
 
         $index = $client->getIndex('test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('test');
-        $type->addDocument(new Document(1, array('username' => 'ruflin')));
-        $index->refresh();
+        $type->addDocument(new Document('1', array('username' => 'ruflin')))->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         $query = array(
             'query' => array(
@@ -1068,39 +1072,39 @@ class ClientTest extends BaseTest
 
         $path = $index->getName().'/'.$type->getName().'/_search';
 
-        $response = $client->request($path, Request::GET, $query);
+        $response = $client->request($path, Request::GET, $query)->getWaitHandle()->join();
         $responseArray = $response->getData();
 
-        $this->assertEquals(1, $responseArray['hits']['total']);
+        $this->assertEquals(1, /* UNSAFE_EXPR */ $responseArray['hits']['total']);
     }
 
     /**
      * @group functional
      */
-    public function testJSONQuery()
+    public function testJSONQuery() : void
     {
         $client = $this->_getClient();
 
         $index = $client->getIndex('test');
-        $index->create(array(), true);
+        $index->create(array(), true)->getWaitHandle()->join();
         $type = $index->getType('test');
-        $type->addDocument(new Document(1, array('username' => 'ruflin')));
-        $index->refresh();
+        $type->addDocument(new Document('1', array('username' => 'ruflin')))->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         $query = '{"query":{"query_string":{"query":"ruflin"}}}';
 
         $path = $index->getName().'/'.$type->getName().'/_search';
 
-        $response = $client->request($path, Request::GET, $query);
+        $response = $client->request($path, Request::GET, $query)->getWaitHandle()->join();
         $responseArray = $response->getData();
 
-        $this->assertEquals(1, $responseArray['hits']['total']);
+        $this->assertEquals(1, /* UNSAFE_EXPR */ $responseArray['hits']['total']);
     }
 
     /**
      * @group unit
      */
-    public function testAddHeader()
+    public function testAddHeader() : void
     {
         $client = $this->_getClient();
 
@@ -1110,25 +1114,12 @@ class ClientTest extends BaseTest
 
         // check class
         $this->assertInstanceOf('Elastica\Client', $client->addHeader('foo', 'bar'));
-
-        // check invalid parameters
-        try {
-            $client->addHeader(new \stdClass(), 'foo');
-            $this->fail('Header name is not a string but exception not thrown');
-        } catch (InvalidException $ex) {
-        }
-
-        try {
-            $client->addHeader('foo', new \stdClass());
-            $this->fail('Header value is not a string but exception not thrown');
-        } catch (InvalidException $ex) {
-        }
     }
 
     /**
      * @group unit
      */
-    public function testRemoveHeader()
+    public function testRemoveHeader() : void
     {
         $client = $this->_getClient();
 
@@ -1149,12 +1140,5 @@ class ClientTest extends BaseTest
 
         // check class
         $this->assertInstanceOf('Elastica\Client', $client->removeHeader('second'));
-
-        // check invalid parameter
-        try {
-            $client->removeHeader(new \stdClass());
-            $this->fail('Header name is not a string but exception not thrown');
-        } catch (InvalidException $ex) {
-        }
     }
 }

@@ -1,22 +1,23 @@
-<?php
+<?hh // strict
 namespace Elastica\Bulk\Action;
 
 use Elastica\AbstractUpdateAction;
 use Elastica\Document;
+use Indexish;
 
 class IndexDocument extends AbstractDocument
 {
     /**
      * @var string
      */
-    protected $_opType = self::OP_TYPE_INDEX;
+    protected string $_opType = self::OP_TYPE_INDEX;
 
     /**
      * @param \Elastica\Document $document
      *
      * @return $this
      */
-    public function setDocument(Document $document)
+    public function setDocument(Document $document) : this
     {
         parent::setDocument($document);
 
@@ -30,7 +31,7 @@ class IndexDocument extends AbstractDocument
      *
      * @return array
      */
-    protected function _getMetadata(AbstractUpdateAction $action)
+    protected function _getMetadata(AbstractUpdateAction $action) : Indexish<string, mixed>
     {
         $params = array(
             'index',

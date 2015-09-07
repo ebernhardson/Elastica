@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Filter;
 
 use Elastica\Filter\AbstractGeoShape;
@@ -12,7 +12,7 @@ class GeoShapePreIndexedTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGeoProvided()
+    public function testGeoProvided() : void
     {
         $index = $this->_createIndex();
         $indexName = $index->getName();
@@ -25,7 +25,7 @@ class GeoShapePreIndexedTest extends BaseTest
                 'type' => 'geo_shape',
             ),
         ));
-        $type->setMapping($mapping);
+        $type->setMapping($mapping)->getWaitHandle()->join();
 
         // create other type mapping
         $otherMapping = new \Elastica\Type\Mapping($type, array(
@@ -33,7 +33,7 @@ class GeoShapePreIndexedTest extends BaseTest
                 'type' => 'geo_shape',
             ),
         ));
-        $otherType->setMapping($otherMapping);
+        $otherType->setMapping($otherMapping)->getWaitHandle()->join();
 
         // add type docs
         $type->addDocument(new \Elastica\Document('1', array(
@@ -44,7 +44,7 @@ class GeoShapePreIndexedTest extends BaseTest
                     array(50.0, 0.0),
                 ),
             ),
-        )));
+        )))->getWaitHandle()->join();
 
         // add other type docs
         $otherType->addDocument(new \Elastica\Document('2', array(
@@ -55,10 +55,10 @@ class GeoShapePreIndexedTest extends BaseTest
                     array(75.0, 25.0),
                 ),
             ),
-        )));
+        )))->getWaitHandle()->join();
 
-        $index->optimize();
-        $index->refresh();
+        $index->optimize()->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         $gsp = new GeoShapePreIndexed(
             'location', '1', 'type', $indexName, 'location'
@@ -82,17 +82,17 @@ class GeoShapePreIndexedTest extends BaseTest
         $this->assertEquals($expected, $gsp->toArray());
 
         $query = new Filtered(new MatchAll(), $gsp);
-        $results = $index->getType('type')->search($query);
+        $results = $index->getType('type')->search($query)->getWaitHandle()->join();
 
         $this->assertEquals(1, $results->count());
 
-        $index->delete();
+        $index->delete()->getWaitHandle()->join();
     }
 
     /**
      * @group unit
      */
-    public function testSetRelation()
+    public function testSetRelation() : void
     {
         $gsp = new GeoShapePreIndexed('location', '1', 'type', 'indexName', 'location');
         $gsp->setRelation(AbstractGeoShape::RELATION_INTERSECT);

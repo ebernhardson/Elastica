@@ -1,7 +1,8 @@
-<?php
+<?hh
 namespace Elastica\Test\Connection\Strategy;
 
 use Elastica\Connection\Strategy\StrategyFactory;
+use Elastica\Test\Connection\Strategy\EmptyStrategy;
 use Elastica\Test\Base;
 
 /**
@@ -14,7 +15,7 @@ class StrategyFactoryTest extends Base
     /**
      * @group unit
      */
-    public function testCreateCallbackStrategy()
+    public function testCreateCallbackStrategy() : void
     {
         $callback = function ($connections) {
         };
@@ -27,7 +28,7 @@ class StrategyFactoryTest extends Base
     /**
      * @group unit
      */
-    public function testCreateByName()
+    public function testCreateByName() : void
     {
         $strategyName = 'Simple';
 
@@ -39,7 +40,7 @@ class StrategyFactoryTest extends Base
     /**
      * @group unit
      */
-    public function testCreateByClass()
+    public function testCreateByClass() : void
     {
         $strategy = new EmptyStrategy();
 
@@ -48,21 +49,9 @@ class StrategyFactoryTest extends Base
 
     /**
      * @group unit
-     */
-    public function testCreateByClassName()
-    {
-        $strategyName = '\\Elastica\Test\Connection\Strategy\\EmptyStrategy';
-
-        $strategy = StrategyFactory::create($strategyName);
-
-        $this->assertInstanceOf($strategyName, $strategy);
-    }
-
-    /**
-     * @group unit
      * @expectedException \InvalidArgumentException
      */
-    public function testFailCreate()
+    public function testFailCreate() : void
     {
         $strategy = new \stdClass();
 
@@ -72,7 +61,7 @@ class StrategyFactoryTest extends Base
     /**
      * @group unit
      */
-    public function testNoCollisionWithGlobalNamespace()
+    public function testNoCollisionWithGlobalNamespace() : void
     {
         // create collision
         if (!class_exists('Simple')) {

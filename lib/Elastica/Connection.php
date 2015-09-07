@@ -1,8 +1,9 @@
-<?php
+<?hh
 namespace Elastica;
 
 use Elastica\Exception\InvalidException;
 use Elastica\Transport\AbstractTransport;
+use Indexish;
 
 /**
  * Elastica connection instance to an elasticasearch node.
@@ -46,7 +47,7 @@ class Connection extends Param
      *
      * @param array $params OPTIONAL Connection params: host, port, transport, timeout. All are optional
      */
-    public function __construct(array $params = array())
+    public function __construct(Map<string, mixed> $params = Map {})
     {
         $this->setParams($params);
         $this->setEnabled(true);
@@ -60,9 +61,9 @@ class Connection extends Param
     /**
      * @return int Server port
      */
-    public function getPort()
+    public function getPort() : int
     {
-        return $this->hasParam('port') ? $this->getParam('port') : self::DEFAULT_PORT;
+        return $this->hasParam('port') ? (int)$this->getParam('port') : self::DEFAULT_PORT;
     }
 
     /**
@@ -70,17 +71,17 @@ class Connection extends Param
      *
      * @return $this
      */
-    public function setPort($port)
+    public function setPort(int $port) : this
     {
-        return $this->setParam('port', (int) $port);
+        return $this->setParam('port', $port);
     }
 
     /**
      * @return string Host
      */
-    public function getHost()
+    public function getHost() : string
     {
-        return $this->hasParam('host') ? $this->getParam('host') : self::DEFAULT_HOST;
+        return $this->hasParam('host') ? (string)$this->getParam('host') : self::DEFAULT_HOST;
     }
 
     /**
@@ -88,7 +89,7 @@ class Connection extends Param
      *
      * @return $this
      */
-    public function setHost($host)
+    public function setHost(string $host) : this
     {
         return $this->setParam('host', $host);
     }
@@ -96,9 +97,9 @@ class Connection extends Param
     /**
      * @return string|null Host
      */
-    public function getProxy()
+    public function getProxy() : ?string
     {
-        return $this->hasParam('proxy') ? $this->getParam('proxy') : null;
+        return $this->hasParam('proxy') ? (string)$this->getParam('proxy') : null;
     }
 
     /**
@@ -111,7 +112,7 @@ class Connection extends Param
      *
      * @return $this
      */
-    public function setProxy($proxy)
+    public function setProxy(?string $proxy) : this
     {
         return $this->setParam('proxy', $proxy);
     }
@@ -119,7 +120,7 @@ class Connection extends Param
     /**
      * @return string|array
      */
-    public function getTransport()
+    public function getTransport() : mixed
     {
         return $this->hasParam('transport') ? $this->getParam('transport') : self::DEFAULT_TRANSPORT;
     }
@@ -129,7 +130,7 @@ class Connection extends Param
      *
      * @return $this
      */
-    public function setTransport($transport)
+    public function setTransport(mixed $transport) : this
     {
         return $this->setParam('transport', $transport);
     }
@@ -137,9 +138,9 @@ class Connection extends Param
     /**
      * @return string
      */
-    public function getPath()
+    public function getPath() : string
     {
-        return $this->hasParam('path') ? $this->getParam('path') : '';
+        return $this->hasParam('path') ? (string)$this->getParam('path') : '';
     }
 
     /**
@@ -147,7 +148,7 @@ class Connection extends Param
      *
      * @return $this
      */
-    public function setPath($path)
+    public function setPath(string $path) : this
     {
         return $this->setParam('path', $path);
     }
@@ -157,7 +158,7 @@ class Connection extends Param
      *
      * @return $this
      */
-    public function setTimeout($timeout)
+    public function setTimeout(int $timeout) : this
     {
         return $this->setParam('timeout', $timeout);
     }
@@ -165,9 +166,9 @@ class Connection extends Param
     /**
      * @return int Connection timeout in seconds
      */
-    public function getTimeout()
+    public function getTimeout() : int
     {
-        return (int) $this->hasParam('timeout') ? $this->getParam('timeout') : self::TIMEOUT;
+        return (int) $this->hasParam('timeout') ? (int)$this->getParam('timeout') : self::TIMEOUT;
     }
 
     /**
@@ -182,7 +183,7 @@ class Connection extends Param
      *
      * @return $this
      */
-    public function setConnectTimeout($timeout)
+    public function setConnectTimeout(int $timeout) : this
     {
         return $this->setParam('connectTimeout', $timeout);
     }
@@ -190,9 +191,9 @@ class Connection extends Param
     /**
      * @return int Connection timeout in seconds
      */
-    public function getConnectTimeout()
+    public function getConnectTimeout() : int
     {
-        return (int) $this->hasParam('connectTimeout') ? $this->getParam('connectTimeout') : self::CONNECT_TIMEOUT;
+        return $this->hasParam('connectTimeout') ? (int)$this->getParam('connectTimeout') : self::CONNECT_TIMEOUT;
     }
 
     /**
@@ -202,7 +203,7 @@ class Connection extends Param
      *
      * @return $this
      */
-    public function setEnabled($enabled = true)
+    public function setEnabled(bool $enabled = true) : this
     {
         return $this->setParam('enabled', $enabled);
     }
@@ -210,7 +211,7 @@ class Connection extends Param
     /**
      * @return bool True if enabled
      */
-    public function isEnabled()
+    public function isEnabled() : bool
     {
         return (bool) $this->getParam('enabled');
     }
@@ -222,8 +223,7 @@ class Connection extends Param
      *
      * @return \Elastica\Transport\AbstractTransport Transport object
      */
-    public function getTransportObject()
-    {
+    public function getTransportObject() : AbstractTransport {
         $transport = $this->getTransport();
 
         return AbstractTransport::create($transport, $this);
@@ -232,9 +232,9 @@ class Connection extends Param
     /**
      * @return bool Returns true if connection is persistent. True by default
      */
-    public function isPersistent()
+    public function isPersistent() : bool
     {
-        return (bool) $this->hasParam('persistent') ? $this->getParam('persistent') : true;
+        return $this->hasParam('persistent') ? (bool) $this->getParam('persistent') : true;
     }
 
     /**
@@ -242,7 +242,7 @@ class Connection extends Param
      *
      * @return $this
      */
-    public function setConfig(array $config)
+    public function setConfig(array $config) : this
     {
         return $this->setParam('config', $config);
     }
@@ -253,8 +253,9 @@ class Connection extends Param
      *
      * @return $this
      */
-    public function addConfig($key, $value)
+    public function addConfig(string $key, mixed $value) : this
     {
+        /* UNSAFE_EXPR */
         $this->_params['config'][$key] = $value;
 
         return $this;
@@ -265,11 +266,20 @@ class Connection extends Param
      *
      * @return bool
      */
-    public function hasConfig($key)
+    public function hasConfig(string $key) : bool
     {
-        $config = $this->getConfig();
+        $config = $this->getFullConfig();
 
         return isset($config[$key]);
+    }
+
+    public function getFullConfig() : Indexish<string, mixed>
+    {
+        $config = $this->getParam('config');
+        if ($config instanceof Indexish) {
+            return $config;
+        }
+        throw new \RuntimeException( 'expected array' );
     }
 
     /**
@@ -282,18 +292,14 @@ class Connection extends Param
      *
      * @return array|string Config value
      */
-    public function getConfig($key = '')
+    public function getConfig(string $key) : mixed
     {
         $config = $this->getParam('config');
-        if (empty($key)) {
-            return $config;
+        if ($config instanceof Indexish && array_key_exists($key, $config)) {
+            return $config[$key];
         }
 
-        if (!array_key_exists($key, $config)) {
-            throw new InvalidException('Config key is not set: '.$key);
-        }
-
-        return $config[$key];
+        throw new InvalidException('Config key is not set: '.$key);
     }
 
     /**
@@ -303,13 +309,13 @@ class Connection extends Param
      *
      * @return self
      */
-    public static function create($params = array())
+    public static function create(mixed $params = Map {}) : Connection
     {
         $connection = null;
 
         if ($params instanceof self) {
             $connection = $params;
-        } elseif (is_array($params)) {
+        } elseif ($params instanceof Map) {
             $connection = new self($params);
         } else {
             throw new InvalidException('Invalid data type');

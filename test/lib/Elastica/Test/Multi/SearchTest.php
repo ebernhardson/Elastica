@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Multi;
 
 use Elastica\Document;
@@ -14,28 +14,28 @@ class SearchTest extends BaseTest
     /**
      * @return \Elastica\Type
      */
-    protected function _createType()
+    protected function _createType() : \Elastica\Type
     {
         $client = $this->_getClient();
 
         $index = $client->getIndex('zero');
-        $index->create(array('index' => array('number_of_shards' => 1, 'number_of_replicas' => 0)), true);
+        $index->create(array('index' => array('number_of_shards' => 1, 'number_of_replicas' => 0)), true)->getWaitHandle()->join();
 
         $docs = array();
-        $docs[] = new Document(1, array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
-        $docs[] = new Document(2, array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
-        $docs[] = new Document(3, array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
-        $docs[] = new Document(4, array('id' => 1, 'email' => 'test@test.com', 'username' => 'kate'));
-        $docs[] = new Document(5, array('id' => 1, 'email' => 'test@test.com', 'username' => 'kate'));
-        $docs[] = new Document(6, array('id' => 1, 'email' => 'test@test.com', 'username' => 'bunny'));
-        $docs[] = new Document(7, array('id' => 1, 'email' => 'test@test.com', 'username' => 'bunny'));
-        $docs[] = new Document(8, array('id' => 1, 'email' => 'test@test.com', 'username' => 'bunny'));
-        $docs[] = new Document(9, array('id' => 1, 'email' => 'test@test.com', 'username' => 'bunny'));
-        $docs[] = new Document(10, array('id' => 1, 'email' => 'test@test.com', 'username' => 'bunny'));
-        $docs[] = new Document(11, array('id' => 1, 'email' => 'test@test.com', 'username' => 'bunny'));
+        $docs[] = new Document('1', array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
+        $docs[] = new Document('2', array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
+        $docs[] = new Document('3', array('id' => 1, 'email' => 'test@test.com', 'username' => 'farrelley'));
+        $docs[] = new Document('4', array('id' => 1, 'email' => 'test@test.com', 'username' => 'kate'));
+        $docs[] = new Document('5', array('id' => 1, 'email' => 'test@test.com', 'username' => 'kate'));
+        $docs[] = new Document('6', array('id' => 1, 'email' => 'test@test.com', 'username' => 'bunny'));
+        $docs[] = new Document('7', array('id' => 1, 'email' => 'test@test.com', 'username' => 'bunny'));
+        $docs[] = new Document('8', array('id' => 1, 'email' => 'test@test.com', 'username' => 'bunny'));
+        $docs[] = new Document('9', array('id' => 1, 'email' => 'test@test.com', 'username' => 'bunny'));
+        $docs[] = new Document('10', array('id' => 1, 'email' => 'test@test.com', 'username' => 'bunny'));
+        $docs[] = new Document('11', array('id' => 1, 'email' => 'test@test.com', 'username' => 'bunny'));
         $type = $index->getType('zeroType');
-        $type->addDocuments($docs);
-        $index->refresh();
+        $type->addDocuments($docs)->getWaitHandle()->join();
+        $index->refresh()->getWaitHandle()->join();
 
         return $type;
     }
@@ -43,7 +43,7 @@ class SearchTest extends BaseTest
     /**
      * @group unit
      */
-    public function testConstruct()
+    public function testConstruct() : void
     {
         $client = $this->_getClient();
         $multiSearch = new MultiSearch($client);
@@ -55,7 +55,7 @@ class SearchTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetSearches()
+    public function testSetSearches() : void
     {
         $client = $this->_getClient();
         $multiSearch = new MultiSearch($client);
@@ -85,41 +85,9 @@ class SearchTest extends BaseTest
     }
 
     /**
-     * @group unit
-     */
-    public function testSetSearchesByKeys()
-    {
-        $client = $this->_getClient();
-        $multiSearch = new MultiSearch($client);
-
-        $search1 = new Search($client);
-        $search2 = new Search($client);
-        $search3 = new Search($client);
-
-        $multiSearch->setSearches(array('search1' => $search1, 'search2' => $search2, $search3));
-
-        $searches = $multiSearch->getSearches();
-
-        $this->assertInternalType('array', $searches);
-        $this->assertCount(3, $searches);
-        $this->assertArrayHasKey('search1', $searches);
-        $this->assertSame($search1, $searches['search1']);
-        $this->assertArrayHasKey('search2', $searches);
-        $this->assertSame($search2, $searches['search2']);
-        $this->assertArrayHasKey(0, $searches);
-        $this->assertSame($search3, $searches[0]);
-
-        $multiSearch->clearSearches();
-        $searches = $multiSearch->getSearches();
-
-        $this->assertInternalType('array', $searches);
-        $this->assertCount(0, $searches);
-    }
-
-    /**
      * @group functional
      */
-    public function testSearch()
+    public function testSearch() : void
     {
         $type = $this->_createType();
         $index = $type->getIndex();
@@ -157,7 +125,7 @@ class SearchTest extends BaseTest
         $this->assertSame($search1, $searches[0]);
         $this->assertSame($search2, $searches[1]);
 
-        $multiResultSet = $multiSearch->search();
+        $multiResultSet = $multiSearch->search()->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Multi\ResultSet', $multiResultSet);
         $this->assertCount(2, $multiResultSet);
@@ -188,7 +156,7 @@ class SearchTest extends BaseTest
         $search1->setOption(Search::OPTION_SEARCH_TYPE, Search::OPTION_SEARCH_TYPE_COUNT);
         $search2->setOption(Search::OPTION_SEARCH_TYPE, Search::OPTION_SEARCH_TYPE_COUNT);
 
-        $multiResultSet = $multiSearch->search();
+        $multiResultSet = $multiSearch->search()->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Multi\ResultSet', $multiResultSet);
         $this->assertCount(2, $multiResultSet);
@@ -214,7 +182,7 @@ class SearchTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSearchWithKeys()
+    public function testSearchWithKeys() : void
     {
         $type = $this->_createType();
         $index = $type->getIndex();
@@ -252,7 +220,7 @@ class SearchTest extends BaseTest
         $this->assertSame($search1, $searches['search1']);
         $this->assertSame($search2, $searches['search2']);
 
-        $multiResultSet = $multiSearch->search();
+        $multiResultSet = $multiSearch->search()->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Multi\ResultSet', $multiResultSet);
         $this->assertCount(2, $multiResultSet);
@@ -262,8 +230,8 @@ class SearchTest extends BaseTest
             $this->assertInstanceOf('Elastica\ResultSet', $resultSet);
         }
 
-        $this->assertInstanceOf('Elastica\ResultSet', $multiResultSet['search1']);
-        $this->assertInstanceOf('Elastica\ResultSet', $multiResultSet['search2']);
+        $this->assertInstanceOf('Elastica\ResultSet', $multiResultSet->offsetGet('search1'));
+        $this->assertInstanceOf('Elastica\ResultSet', $multiResultSet->offsetGet('search2'));
 
         $resultSets = $multiResultSet->getResultSets();
 
@@ -286,7 +254,7 @@ class SearchTest extends BaseTest
         $search1->setOption(Search::OPTION_SEARCH_TYPE, Search::OPTION_SEARCH_TYPE_COUNT);
         $search2->setOption(Search::OPTION_SEARCH_TYPE, Search::OPTION_SEARCH_TYPE_COUNT);
 
-        $multiResultSet = $multiSearch->search();
+        $multiResultSet = $multiSearch->search()->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Multi\ResultSet', $multiResultSet);
         $this->assertCount(2, $multiResultSet);
@@ -312,7 +280,7 @@ class SearchTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSearchWithError()
+    public function testSearchWithError() : void
     {
         $type = $this->_createType();
         $index = $type->getIndex();
@@ -335,7 +303,7 @@ class SearchTest extends BaseTest
 
         $multiSearch->addSearch($searchBad);
 
-        $multiResultSet = $multiSearch->search();
+        $multiResultSet = $multiSearch->search()->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Multi\ResultSet', $multiResultSet);
         $resultSets = $multiResultSet->getResultSets();
@@ -360,7 +328,7 @@ class SearchTest extends BaseTest
     /**
      * @group functional
      */
-    public function testSearchWithErrorWithKeys()
+    public function testSearchWithErrorWithKeys() : void
     {
         $type = $this->_createType();
         $index = $type->getIndex();
@@ -383,7 +351,7 @@ class SearchTest extends BaseTest
 
         $multiSearch->addSearch($searchBad);
 
-        $multiResultSet = $multiSearch->search();
+        $multiResultSet = $multiSearch->search()->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Multi\ResultSet', $multiResultSet);
         $resultSets = $multiResultSet->getResultSets();
@@ -408,7 +376,7 @@ class SearchTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGlobalSearchTypeSearch()
+    public function testGlobalSearchTypeSearch() : void
     {
         $type = $this->_createType();
         $index = $type->getIndex();
@@ -442,7 +410,7 @@ class SearchTest extends BaseTest
 
         $multiSearch->setSearchType(Search::OPTION_SEARCH_TYPE_COUNT);
 
-        $multiResultSet = $multiSearch->search();
+        $multiResultSet = $multiSearch->search()->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Multi\ResultSet', $multiResultSet);
         $this->assertCount(2, $multiResultSet);
@@ -466,7 +434,7 @@ class SearchTest extends BaseTest
 
         $search1->setOption(Search::OPTION_SEARCH_TYPE, Search::OPTION_SEARCH_TYPE_QUERY_AND_FETCH);
 
-        $multiResultSet = $multiSearch->search();
+        $multiResultSet = $multiSearch->search()->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Multi\ResultSet', $multiResultSet);
         $this->assertCount(2, $multiResultSet);
@@ -492,7 +460,7 @@ class SearchTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGlobalSearchTypeSearchWithKeys()
+    public function testGlobalSearchTypeSearchWithKeys() : void
     {
         $type = $this->_createType();
         $index = $type->getIndex();
@@ -526,7 +494,7 @@ class SearchTest extends BaseTest
 
         $multiSearch->setSearchType(Search::OPTION_SEARCH_TYPE_COUNT);
 
-        $multiResultSet = $multiSearch->search();
+        $multiResultSet = $multiSearch->search()->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Multi\ResultSet', $multiResultSet);
         $this->assertCount(2, $multiResultSet);
@@ -550,7 +518,7 @@ class SearchTest extends BaseTest
 
         $search1->setOption(Search::OPTION_SEARCH_TYPE, Search::OPTION_SEARCH_TYPE_QUERY_AND_FETCH);
 
-        $multiResultSet = $multiSearch->search();
+        $multiResultSet = $multiSearch->search()->getWaitHandle()->join();
 
         $this->assertInstanceOf('Elastica\Multi\ResultSet', $multiResultSet);
         $this->assertCount(2, $multiResultSet);

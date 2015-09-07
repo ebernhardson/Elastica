@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Query;
 
 /**
@@ -17,7 +17,7 @@ class Wildcard extends AbstractQuery
      * @param string $value OPTIONAL Wildcard value
      * @param float  $boost OPTIONAL Boost value (default = 1)
      */
-    public function __construct($key = '', $value = null, $boost = 1.0)
+    public function __construct(string $key = '', ?string $value = null, float $boost = 1.0)
     {
         if (!empty($key)) {
             $this->setValue($key, $value, $boost);
@@ -33,7 +33,7 @@ class Wildcard extends AbstractQuery
      *
      * @return $this
      */
-    public function setValue($key, $value, $boost = 1.0)
+    public function setValue(string $key, ?string $value, float $boost = 1.0) : this
     {
         return $this->setParam($key, array('value' => $value, 'boost' => $boost));
     }

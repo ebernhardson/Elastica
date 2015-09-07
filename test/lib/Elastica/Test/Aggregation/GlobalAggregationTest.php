@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Test\Aggregation;
 
 use Elastica\Aggregation\Avg;
@@ -9,12 +9,12 @@ class GlobalAggregationTest extends BaseAggregationTest
     /**
      * @group unit
      */
-    public function testToArray()
+    public function testToArray() : void
     {
         $expected = array(
             'global' => new \stdClass(),
             'aggs' => array(
-                'avg_price' => array('avg' => array('field' => 'price')),
+                'avg_price' => array('avg' => Map {'field' => 'price'}),
             ),
         );
 

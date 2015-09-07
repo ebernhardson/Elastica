@@ -1,4 +1,4 @@
-<?php
+<?hh
 namespace Elastica\Filter;
 
 /**
@@ -15,14 +15,14 @@ class GeoPolygon extends AbstractFilter
      *
      * @var string Key
      */
-    protected $_key = '';
+    protected string $_key = '';
 
     /**
      * Points making up polygon.
      *
      * @var array Points making up polygon
      */
-    protected $_points = array();
+    protected array $_points = array();
 
     /**
      * Construct polygon filter.
@@ -30,7 +30,7 @@ class GeoPolygon extends AbstractFilter
      * @param string $key    Key
      * @param array  $points Points making up polygon
      */
-    public function __construct($key, array $points)
+    public function __construct(string $key, array $points)
     {
         $this->_key = $key;
         $this->_points = $points;
@@ -43,7 +43,7 @@ class GeoPolygon extends AbstractFilter
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : array
     {
         return array(
             'geo_polygon' => array(

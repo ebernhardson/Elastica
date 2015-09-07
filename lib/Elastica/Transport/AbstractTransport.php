@@ -1,10 +1,12 @@
-<?php
+<?hh
 namespace Elastica\Transport;
 
 use Elastica\Connection;
 use Elastica\Exception\InvalidException;
 use Elastica\Param;
 use Elastica\Request;
+use Elastica\Response;
+use Indexish;
 
 /**
  * Elastica Abstract Transport object.
@@ -23,7 +25,7 @@ abstract class AbstractTransport extends Param
      *
      * @param \Elastica\Connection $connection Connection object
      */
-    public function __construct(Connection $connection = null)
+    public function __construct(?Connection $connection = null)
     {
         if ($connection) {
             $this->setConnection($connection);
@@ -33,7 +35,7 @@ abstract class AbstractTransport extends Param
     /**
      * @return \Elastica\Connection Connection object
      */
-    public function getConnection()
+    public function getConnection() : Connection
     {
         return $this->_connection;
     }
@@ -43,7 +45,7 @@ abstract class AbstractTransport extends Param
      *
      * @return $this
      */
-    public function setConnection(Connection $connection)
+    public function setConnection(Connection $connection) : this
     {
         $this->_connection = $connection;
 
@@ -56,9 +58,9 @@ abstract class AbstractTransport extends Param
      * @param \Elastica\Request $request Request object
      * @param array             $params  Hostname, port, path, ...
      *
-     * @return \Elastica\Response Response object
+     * @return Awaitable<\Elastica\Response> Response object
      */
-    abstract public function exec(Request $request, array $params);
+    abstract public function exec(Request $request, Indexish<string, mixed> $params) : Awaitable<Response>;
 
     /**
      * Create a transport.
@@ -78,13 +80,18 @@ abstract class AbstractTransport extends Param
      *
      * @return AbstractTransport
      */
-    public static function create($transport, Connection $connection, array $params = array())
+    public static function create(mixed $transport, Connection $connection, array $params = array()) : AbstractTransport
     {
-        if (is_array($transport) && isset($transport['type'])) {
+        if ($transport instanceof Indexish && isset($transport['type'])) {
             $transportParams = $transport;
+			if (is_object($transportParams)) {
+				$transportParams = clone $transportParams;
+			}
             unset($transportParams['type']);
 
-            $params = array_replace($params, $transportParams);
+			foreach ($transportParams as $k => $v) {
+				$params[$k] = $v;
+			}
             $transport = $transport['type'];
         }
 
