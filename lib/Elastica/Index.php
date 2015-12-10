@@ -165,11 +165,12 @@ class Index implements SearchableInterface
     /**
      * Deletes the index.
      *
+     * @param array $query OPTIONAL Query string parameters to send with delete
      * @return \Elastica\Response Response object
      */
-    public function delete()
+    public function delete(array $query = array())
     {
-        $response = $this->request('', Request::DELETE);
+        $response = $this->request('', Request::DELETE, $query);
 
         return $response;
     }
@@ -229,16 +230,17 @@ class Index implements SearchableInterface
      * @param bool|array $options OPTIONAL
      *                            bool=> Deletes index first if already exists (default = false).
      *                            array => Associative array of options (option=>value)
+     * @param array      $query   OPTIONAL Query string parameters to send with creation and deletion
      *
      * @throws \Elastica\Exception\InvalidException
      * @throws \Elastica\Exception\ResponseException
      *
      * @return array Server response
      */
-    public function create(array $args = array(), $options = null)
+    public function create(array $args = array(), $options = null, array $query = array())
     {
         $path = '';
-        $query = array();
+        $createQuery = array();
 
         if (is_bool($options)) {
             if ($options) {
@@ -254,13 +256,13 @@ class Index implements SearchableInterface
                     switch ($key) {
                         case 'recreate' :
                             try {
-                                $this->delete();
+                                $this->delete($query);
                             } catch (ResponseException $e) {
                                 // Table can't be deleted, because doesn't exist
                             }
                             break;
                         case 'routing' :
-                            $query = array('routing' => $value);
+                            $createQuery = array('routing' => $value);
                             break;
                         default:
                             throw new InvalidException('Invalid option '.$key);
@@ -270,7 +272,7 @@ class Index implements SearchableInterface
             }
         }
 
-        return $this->request($path, Request::PUT, $args, $query);
+        return $this->request($path, Request::PUT, $args, $query + $createQuery);
     }
 
     /**
@@ -383,12 +385,13 @@ class Index implements SearchableInterface
      *
      * @param string $name    Alias name
      * @param bool   $replace OPTIONAL If set, an existing alias will be replaced
+     * @param array  $query   OPTIONAL Query string arguments to send with alias creation
      *
      * @return \Elastica\Response Response
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html
      */
-    public function addAlias($name, $replace = false)
+    public function addAlias($name, $replace = false, array $query = array())
     {
         $path = '_aliases';
 
@@ -403,25 +406,26 @@ class Index implements SearchableInterface
 
         $data['actions'][] = array('add' => array('index' => $this->getName(), 'alias' => $name));
 
-        return $this->getClient()->request($path, Request::POST, $data);
+        return $this->getClient()->request($path, Request::POST, $data, $query);
     }
 
     /**
      * Removes an alias pointing to the current index.
      *
-     * @param string $name Alias name
+     * @param string $name  Alias name
+     * @param array  $query OPTIONAL Query string parameters to send with delete
      *
      * @return \Elastica\Response Response
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html
      */
-    public function removeAlias($name)
+    public function removeAlias($name, array $query = array())
     {
         $path = '_aliases';
 
         $data = array('actions' => array(array('remove' => array('index' => $this->getName(), 'alias' => $name))));
 
-        return $this->getClient()->request($path, Request::POST, $data);
+        return $this->getClient()->request($path, Request::POST, $data, $query);
     }
 
     /**
@@ -486,15 +490,16 @@ class Index implements SearchableInterface
     /**
      * Can be used to change settings during runtime. One example is to use it for bulk updating.
      *
-     * @param array $data Data array
+     * @param array $data  Data array
+     * @param array $query OPTIONAL Query string parameters to send with settings
      *
      * @return \Elastica\Response Response object
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-update-settings.html
      */
-    public function setSettings(array $data)
+    public function setSettings(array $data, array $query = array())
     {
-        return $this->request('_settings', Request::PUT, $data);
+        return $this->request('_settings', Request::PUT, $data, $query);
     }
 
     /**

@@ -107,17 +107,19 @@ class Settings
      *
      * @param string $key
      * @param string $value
+     * @param array  $query OPTIONAL Query string parameters to send with setting
      *
      * @return \Elastica\Response
      */
-    public function setPersistent($key, $value)
+    public function setPersistent($key, $value, array $query = array())
     {
         return $this->set(
             array(
                 'persistent' => array(
                     $key => $value,
                 ),
-            )
+            ),
+            $query
         );
     }
 
@@ -126,17 +128,19 @@ class Settings
      *
      * @param string $key
      * @param string $value
+     * @param array  $query OPTIONAL Query string parameters to send with setting
      *
      * @return \Elastica\Response
      */
-    public function setTransient($key, $value)
+    public function setTransient($key, $value, array $query = array())
     {
         return $this->set(
             array(
                 'transient' => array(
                     $key => $value,
                 ),
-            )
+            ),
+            $query
         );
     }
 
@@ -145,19 +149,20 @@ class Settings
      *
      * Second param can be used to set it persistent
      *
-     * @param bool $readOnly
-     * @param bool $persistent
+     * @param bool  $readOnly
+     * @param bool  $persistent
+     * @param array $query      OPTIONAL Query string parameters to send with setting
      *
      * @return \Elastica\Response $response
      */
-    public function setReadOnly($readOnly = true, $persistent = false)
+    public function setReadOnly($readOnly = true, $persistent = false, array $query = array())
     {
         $key = 'cluster.blocks.read_only';
 
         if ($persistent) {
-            $response = $this->setPersistent($key, $readOnly);
+            $response = $this->setPersistent($key, $readOnly, $query);
         } else {
-            $response = $this->setTransient($key, $readOnly);
+            $response = $this->setTransient($key, $readOnly, $query);
         }
 
         return $response;
@@ -167,12 +172,13 @@ class Settings
      * Set settings for cluster.
      *
      * @param array $settings Raw settings (including persistent or transient)
+     * @param array $query    OPTIONAL Query string parameters to send with setting
      *
      * @return \Elastica\Response
      */
-    public function set(array $settings)
+    public function set(array $settings, array $query = array())
     {
-        return $this->request($settings, Request::PUT);
+        return $this->request($settings, Request::PUT, $query);
     }
 
     /**
@@ -190,13 +196,14 @@ class Settings
      *
      * @param array  $data   OPTIONAL Data array
      * @param string $method OPTIONAL Transfer method (default = \Elastica\Request::GET)
+     * @param array  $query  OPTIONAL Query params
      *
      * @return \Elastica\Response Response object
      */
-    public function request(array $data = array(), $method = Request::GET)
+    public function request(array $data = array(), $method = Request::GET, array $query = array())
     {
         $path = '_cluster/settings';
 
-        return $this->getClient()->request($path, $method, $data);
+        return $this->getClient()->request($path, $method, $data, $query);
     }
 }

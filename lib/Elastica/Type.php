@@ -288,15 +288,16 @@ class Type implements SearchableInterface
      * Sets value type mapping for this type.
      *
      * @param \Elastica\Type\Mapping|array $mapping Elastica\Type\MappingType object or property array with all mappings
+     * @param array                        $query                             OPTIONAL Query string parameters to send with delete
      *
      * @return \Elastica\Response
      */
-    public function setMapping($mapping)
+    public function setMapping($mapping, array $query = array())
     {
         $mapping = Mapping::create($mapping);
         $mapping->setType($this);
 
-        return $mapping->send();
+        return $mapping->send($query);
     }
 
     /**

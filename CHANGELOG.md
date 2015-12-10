@@ -14,6 +14,9 @@ All notable changes to this project will be documented in this file based on the
 ### Added
 - Elastica\Query\MultiMatch::setFuzziness now supports being set to `AUTO` with the const `MultiMatch::FUZZINESS_AUTO`
 - Elastica\Type\Mapping::send now accepts query string parameters to send along with the mapping request
+- Elastica\Type::setMapping now accepts query string parameters to send along with the mapping request
+- Elastica\Cluster\Settings::setPersistent, setTransient, setReadOnly, set, and request now accept query string parameters to send along with the request
+- Elastica\Index::delete, create, addAlias, removeAlias, and setSettings now accept query string parameters to send along with the request
 
 ### Improvements
 - More info on Elastica\Exception\PartialShardFailureException. Not just number of failed shards.
